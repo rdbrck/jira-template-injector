@@ -23,6 +23,12 @@ body{
     margin-bottom: 15px;
 }
 
+.templateTextArea{
+    width: 95%;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
 #test{
     display: inline;
 }
