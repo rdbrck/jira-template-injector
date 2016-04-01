@@ -9,9 +9,9 @@ chrome.storage.sync.get("rdbrck-JiraDescriptions-test2", function(templates) {
         console.log("The following templates are currently loaded:\n");
         console.log(templates)
     }
-})
+});
 
-function loadTemplates(templateJSON) {
+function saveTemplates(templateJSON) {
     chrome.storage.sync.set({"rdbrck-JiraDescriptions-test2": templateJSON}, function() {
         // Notify that we saved.
         console.log('Settings were hopefully saved');
@@ -24,7 +24,7 @@ function fetchJSON(url) {
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
             var templateJSON = JSON.parse(xmlhttp.responseText);
-            loadTemplates(templateJSON);
+            saveTemplates(templateJSON);
         }
     };
     xmlhttp.open("GET", url, true);
