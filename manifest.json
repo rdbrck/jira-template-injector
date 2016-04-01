@@ -10,9 +10,12 @@
             "https://redbrickmedia.atlassian.net/*"
         ],
         "js": [
-            "jiraDescriptionTemplates.js"
+            "template.js"
         ],
         "run_at": "document_end"
     }
+],
+"permissions":[
+    "storage"
 ]
 }

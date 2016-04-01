@@ -133,6 +133,7 @@ function descriptionChangeEvent(changeEvent)
 
 function observeDocumentBody(mutation) 
 {
+    console.log(mutation);
     if (document.getElementById("create-issue-dialog") != null) { // only interested in document changes related to Create Issue Dialog box        
         if (mutation.target.id == "description") { // only interested in the description field
             var descriptionElement = mutation.target
@@ -153,47 +154,3 @@ var observer = new MutationObserver(function(mutations) {
 });
 
 observer.observe(document.body, {subtree: true, attributes: true, attributeFilter: ["resolved"]});
-
-/*
-TODO: Mutation Observer should only be active when it needs to be to 
-prevent slowing down page loads and other operations. This can be done
-by installing the mutation observer when the create issue dialog is
-lanuched and then removing it when the dialog is dismissed.
-
-var isMutationObserverInstalled = false;
-
-function installMutationObserver()
-{
-    if (isMutationObserverInstalled == false) {
-        console.log("Installing Mutation Observer")
-        observer.observe(document.body, {attributes: true, subtree: true});
-        isMutationObserverInstalled = true;      
-    }
-}
-
-function keypressHandler(evt)
-{
-    if (evt.keyCode == 99) { // 'c'
-        installMutationObserver()
-    }
-}
-
-var createIssueElement = document.getElementById('create_link')
-
-console.log("-------------------------------")
-console.log("id............: " + createIssueElement.id)
-console.log("nodeValue.....: " + createIssueElement.nodeValue)
-console.log("tagName.......: " + createIssueElement.tagName)
-console.log("nodeName......: " + createIssueElement.nodeName)
-console.log("nodeType......: " + createIssueElement.nodeType)
-console.log("className.....: " + createIssueElement.className)
-console.log("TextContent...: " + createIssueElement.textContent)
-console.log("-------------------------------")
-
-if (createIssueElement != null) {
-    createIssueElement.addEventListener("click", installMutationObserver)
-    addEventListener("keypress", keypressHandler)
-} else {
-    console.error("*** Error: Element Id 'create_link' not found.")    
-}
-*/
