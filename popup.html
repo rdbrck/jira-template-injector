@@ -1,1 +1,38 @@
-popup.html
+<!doctype html>
+<!--
+ This page is shown when the extension button is clicked, because the
+ "browser_action" field in manifest.json contains the "default_popup" key with
+ value "popup.html".
+ -->
+<html style="min-width:350px;">
+
+  <head>
+    <title>rdbrck Jira Description Template Extension</title>
+    <link href="popup.css" rel="stylesheet">
+    <script src="popup.js"></script>
+  </head>
+
+  <body>
+    <div id="title">
+        <h2>Jira Description Template Injector</h2>
+    </div>
+    <div id="loadOrReset">
+        <div id="reset">
+            Reset Templates to Default:
+            <button id="reset">Reset!</button>
+        </div>
+        </br>
+        <div id="loadJSON">
+            Load Templates from JSON file:</br>
+            <form id="test">
+                <input type="text" name="url" placeholder="URL to JSON file">
+                <input type="submit" value="Submit">
+            </form> 
+        </div>
+    </div>
+    <hr>
+    <div id="Current Templates">
+    </div>
+  </body>
+
+</html>
