@@ -1,0 +1,28 @@
+body{
+    margin: 0px;
+}
+
+#title {
+    background-color: red;
+    color: white;
+    white-space: nowrap;
+    padding-bottom: 1px;
+    padding-top: 1px;
+    margin-bottom: 10px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+#reset{
+    display: inline;
+    margin-bottom: 15px;
+}
+
+#loadJSON{
+    display: inline;
+    margin-bottom: 15px;
+}
+
+#test{
+    display: inline;
+}
