@@ -7,7 +7,7 @@
     "default_popup": "popup.html"
   },
 "background": {
-    "scripts": ["eventPage.js"],
+    "scripts": ["resources/js/jquery-2.2.2.min.js", "eventPage.js"],
     "persistent": false
   },
 "content_scripts": [
@@ -17,12 +17,15 @@
             "https://redbrickmedia.atlassian.net/*"
         ],
         "js": [
+            "resources/js/jquery-2.2.2.min.js",
             "template.js"
         ],
         "run_at": "document_end"
     }
   ],
 "permissions":[
-    "storage"
+    "storage",
+    "*://*/*.json",
+    "file:///*.json"
   ]
 }

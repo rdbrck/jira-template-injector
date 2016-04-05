@@ -1,0 +1,63 @@
+nav {
+    line-height: normal;
+}
+
+main {
+    padding-top: 15px;
+    padding-bottom: 35px;
+}
+
+.container {
+    width: 95%;
+}
+
+.section {
+    padding-top: 0rem;
+    padding-bottom: 0rem;
+}
+
+.row {
+    height: 37px;
+    margin-bottom: 10px;
+}
+
+.valign-wrapper{
+    height: inherit;
+}
+
+.divider {
+    margin-bottom: 10px;
+}
+
+.toastNotification{
+    opacity: 0.8 !important;
+    min-height: 40px !important;
+    max-height: 40px;
+}
+
+.collapsible-header.active i {
+    -ms-transform: rotate(180deg); /* IE 9 */
+    -webkit-transform: rotate(180deg); /* Chrome, Safari, Opera */
+    transform: rotate(180deg);
+}
+
+#subTitle{
+    font-size: xx-small;
+    margin-bottom: 0px;
+    margin-top: 0px;
+}
+#jsonURLInput {
+    margin-bottom: 0px !important;
+    border-bottom-color: #b71c1c !important;
+}
+
+#templateEditorTitle {
+    padding-top: 5px;
+    font-weight: bold;
+}
+
+.templateTextArea{
+    border: solid 1px #b71c1c !important;
+    height: 10rem;
+    background-color: white !important;
+}

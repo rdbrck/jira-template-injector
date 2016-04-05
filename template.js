@@ -4,7 +4,6 @@ function isDefaultDescription(value, callback)
         templates = templates['rdbrck-JiraDescriptions-test2'];
         
         if (value == templates['JIRA DEFAULT']) {
-            console.log("It was true!!");
             callback(true);
         }
         if (value == templates['BUG TEMPLATE']) {

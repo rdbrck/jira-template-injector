@@ -5,34 +5,89 @@
  value "popup.html".
  -->
 <html style="min-width:350px;">
+<head>
 
-  <head>
-    <title>rdbrck Jira Description Template Extension</title>
-    <link href="popup.css" rel="stylesheet">
-    <script src="popup.js"></script>
-  </head>
+        <title>rdbrck Jira Description Template Injector</title>
 
-  <body>
-    <div id="title">
-        <h2>Jira Description Template Injector</h2>
+        <!--Import Google Icon Font-->
+        <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+        <!-- Javascript -->
+        <script type="text/javascript" src="resources/js/jquery-2.2.2.min.js"></script>
+        <script type="text/javascript" src="resources/js/materialize.min.js"></script>
+        <script type="text/javascript" src="resources/js/popup.js"></script>
+
+        <!-- CSS -->
+        <link type="text/css" rel="stylesheet" href="resources/css/materialize.min.css"  media="screen,projection"/>
+        <link type="text/css" rel="stylesheet" href="resources/css/popup.css">
+
+        <!--Let browser know website is optimized for mobile-->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+</head>
+
+<body>
+    <div class="navbar-fixed">
+      <nav>
+          <div class="nav-wrapper red darken-4">
+              <div class="brand-logo center">redbrick JDTI</br><p id="subTitle">(Jira Description Template Injector)</p></div>
+          </div>
+      </nav>
     </div>
-    <div id="loadOrReset">
-        <div id="reset">
-            Reset Templates to Default:
-            <button id="reset">Reset!</button>
+
+    <main>
+        <div class="container">
+            <div class="section">
+                <div class="row">
+                    <div class="col s8 valign-wrapper">
+                        <h6 class="left-align"> Reload default Templates:</h6>
+                    </div>
+                    <div class="col s4">
+                        <div class="right-align">
+                            <a id="reset" class="btn-floating btn-Medium waves-effect waves-light red darken-4"><i class="material-icons">replay</i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="section">
+                <div class="row">
+                    <div class="col s4 valign-wrapper">
+                        <h6 class="valign"> Load JSON from URL:</h6>
+                    </div>
+                    <div class="col s6">
+                        <input id="jsonURLInput" type="text" name="url" placeholder="URL to JSON file">
+                    </div>
+                    <div class="col s2">
+                        <div class="right-align">
+                            <a id="download" class="btn-floating btn-Small waves-effect waves-light red darken-4"><i class="material-icons">cloud_download</i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="section">
+                <div class="row">
+                    <div class="col s8 valign-wrapper">
+                        <h6 class="left-align"> Clear all Templates:</h6>
+                    </div>
+                    <div class="col s4">
+                        <div class="right-align">
+                            <a id="delete" class="btn-floating btn-Medium waves-effect waves-light red darken-4"><i class="material-icons">delete</i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div>
+                <h6 id="templateEditorTitle">Current Templates:</h6>
+            </div>
+            <div class="section">
+                <ul class="collapsible" data-collapsible="accordion" id="templateEditor">
+                </ul>
+            </div>
         </div>
-        </br>
-        <div id="loadJSON">
-            Load Templates from JSON file:</br>
-            <form id="test">
-                <input type="text" name="url" placeholder="URL to JSON file">
-                <input type="submit" value="Submit">
-            </form> 
-        </div>
-    </div>
-    <hr>
-    <div id="Current Templates">
-    </div>
-  </body>
+    </main>
+</body>
 
 </html>
