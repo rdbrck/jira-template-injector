@@ -4,7 +4,7 @@ nav {
 
 main {
     padding-top: 15px;
-    padding-bottom: 35px;
+    margin-bottom: 40px;
 }
 
 .container {
@@ -21,15 +21,16 @@ main {
     margin-bottom: 10px;
 }
 
-.valign-wrapper{
+.valign-wrapper {
     height: inherit;
 }
 
 .divider {
     margin-bottom: 10px;
+    overflow: visible;
 }
 
-.toastNotification{
+.toastNotification {
     opacity: 0.8 !important;
     min-height: 40px !important;
     max-height: 40px;
@@ -41,11 +42,94 @@ main {
     transform: rotate(180deg);
 }
 
-#subTitle{
-    font-size: xx-small;
+.input-field {
+    margin-top: 0;
+}
+
+.input-field .prefix.active {
+    color: #b71c1c;
+}
+
+.input-field .prefix ~ textarea {
+    width: calc(100% - 4rem) !important;
+}
+
+input[type=text].valid {
+    border-bottom: 1px solid #b71c1c !important;
+    box-shadow: 0 1px 0 0 #b71c1c !important;
+}
+
+input[type=text]:focus:not([readonly]) {
+    border-bottom: 1px solid #b71c1c !important;
+    box-shadow: 0 1px 0 0 #b71c1c !important;
+}
+
+textarea.materialize-textarea {
+    padding: 0;
+    min-height: 0;
+}
+
+textarea.materialize-textarea:focus:not([readonly]) {
+    border-bottom: 1px solid #b71c1c !important;
+    box-shadow: 0 1px 0 0 #b71c1c !important;
+}
+
+.modal.bottom-sheet {
+    overflow: visible;
+    max-height: 55% !important;
+}
+
+.modal-content {
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+}
+
+.dropdown-content {
+    width: inherit;
+}
+
+.dropdown-content li>a, .dropdown-content li>span {
+    color: black;
+}
+
+.dropdown-content li>a:hover, .dropdown-content li>span {
+    color: #b71c1c;
+}
+
+.zpr {
+    padding-right: 0px !important;
+}
+
+.zpl {
+    padding-left: 0px !important;
+}
+
+.text-center{
+  text-align: center;
+}
+
+.addTemplateLabel {
+    padding-left: 10px;
+}
+[type="checkbox"].filled-in:checked+label:after {
+    border: 2px solid #b71c1c !important;
+    background-color: #b71c1c !important;
+}
+
+#subTitle {
+    font-size: x-small;
     margin-bottom: 0px;
     margin-top: 0px;
 }
+
+#mainTitle {
+    margin-bottom: 0px;
+    margin-top: 3px;
+    margin-left: -50px;
+}
+
 #jsonURLInput {
     margin-bottom: 0px !important;
     border-bottom-color: #b71c1c !important;
@@ -55,9 +139,37 @@ main {
     padding-top: 5px;
     font-weight: bold;
 }
+#templateEditorSection {
+    padding-bottom: 1rem;
+}
 
-.templateTextArea{
+.templateEditorTextArea {
     border: solid 1px #b71c1c !important;
     height: 10rem;
     background-color: white !important;
+}
+
+#addDefaultDropdownRow {
+    margin-top: 10px;
+}
+
+#addDefaultDropdown {
+    bottom: 16px;
+    top: inherit !important;
+    max-height: calc(100vh - 95px);
+}
+
+#addCustomTemplate {
+    margin-left: -20px;
+}
+
+#issueTypeField{
+    width: 90%;
+}
+
+#logoIcon{
+    width: 40px;
+    height: 40px;
+    float: left;
+    margin-right: 10px;
 }

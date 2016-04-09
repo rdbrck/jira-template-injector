@@ -4,7 +4,7 @@
  "browser_action" field in manifest.json contains the "default_popup" key with
  value "popup.html".
  -->
-<html style="min-width:350px;">
+<html style="min-width:400px; min-height: 400px">
 <head>
 
         <title>rdbrck Jira Description Template Injector</title>
@@ -30,7 +30,7 @@
     <div class="navbar-fixed">
       <nav>
           <div class="nav-wrapper red darken-4">
-              <div class="brand-logo center">redbrick JDTI</br><p id="subTitle">(Jira Description Template Injector)</p></div>
+              <div class="brand-logo center"><p id="mainTitle"><img src="resources/images/icons/RB-icon-128-white.png" id="logoIcon">REDBRICK JDTI</p><p id="subTitle">(Jira Description Template Injector)</p></div>
           </div>
       </nav>
     </div>
@@ -44,7 +44,9 @@
                     </div>
                     <div class="col s4">
                         <div class="right-align">
-                            <a id="reset" class="btn-floating btn-Medium waves-effect waves-light red darken-4"><i class="material-icons">replay</i></a>
+                            <a id="reset" class="btn-floating btn-Medium waves-effect waves-light red darken-4 tooltipped" data-position="left" data-delay="50" data-tooltip="Reload Templates">
+                                <i class="material-icons">replay</i>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -52,15 +54,45 @@
             <div class="divider"></div>
             <div class="section">
                 <div class="row">
-                    <div class="col s4 valign-wrapper">
+                    <div class="col s5 valign-wrapper">
                         <h6 class="valign"> Load JSON from URL:</h6>
                     </div>
-                    <div class="col s6">
+                    <div class="col s5">
                         <input id="jsonURLInput" type="text" name="url" placeholder="URL to JSON file">
                     </div>
                     <div class="col s2">
                         <div class="right-align">
-                            <a id="download" class="btn-floating btn-Small waves-effect waves-light red darken-4"><i class="material-icons">cloud_download</i></a>
+                            <a id="download" class="btn-floating btn-Small waves-effect waves-light red darken-4 tooltipped" data-position="left" data-delay="50" data-tooltip="Download Templates">
+                                <i class="material-icons">cloud_download</i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="section">
+                <div class="row">
+                    <div class="col s3 valign-wrapper">
+                        <h6 class="valign"> Select file:</h6>
+                    </div>
+                    <div class="col s7">
+                        <form action="#">
+                            <div class="file-field input-field">
+                                <div class="btn btn-Small red darken-4">
+                                    <span>File</span>
+                                    <input type="file" id="fileSelector">
+                                </div>
+                                <div class="file-path-wrapper">
+                                    <input class="file-path validate" type="text">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col s2">
+                        <div class="right-align">
+                            <a id="upload" class="btn-floating btn-Small waves-effect waves-light red darken-4 tooltipped" data-position="left" data-delay="50" data-tooltip="Upload File">
+                                <i class="material-icons">file_upload</i>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -73,20 +105,86 @@
                     </div>
                     <div class="col s4">
                         <div class="right-align">
-                            <a id="delete" class="btn-floating btn-Medium waves-effect waves-light red darken-4"><i class="material-icons">delete</i></a>
+                            <a id="delete" class="btn-floating btn-Medium waves-effect waves-light red darken-4 tooltipped" data-position="left" data-delay="50" data-tooltip="Delete all templates">
+                                <i class="material-icons">delete</i>
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="divider"></div>
-            <div>
-                <h6 id="templateEditorTitle">Current Templates:</h6>
+            <div class="row">
+                <div class="col s8 valign-wrapper">
+                    <h6 id="templateEditorTitle">Templates:</h6>
+                </div>
+                <div class="col s4">
+                    <div class="right-align">
+                        <!-- Modal Trigger -->
+                        <a id="add" class="btn-floating btn-Medium waves-effect waves-light red darken-4 tooltipped modal-trigger" href="#addTemplateModal" data-position="left" data-delay="50" data-tooltip="Add a Template">
+                            <i class="material-icons">add</i>
+                        </a>
+                    </div>
+                </div>
             </div>
             <div class="section">
-                <ul class="collapsible" data-collapsible="accordion" id="templateEditor">
+                <ul class="collapsible popout" data-collapsible="accordion" id="templateEditor">
                 </ul>
             </div>
         </div>
+
+        <!-- Modal Structure -->
+        <div id="addTemplateModal" class="modal bottom-sheet">
+            <div class="modal-content">
+                <div class="row">
+                    <div class="col s12">
+                        <h5 id="addTemplateTitle">Add Default or Custom Template</h5>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                <label class="addTemplateLabel">Custom:</label>
+                <div class="row">
+                    <div class="col s2 valign-wrapper zpr">
+                        <h6>Name:</h6>
+                    </div>
+                    <div class="col s4 zpl">
+                        <input id="customTemplateName" type="text" name="customName" placeholder='BUG TEMPLATE' >
+                    </div>
+                    <div class="col s2 valign-wrapper zpr zpl text-center">
+                        <h6>Issue Type Field:</h6>
+                    </div>
+                    <div class="col s3">
+                        <input id="customTemplateIssueTypeField" type="text" name="issueTypeField" placeholder='Bug' >
+                    </div>
+                    <div class="col s1">
+                        <div class="right-align">
+                            <a id="addCustomTemplate" class="btn-floating btn-Small waves-effect waves-light red darken-4">
+                                <i class="material-icons">forward</i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                <label class="addTemplateLabel">Default:</label>
+                <div class="row" id="addDefaultDropdownRow">
+                    <div class="col s7">
+                        <!-- Dropdown Trigger -->
+                        <a class='dropdown-button waves-effect waves-light btn red darken-4' id="addDefaultDropdownButton" href='#' data-activates='addDefaultDropdown'><i class="material-icons left">expand_more</i>Default Templates</a>
+                    </div>
+                    <div class="col s5 valign-wrapper">
+                        <p>
+                            <input type="checkbox" class="filled-in disabled red darken-4" id="loadDefault" checked="checked" />
+                            <label for="loadDefault">Load default</label>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dropdown Structure -->
+        <ul id='addDefaultDropdown' class='dropdown-content'>
+            <!-- Dynamically built -->
+        </ul>
+
     </main>
 </body>
 
