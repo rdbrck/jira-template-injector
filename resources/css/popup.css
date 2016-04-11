@@ -3,7 +3,6 @@ nav {
 }
 
 main {
-    padding-top: 15px;
     margin-bottom: 40px;
 }
 
@@ -172,4 +171,11 @@ textarea.materialize-textarea:focus:not([readonly]) {
     height: 40px;
     float: left;
     margin-right: 10px;
+}
+
+#help {
+    height: 25px;
+    margin-bottom: 0px;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }

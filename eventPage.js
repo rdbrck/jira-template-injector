@@ -83,10 +83,12 @@ function removeTemplate(templateName, callback) {
 
 }
 function updateTemplate(templateName, templateText, callback) {
+    console.log(templateName);
+    console.log(templateText);
     chrome.storage.sync.get(StorageID, function(templates) {
         if (templates[StorageID]) {
             var templateJSON = templates[StorageID];
-            templateJSON[templateName] = templateText;
+            templateJSON[templateName]['text'] = templateText;
             saveTemplates(templateJSON, callback);
         } else {
             callback(false, "No data available to update. Please recreate the template")
@@ -97,11 +99,23 @@ function updateTemplate(templateName, templateText, callback) {
 function addTemplate(templateName, issueTypeField, text, callback) {
     chrome.storage.sync.get(StorageID, function(templates) {
         var templateJSON = {};
+        var save = true;
+
         if (templates[StorageID]) {
             templateJSON = templates[StorageID];
         }
-        templateJSON[templateName] = {"issuetype-field":issueTypeField, "text": text};
-        saveTemplates(templateJSON, callback);
+
+        $.each(templateJSON, function(name, template){
+            if (issueTypeField == template['issuetype-field']) {
+                save = false;
+                callback(false, "Template with same issuetype-field already exists", "open");
+            }
+        });
+
+        if(save) {
+            templateJSON[templateName] = {"issuetype-field":issueTypeField, "text": text};
+            saveTemplates(templateJSON, callback);
+        }
     });
 }
 
@@ -137,44 +151,44 @@ chrome.runtime.onMessage.addListener(
                 });
                 break;
             case "reset":
-                setDefaultTemplates(function(status, message = null){
-                    response = reponseMessage(status, message);
+                setDefaultTemplates(function(status, message = null, data = null){
+                    response = reponseMessage(status, message, data);
                     sendResponse(response);
                 });
                 break;
             case "upload":
-                loadLocalFile(request.fileContents, function(status, message = null){
-                    response = reponseMessage(status, message);
+                loadLocalFile(request.fileContents, function(status, message = null, data = null){
+                    response = reponseMessage(status, message, data);
                     sendResponse(response);
                 });
                 break;
             case "download":
-                downloadJSONData(request.url, function(status, message = null){
-                    response = reponseMessage(status, message);
+                downloadJSONData(request.url, function(status, message = null, data = null){
+                    response = reponseMessage(status, message, data);
                     sendResponse(response);
                 });
                 break;
             case "clear":
-                clearStorage(function(status, message = null){
-                    response = reponseMessage(status, message);
+                clearStorage(function(status, message = null, data = null){
+                    response = reponseMessage(status, message, data);
                     sendResponse(response);
                 });
                 break;
             case "delete":
-                removeTemplate(request.templateName, function(status, message = null){
-                    response = reponseMessage(status, message);
+                removeTemplate(request.templateName, function(status, message = null, data = null){
+                    response = reponseMessage(status, message, data);
                     sendResponse(response);
                 });
                 break;
             case "save":
-                updateTemplate(request.templateName, request.templateText,function(status, message = null){
-                    response = reponseMessage(status, message);
+                updateTemplate(request.templateName, request.templateText,function(status, message = null, data = null){
+                    response = reponseMessage(status, message, data);
                     sendResponse(response);
                 });
                 break;
             case "add":
-                addTemplate(request.templateName, request.issueTypeField, request.text, function(status, message = null){
-                    response = reponseMessage(status, message);
+                addTemplate(request.templateName, request.issueTypeField, request.text, function(status, message = null, data = null){
+                    response = reponseMessage(status, message, data);
                     sendResponse(response);
                 });
                 break;
