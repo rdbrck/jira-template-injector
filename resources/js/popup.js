@@ -2,22 +2,28 @@ const StorageID = "rdbrck-JiraDescriptions-test2";
 
 $(document).ready(function() {
 
+    document.addEventListener("focusin", onInitialFocus);
     loadTemplateEditor();
 
     // Click Handlers
+    $('.newTabLinks').click(function(){
+        chrome.tabs.create({url: $(this).attr('href')});
+            return false;
+    });
+
     $('#reset').click(function(){
         chrome.runtime.sendMessage({
             JDTIfunction: "reset"
         }, function(response) {
             if(response.status == "success"){
                 loadTemplateEditor();
-                Materialize.toast('Default templates successfully loaded', 1000, 'toastNotification');
+                Materialize.toast('Default templates successfully loaded', 2000, 'toastNotification');
             } else {
                 $('#templateEditor').empty();
                 if(response.message){
-                    Materialize.toast(response.message, 1000, 'toastNotification');
+                    Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
-                    Materialize.toast('Something went wrong. Please try again.', 1000, 'toastNotification');
+                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
         });
@@ -25,14 +31,14 @@ $(document).ready(function() {
 
     $('#upload').click(function(){
         if(!$('input#fileSelector')[0].files[0]){
-            Materialize.toast('No file selected. Please select a file and try again', 1000, 'toastNotification');
+            Materialize.toast('No file selected. Please select a file and try again', 2000, 'toastNotification');
         } else {
             var reader = new FileReader();
             // Read file into memory
             reader.readAsText($('input#fileSelector')[0].files[0]);
             // Handle success and errors
             reader.onerror = function(){
-                Materialize.toast('Error reading file. Please try again', 1000, 'toastNotification');
+                Materialize.toast('Error reading file. Please try again', 2000, 'toastNotification');
             };
             reader.onload = function(){
                 var data = jQuery.parseJSON(reader.result);
@@ -42,12 +48,12 @@ $(document).ready(function() {
                 }, function(response) {
                     if(response.status == "success"){
                         loadTemplateEditor();
-                        Materialize.toast('Templates successfully loaded from file', 1000, 'toastNotification');
+                        Materialize.toast('Templates successfully loaded from file', 2000, 'toastNotification');
                     } else {
                         if(response.message){
-                            Materialize.toast(response.message, 1000, 'toastNotification');
+                            Materialize.toast(response.message, 2000, 'toastNotification');
                         } else {
-                            Materialize.toast('Something went wrong. Please try again.', 1000, 'toastNotification');
+                            Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                         }
                     }
                 });
@@ -62,12 +68,12 @@ $(document).ready(function() {
         }, function(response) {
             if(response.status == "success"){
                 loadTemplateEditor();
-                Materialize.toast('Templates successfully loaded from URL', 1000, 'toastNotification');
+                Materialize.toast('Templates successfully loaded from URL', 2000, 'toastNotification');
             } else {
                 if(response.message){
-                    Materialize.toast(response.message, 1000, 'toastNotification');
+                    Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
-                    Materialize.toast('Something went wrong. Please try again.', 1000, 'toastNotification');
+                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
         });
@@ -79,13 +85,13 @@ $(document).ready(function() {
         }, function(response) {
             if(response.status == "success"){
                 loadTemplateEditor();
-                Materialize.toast('All templates deleted', 1000, 'toastNotification');
+                Materialize.toast('All templates deleted', 2000, 'toastNotification');
             } else {
                 $('#templateEditor').empty();
                 if(response.message){
-                    Materialize.toast(response.message, 1000, 'toastNotification');
+                    Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
-                    Materialize.toast('Something went wrong. Please try again.', 1000, 'toastNotification');
+                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
         });
@@ -97,36 +103,34 @@ $(document).ready(function() {
 
         chrome.runtime.sendMessage({
             JDTIfunction: "add",
-            templateName:templateName,
-            issueTypeField:issueTypeField,
+            templateName: templateName,
+            issueTypeField: issueTypeField,
             text:""
         }, function(response) {
             $('#addTemplateModal').closeModal();
-            loadTemplateEditor(function(){
-                // Open the added template in the collapsible list and move focus
-                $('.collapsible-header:contains("'+ templateName +'")').click();
-                var textArea = $('.collapsible-header:contains("'+ templateName +'")').siblings('.collapsible-body').find('textarea');
-                textArea.focus();
-                // Move textarea into view
-                $('html, body').animate({
-                    scrollTop: textArea.offset().top
-                }, 100);
-            });
             if(response.status == "success"){
-                Materialize.toast('Template successfully added', 1000, 'toastNotification');
+                loadTemplateEditor(function(){
+                    openCollapsible(issueTypeField);
+                });
+                Materialize.toast('Template successfully added', 2000, 'toastNotification');
             } else {
-                if(response.message){
-                    Materialize.toast(response.message, 1000, 'toastNotification');
-                } else {
-                    Materialize.toast('Something went wrong. Please try again.', 1000, 'toastNotification');
-                }
+                loadTemplateEditor(function(){
+                    if(response.message){
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                        if(response.data == 'open'){
+                            openCollapsible(issueTypeField);
+                        }
+                    } else {
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    }
+                });
             }
         });
     });
 
     $('#addDefaultDropdownButton').click(function(){
         if($( "#addDefaultDropdownButton" ).hasClass( "disabled" )){
-            Materialize.toast('All default templates have already been added', 1000, 'toastNotification');
+            Materialize.toast('All default templates have already been added', 2000, 'toastNotification');
         }
     });
 
@@ -134,16 +138,16 @@ $(document).ready(function() {
     $(document).on('click', "a.removeSingleTemplate", function() {
         chrome.runtime.sendMessage({
             JDTIfunction: "delete",
-            templateName:$(this).attr("id")
+            templateName: $(this).attr("id")
         }, function(response) {
             if(response.status == "success"){
                 loadTemplateEditor();
-                Materialize.toast('Template successfully removed', 1000, 'toastNotification');
+                Materialize.toast('Template successfully removed', 2000, 'toastNotification');
             } else {
                 if(response.message){
-                    Materialize.toast(response.message, 1000, 'toastNotification');
+                    Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
-                    Materialize.toast('Something went wrong. Please try again.', 1000, 'toastNotification');
+                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
         });
@@ -152,16 +156,16 @@ $(document).ready(function() {
     $(document).on('click', "a.updateSingleTemplate", function() {
         chrome.runtime.sendMessage({
             JDTIfunction: "save",
-            templateName:$(this).attr("id"),
-            templateText:$('textarea[name="'+ $(this).attr("id") +'"]').val()
+            templateName: $(this).attr("id"),
+            templateText: $('textarea[name="'+ $(this).attr("id") +'"]').val()
         }, function(response) {
             if(response.status == "success"){
-                Materialize.toast('Template successfully updated', 1000, 'toastNotification');
+                Materialize.toast('Template successfully updated', 2000, 'toastNotification');
             } else {
                 if(response.message){
-                    Materialize.toast(response.message, 1000, 'toastNotification');
+                    Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
-                    Materialize.toast('Something went wrong. Please try again.', 1000, 'toastNotification');
+                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
         });
@@ -170,6 +174,7 @@ $(document).ready(function() {
     $(document).on('click', ".dropdownOption", function() {
         // Close the Modal
         var templateName = $(this).text();
+        var issueTypeField = $(this).data('issuefieldtype');
         var text = "";
         if($('#loadDefault').prop('checked')){
             text = $(this).data('text');
@@ -177,41 +182,33 @@ $(document).ready(function() {
 
         chrome.runtime.sendMessage({
             JDTIfunction: "add",
-            templateName:templateName,
-            issueTypeField:$(this).data('issuefieldtype'),
-            text:text
+            templateName: templateName,
+            issueTypeField: issueTypeField,
+            text: text
         }, function(response) {
             $('#addTemplateModal').closeModal();
-            loadTemplateEditor(function(){
-                // Open the added template in the collapsible list and move focus
-                $('.collapsible-header:contains("'+ templateName +'")').click();
-                var textArea = $('.collapsible-header:contains("'+ templateName +'")').siblings('.collapsible-body').find('textarea');
-                textArea.focus();
-                // Move textarea into view
-                $('html, body').animate({
-                    scrollTop: textArea.offset().top
-                }, 100);
-            });
             if(response.status == "success"){
-                Materialize.toast('Template successfully added', 1000, 'toastNotification');
+                loadTemplateEditor(function(){
+                    openCollapsible(issueTypeField);
+                });
+                Materialize.toast('Template successfully added', 2000, 'toastNotification');
             } else {
+                loadTemplateEditor();
                 if(response.message){
-                    Materialize.toast(response.message, 1000, 'toastNotification');
+                    Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
-                    Materialize.toast('Something went wrong. Please try again.', 1000, 'toastNotification');
+                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
         });
     });
 
-    // Resize textarea on click of collapsible header because doing it earlier was causing it to not resize correctly
+    // Resize textarea on click of collapsible header because doing it earlier doesn't resize it 100$ correctly.
     $(document).on('click', ".collapsible-header", function() {
-        var textArea = $(this).siblings('.collapsible-body').find('textarea');
-        textArea.trigger('autoresize');
-        textArea.focus();
         $('html, body').animate({
-            scrollTop: textArea.offset().top
-        }, 100);
+            scrollTop: $(this).siblings('.collapsible-body').find('textarea').focus().trigger('autoresize').offset().top - 90
+        }, 500);
+
     });
 
     // Enable Modals
@@ -253,16 +250,16 @@ function loadTemplateEditor(callback = false) {
             //Build the Collapsible Template Editor
             $.each(templates, function(key, template){
                 if( key == "DEFAULT TEMPLATE"){
-                    templateTitle = '<div class="collapsible-header grey lighten-5" style="font-weight: bold;"><i class="material-icons">expand_less</i>' + key + '</div>';
+                    templateTitle = '<div class="collapsible-header grey lighten-5" data-issueFieldType="'+ template['issuetype-field'] +'" style="font-weight: bold;"><i class="material-icons">expand_less</i>' + key + '</div>';
                 } else {
-                    templateTitle = '<div class="collapsible-header grey lighten-5"><i class="material-icons">expand_less</i>' + key + '</div>';
+                    templateTitle = '<div class="collapsible-header grey lighten-5" data-issueFieldType="'+ template['issuetype-field'] +'"><i class="material-icons">expand_less</i>' + key + '</div>';
                 }
 
                 templateData =
                     '<div class="collapsible-body">' +
                         '<div class="input-field">' +
                             '<i class="material-icons prefix">mode_edit</i>' +
-                            '<textarea id="'+ key +'" class="materialize-textarea" name="' + key + '">' + template['text'] +'</textarea>' +
+                            '<textarea data-issueFieldType="'+ template['issuetype-field'] +'" class="materialize-textarea" name="' + key + '">' + template['text'] +'</textarea>' +
                         '</div>' +
                         '<div class="row">' +
                             '<div class="col s4 offset-s4">' +
@@ -277,7 +274,11 @@ function loadTemplateEditor(callback = false) {
                 $('#templateEditor').html($('#templateEditor').html() + '<li>' + templateTitle + templateData + '</li>');
 
                 // Add templateName to dropdown exclude list
-                dropdownExcludeList.push(key);
+                dropdownExcludeList.push(template['issuetype-field']);
+            });
+
+            $('textarea').each(function(index){
+                $(this).trigger('autoresize');
             });
         } else {
             $('#templateEditorTitle').text('No templates are currently loaded');
@@ -289,10 +290,12 @@ function loadTemplateEditor(callback = false) {
                 defaultTemplates = response.data;
 
                 // Remove default templates from dropdown list if already added
-                $.each(dropdownExcludeList, function(key, value){
-                    if (value in defaultTemplates) {
-                        delete defaultTemplates[value];
-                    }
+                $.each(dropdownExcludeList, function(index, issueTypeField){
+                    $.each(defaultTemplates, function(name, template){
+                        if (issueTypeField == template['issuetype-field']) {
+                            delete defaultTemplates[name];
+                        }
+                    });
                 });
 
                 if(!$.isEmptyObject(defaultTemplates)){
@@ -314,7 +317,7 @@ function loadTemplateEditor(callback = false) {
                 $('#addTemplateDropdown').empty();
                 $('#addDefaultDropdownButton').addClass('disabled');
                 $('#addDefaultDropdownButton').removeClass( "waves-effect waves-light" );
-                Materialize.toast('Error loading default templates please reload the extension', 1000, 'toastNotification');
+                Materialize.toast('Error loading default templates please reload the extension', 2000, 'toastNotification');
             }
         });
 
@@ -341,4 +344,18 @@ function sortObject(o) {
         sorted[a[key]] = o[a[key]];
     }
     return sorted;
+}
+
+function openCollapsible(issueFieldType){
+    // Click header to open
+    $('.collapsible-header[data-issuefieldtype="'+ issueFieldType +'"]').click();
+}
+
+function onInitialFocus(event) {
+    // If this is an anchor tag, remove focus
+    if (event.target.tagName == "A") {
+        event.target.blur();
+    }
+    // remove this event listener after it is triggered,
+    document.removeEventListener("focusin", onInitialFocus);
 }

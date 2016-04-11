@@ -1,5 +1,52 @@
 const StorageID = "rdbrck-JiraDescriptions-test2";
 
+$(document).on('click', "#description", function() {
+    var text = $(this).val();
+    var cursorStart = $(this).prop("selectionStart");
+    var cursorFinish = $(this).prop("selectionEnd");
+    var selectStart = null;
+    var selectEnd = null;
+
+    // Only proceed if this is a click. i.e. not a highlight
+    if (cursorStart == cursorFinish) {
+        // Look for opening tag "<DT>"
+        for(var i = cursorStart; i >= 4; i--){
+            if(i != 4){
+                if(text.slice((i-5),(i)) == "</TI>"){
+                    // Found closing tag before opening tag -> We are not withing any valid tags
+                    break;
+                }
+            }
+            if(text.slice((i-4),(i)) == "<TI>"){
+                // Found opening Tag!
+                selectStart = (i-4);
+                break;
+            }
+        }
+
+        if(selectStart){
+            // Look for closing tag "</DT>"
+            var end = (text.length - 5);
+            for(var i = cursorStart; i <= end; i++) {
+
+                if(text.slice((i), (i+4)) == "<TI>"){
+                    // Found another opening bracket before closing bracket. Exit search
+                    break;
+                }
+                if(text.slice((i), (i+5)) == "</TI>") {
+                    // Found closing Tag!
+                    selectEnd = (i+5);
+                    break;
+                }
+            }
+            if(selectEnd){
+                // Select all the text between the two tags
+                $(this)[0].setSelectionRange(selectStart, selectEnd);
+            }
+        }
+    }
+});
+
 function isDefaultDescription(value, callback) {
     chrome.storage.sync.get(StorageID, function(templates) {
         templates = templates[StorageID];
@@ -19,7 +66,7 @@ function isDefaultDescription(value, callback) {
                 }
             });
         }
-        
+
         callback(match);
     });
 }
@@ -50,6 +97,7 @@ function injectDescriptionTemplate(descriptionElement) {
         }
     });
 }
+
 
 function descriptionChangeEvent(changeEvent) {
     // the description field has been changed, turn the dirtyDialogMessage back on and remove the listener
