@@ -1,9 +1,4 @@
 <!doctype html>
-<!--
- This page is shown when the extension button is clicked, because the
- "browser_action" field in manifest.json contains the "default_popup" key with
- value "popup.html".
- -->
 <html style="min-width:400px; min-height: 400px">
 <head>
 
@@ -30,13 +25,29 @@
     <div class="navbar-fixed">
       <nav>
           <div class="nav-wrapper red darken-4">
-              <div class="brand-logo center"><p id="mainTitle"><a class="newTabLinks" href="https://rdbrck.com/"><img src="resources/images/icons/RB-icon-128-white.png" id="logoIcon"></a><a class="newTabLinks" href="https://github.com/rdbrck/jira-description-extension">REDBRICK JDTI</a></p><p id="subTitle">(Jira Description Template Injector)</p></div>
+              <div class="brand-logo center">
+                  <p id="mainTitle">
+                      <a class="newTabLinks" href="https://rdbrck.com/">
+                          <img src="resources/images/icons/RB-icon-128-white.png" id="logoIcon">
+                      </a>
+                      <a class="newTabLinks" href="https://github.com/rdbrck/jira-description-extension">
+                          REDBRICK JDTI
+                      </a>
+                  </p>
+                  <p id="subTitle">
+                      (Jira Description Template Injector)
+                  </p>
+              </div>
           </div>
       </nav>
     </div>
 
     <main>
-        <div id="help" class="row center-align"><a class="newTabLinks" href="https://github.com/rdbrck/jira-description-extension">Help?</a></div>
+        <div id="help" class="row center-align">
+            <a class="newTabLinks" href="https://github.com/rdbrck/jira-description-extension">
+                Help?
+            </a>
+        </div>
         <div class="container">
             <div class="section">
                 <div class="row">
@@ -169,7 +180,10 @@
                 <div class="row" id="addDefaultDropdownRow">
                     <div class="col s7">
                         <!-- Dropdown Trigger -->
-                        <a class='dropdown-button waves-effect waves-light btn red darken-4' id="addDefaultDropdownButton" href='#' data-activates='addDefaultDropdown'><i class="material-icons left">expand_more</i>Default Templates</a>
+                        <a class='dropdown-button waves-effect waves-light btn red darken-4' id="addDefaultDropdownButton" href='#' data-activates='addDefaultDropdown'>
+                            <i class="material-icons left">expand_more</i>
+                            Default Templates
+                        </a>
                     </div>
                     <div class="col s5 valign-wrapper">
                         <p>
