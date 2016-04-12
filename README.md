@@ -38,3 +38,6 @@ The JSON format is:
   * Useful to keep everyone's templates constant if used in an office environment.
 * Expand tag detection to include pre population of various options.
   * Example: ```</TI_date>``` would pre populate with 2016-04-11.
+
+### Images
+![No Templates Loaded](https://cloud.githubusercontent.com/assets/6020196/14467925/674f9994-0092-11e6-943c-5ee5bf629f3c.png "No Templates") ![Default Templates Loaded](https://cloud.githubusercontent.com/assets/6020196/14467923/673b9afc-0092-11e6-9606-283b0ac7a1b5.png "Default Templates") ![Template Editor](https://cloud.githubusercontent.com/assets/6020196/14467924/6749d450-0092-11e6-97cd-f31c9ede76ef.png "Template Editor") ![Add Template](https://cloud.githubusercontent.com/assets/6020196/14467922/671e9560-0092-11e6-9619-c6064e6b70a7.png "Add Template")
