@@ -27,6 +27,8 @@ The JSON format is:
 * Template Priotiries.
   * Set a default template (DEFAULT TEMPLATE) for all Issue Types.
   * Individual Issue Types will overide the default.
+* Templates are synced accross devices. 
+  * Configure once, use on all chrome devices that support extensions!
 * Reload default templates with one click.
 * Load templates from url (json file). Host a single json file and have everyone use the same templates.
 * Load templates from local file (json). Easily share templates with other users.
@@ -40,5 +42,4 @@ The JSON format is:
   * Example: ```</TI_date>``` would pre populate with 2016-04-11.
 
 ### Images
-![No Templates Loaded](https://cloud.githubusercontent.com/assets/6020196/14467925/674f9994-0092-11e6-943c-5ee5bf629f3c.png "No Templates") ![Default Templates Loaded](https://cloud.githubusercontent.com/assets/6020196/14467923/673b9afc-0092-11e6-9606-283b0ac7a1b5.png "Default Templates") ![Template Editor](https://cloud.githubusercontent.com/assets/6020196/14467924/6749d450-0092-11e6-97cd-f31c9ede76ef.png "Template Editor") ![Add Template](https://cloud.githubusercontent.com/assets/6020196/14467922/671e9560-0092-11e6-9619-c6064e6b70a7.png "Add Template")
-![Create Issue Window with auto Select](https://cloud.githubusercontent.com/assets/6020196/14468227/9a43633e-0093-11e6-913c-9afb16f32acd.png "JIRA Create Issue")
+![No Templates Loaded](https://cloud.githubusercontent.com/assets/6020196/14467925/674f9994-0092-11e6-943c-5ee5bf629f3c.png "No Templates") ![Default Templates Loaded](https://cloud.githubusercontent.com/assets/6020196/14467923/673b9afc-0092-11e6-9606-283b0ac7a1b5.png "Default Templates") ![Template Editor](https://cloud.githubusercontent.com/assets/6020196/14467924/6749d450-0092-11e6-97cd-f31c9ede76ef.png "Template Editor") ![Add Template](https://cloud.githubusercontent.com/assets/6020196/14467922/671e9560-0092-11e6-9619-c6064e6b70a7.png "Add Template") ![Create Issue Window with auto Select](https://cloud.githubusercontent.com/assets/6020196/14468227/9a43633e-0093-11e6-913c-9afb16f32acd.png "JIRA Create Issue")
