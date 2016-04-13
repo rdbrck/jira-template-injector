@@ -24,10 +24,10 @@ The JSON format is:
 ### Current Features:
 
 * Automatically select text between ```<TI>``` and ```<\TI>``` tags for quick template completion.
-* Template Priotiries.
+* Template Priorities.
   * Set a default template (DEFAULT TEMPLATE) for all Issue Types.
-  * Individual Issue Types will overide the default.
-* Templates are synced accross devices. 
+  * Individual Issue Types will override the default.
+* Templates are synced across devices.
   * Configure once, use on all chrome devices that support extensions!
 * Reload default templates with one click.
 * Load templates from url (json file). Host a single json file and have everyone use the same templates.
