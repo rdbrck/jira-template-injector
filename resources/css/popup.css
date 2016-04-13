@@ -11,8 +11,8 @@ main {
 }
 
 .section {
-    padding-top: 0rem;
-    padding-bottom: 0rem;
+    padding-top: 0;
+    padding-bottom: 0;
 }
 
 .row {
@@ -29,6 +29,7 @@ main {
     overflow: visible;
 }
 
+/*noinspection CssUnusedSymbol*/
 .toastNotification {
     opacity: 0.8 !important;
     min-height: 40px !important;
@@ -45,6 +46,7 @@ main {
     margin-top: 0;
 }
 
+/*noinspection CssUnusedSymbol,CssUnusedSymbol*/
 .input-field .prefix.active {
     color: #b71c1c;
 }
@@ -53,6 +55,7 @@ main {
     width: calc(100% - 4rem) !important;
 }
 
+/*noinspection CssUnusedSymbol*/
 input[type=text].valid {
     border-bottom: 1px solid #b71c1c !important;
     box-shadow: 0 1px 0 0 #b71c1c !important;
@@ -79,10 +82,7 @@ textarea.materialize-textarea:focus:not([readonly]) {
 }
 
 .modal-content {
-    padding-left: 0px !important;
-    padding-right: 0px !important;
-    padding-top: 5px !important;
-    padding-bottom: 5px !important;
+    padding: 5px 0 !important;
 }
 
 .dropdown-content {
@@ -98,11 +98,11 @@ textarea.materialize-textarea:focus:not([readonly]) {
 }
 
 .zpr {
-    padding-right: 0px !important;
+    padding-right: 0 !important;
 }
 
 .zpl {
-    padding-left: 0px !important;
+    padding-left: 0 !important;
 }
 
 .text-center{
@@ -119,33 +119,24 @@ textarea.materialize-textarea:focus:not([readonly]) {
 
 #subTitle {
     font-size: x-small;
-    margin-bottom: 0px;
-    margin-top: 0px;
+    margin-bottom: 0;
+    margin-top: 0;
 }
 
 #mainTitle {
-    margin-bottom: 0px;
+    margin-bottom: 0;
     margin-top: 3px;
     margin-left: -50px;
 }
 
 #jsonURLInput {
-    margin-bottom: 0px !important;
+    margin-bottom: 0 !important;
     border-bottom-color: #b71c1c !important;
 }
 
 #templateEditorTitle {
     padding-top: 5px;
     font-weight: bold;
-}
-#templateEditorSection {
-    padding-bottom: 1rem;
-}
-
-.templateEditorTextArea {
-    border: solid 1px #b71c1c !important;
-    height: 10rem;
-    background-color: white !important;
 }
 
 #addDefaultDropdownRow {
@@ -162,6 +153,7 @@ textarea.materialize-textarea:focus:not([readonly]) {
     margin-left: -20px;
 }
 
+/*noinspection CssUnusedSymbol*/
 #issueTypeField{
     width: 90%;
 }
@@ -175,7 +167,7 @@ textarea.materialize-textarea:focus:not([readonly]) {
 
 #help {
     height: 25px;
-    margin-bottom: 0px;
+    margin-bottom: 0;
     padding-top: 5px;
     padding-bottom: 5px;
 }
