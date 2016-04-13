@@ -23,7 +23,7 @@ The JSON format is:
 
 ### Current Features:
 
-* Automatically select text between ```<TI>``` and ```<\TI>``` tags for quick template completion.
+* Automatically select text between ```<TI>``` and ```</TI>``` tags for quick template completion.
 * Template Priotiries.
   * Set a default template (DEFAULT TEMPLATE) for all Issue Types.
   * Individual Issue Types will overide the default.
