@@ -38,6 +38,7 @@ The JSON format is:
 
 * Disable editing of templates based on options passed in from json.
   * Useful to keep everyone's templates consistent if used in an office/team environment.
+* Export Templates to JSON file. Easily share template JSON file.
 * Expand tag detection to include pre population of various options.
   * Example: ```</TI_date>``` would pre populate with 2016-04-11.
 
