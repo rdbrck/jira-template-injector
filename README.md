@@ -23,7 +23,7 @@ The JSON format is:
 
 ### Current Features:
 
-* Automatically select text between ```<TI>``` and ```<\TI>``` tags for quick template completion.
+* Automatically select text between ```<TI>``` and ```</TI>``` tags for quick template completion.
 * Template Priorities.
   * Set a default template (DEFAULT TEMPLATE) for all Issue Types.
   * Individual Issue Types will override the default.
@@ -38,6 +38,7 @@ The JSON format is:
 
 * Disable editing of templates based on options passed in from json.
   * Useful to keep everyone's templates consistent if used in an office/team environment.
+* Export Templates to JSON file. Easily share template JSON file.
 * Expand tag detection to include pre population of various options.
   * Example: ```</TI_date>``` would pre populate with 2016-04-11.
 
