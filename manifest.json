@@ -1,18 +1,21 @@
+/* Copyright 2016 TBD */
+/* https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE */
+
 {
     "manifest_version": 2,
-    "name": "JIRA Description Template Injector",
+    "name": "JIRA Template Injector",
     "version": "0.1.0",
     "description": "When creating a new issue in JIRA this extension will automatically populate the description field with a template relevant to the issue type.",
     "icons": {
-        "16": "resources/images/icons/RB-icon-16.png",
-        "48": "resources/images/icons/RB-icon-48.png",
-        "128": "resources/images/icons/RB-icon-128.png"
+        "16": "resources/images/icons/icon-red-16.png",
+        "48": "resources/images/icons/icon-red-48.png",
+        "128": "resources/images/icons/icon-red-128.png"
     },
     "browser_action": {
         "default_popup": "popup.html"
     },
     "background": {
-        "scripts": ["resources/js/jquery-2.2.2.min.js", "eventPage.js"],
+        "scripts": ["resources/js/jquery-2.2.3.js", "eventPage.js"],
         "persistent": false
     },
     "content_scripts": [
@@ -22,7 +25,7 @@
                 "https://redbrickmedia.atlassian.net/*"
             ],
             "js": [
-                "resources/js/jquery-2.2.2.min.js",
+                "resources/js/jquery-2.2.3.js",
                 "templateInjector.js"
             ],
             "run_at": "document_end"

@@ -1,3 +1,6 @@
+/* Copyright 2016 TBD */
+/* https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE */
+
 var StorageID = "rdbrck-JiraDescriptions-test2";
 
 function sortObject(o) {

@@ -1,4 +1,4 @@
-# Jira Description Template Injector
+# Jira Template Injector
 
 This extension automatically inserts a template of your choosing into the JIRA Create Issue Description field. The template injected is relative to the selected “Issue Type” within the Create Issue modal on JIRA.
 
