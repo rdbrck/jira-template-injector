@@ -17,9 +17,17 @@ The JSON format is:
         },
     	...
     },
-    "options": {}
+    "options": {
+        "limit": ["clear","delete","save"]
+    }
 }
 ```
+
+### HELP:
+
+* Why are some buttons disabled?
+    * By default no button are disabled, but if you were provided a url or a json file to load into the extension, it may have contained some options to limit the interface (see Limit interface options below)
+    * If you need to use one of the options disabled you can always "Reload the default templates" but be ware this will override any existing templates. It may be a good idea to export your current templates first so that you have a backup
 
 ### Current Features:
 
@@ -33,11 +41,20 @@ The JSON format is:
 * Load templates from url (json file). Host a single json file and have everyone use the same templates.
 * Load templates from local file (json). Easily share templates with other users.
 * Add/Remove/Edit individual templates.
+* Limit interface options (To keep templates consistent across users)
+    * Current limit options are:
+        * "all"         -> disable all interface actions except reload default
+        * "url"         -> disable loading of json from url
+        * "file"        -> disable loading of json from local file
+        * "clear"       -> disable clearing of all templates
+        * "delete"      -> disable deleting single template
+        * "save"        -> disable saving/updating single template
+        * "add"         -> disable add new template menu
+        * "add-custom"  -> disable adding custom template
+        * "add-default" -> disable adding default template
 
 ### Future Features:
 
-* Disable editing of templates based on options passed in from json.
-  * Useful to keep everyone's templates consistent if used in an office/team environment.
 * Export Templates to JSON file. Easily share template JSON file.
 * Expand tag detection to include pre population of various options.
   * Example: ```</TI_date>``` would pre populate with 2016-04-11.

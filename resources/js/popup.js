@@ -1,7 +1,11 @@
 /* Copyright 2016 TBD */
 /* https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE */
 
-var StorageID = "rdbrck-JiraDescriptions-test2";
+var StorageID = "Jira-Template-Injector";
+var disabledOptionToast =
+    '<span>Option is currently disabled. See ' +
+    '<a class="newTabLinks" href="https://github.com/rdbrck/jira-description-extension">Help?</a>' +
+    ' for details</span>';
 
 function sortObject(o) {
     var sorted = {}, key, a = [];
@@ -50,8 +54,8 @@ function loadTemplateEditor(callback = false) {
         $('#addDefaultDropdown').empty();
 
 
-        if (templates[StorageID]) {
-            templates = templates[StorageID];
+        if (templates[StorageID].templates) {
+            templates = templates[StorageID].templates;
 
             $('#templateEditorTitle').text('Templates:');
 
@@ -100,7 +104,7 @@ function loadTemplateEditor(callback = false) {
         // Populate the add default template dropdown - excluding any templates already loaded
         chrome.runtime.sendMessage({JDTIfunction: "fetchDefault"}, function (response) {
             if (response.status === "success") {
-                var defaultTemplates = response.data;
+                var defaultTemplates = response.data.templates;
 
                 // Remove default templates from dropdown list if already added
                 $.each(dropdownExcludeList, function (index, issueTypeField) {
@@ -112,24 +116,88 @@ function loadTemplateEditor(callback = false) {
                 });
 
                 if (!$.isEmptyObject(defaultTemplates)) {
-                    $('#addDefaultDropdownButton').removeClass('disabled').addClass( "waves-effect waves-light" );
+                    $('#addDefaultDropdownButton').removeClass('emptyDropdown').addClass( "waves-effect waves-light" );
 
                     $.each(defaultTemplates, function(key, template){
                         var dropdownData = '<li><a class="dropdownOption" href="#!" data-issueFieldType="'+ template['issuetype-field'] +'" data-text="'+ template.text +'">'+ key +'</a></li>';
                         $('#addDefaultDropdown').append(dropdownData);
                     });
                 } else {
-                    $('#addDefaultDropdownButton').addClass('disabled').removeClass( "waves-effect waves-light" );
+                    $('#addDefaultDropdownButton').addClass('emptyDropdown').removeClass( "waves-effect waves-light" );
                 }
 
                 // Reload the dropdown
                 $('.dropdown-button').dropdown({constrain_width: false});
             } else {
                 $('#addTemplateDropdown').empty();
-                $('#addDefaultDropdownButton').addClass('disabled').removeClass( "waves-effect waves-light" );
+                $('#addDefaultDropdownButton').addClass('emptyDropdown').removeClass( "waves-effect waves-light" );
                 Materialize.toast('Error loading default templates please reload the extension', 2000, 'toastNotification');
             }
         });
+
+        limitAccess();
+
+        if (callback) {
+            callback();
+        }
+    });
+}
+
+function limitAccess(callback = false) {
+    // Limit interface actions from parameters passed in through json
+    chrome.storage.sync.get(StorageID, function (data) {
+
+        if (data[StorageID].options.limit) {
+            var limits = data[StorageID].options.limit;
+            console.log(limits);
+            $.each(limits, function(key, limit){
+                switch (limit) {
+                    case "all":
+                        $('#download').addClass('disabled');
+                        $('#fileSelectorButton').addClass('disabled');
+                        $("input[title='filePath']").prop('disabled', true);
+                        $('#upload').addClass('disabled');
+                        $('#clear').addClass('disabled');
+                        $('.removeSingleTemplate').addClass('disabled');
+                        $('.updateSingleTemplate').addClass('disabled');
+                        $('#add').addClass('disabled');
+                        $('#addCustomTemplate').addClass('disabled');
+                        $("#customTemplateName").prop('disabled', true);
+                        $("#customTemplateIssueTypeField").prop('disabled', true);
+                        $('#addDefaultDropdownButton').addClass('disabled');
+                        break;
+                    case "url":
+                        $('#download').addClass('disabled');
+                        break;
+                    case "file":
+                        $('#fileSelectorButton').addClass('disabled');
+                        $("input[title='filePath']").prop('disabled', true);
+                        $('#upload').addClass('disabled');
+                        break;
+                    case "clear":
+                        $('#clear').addClass('disabled');
+                        break;
+                    case "delete":
+                        $('.removeSingleTemplate').addClass('disabled');
+                        break;
+                    case "save":
+                        $('.updateSingleTemplate').addClass('disabled');
+                        break;
+                    case "add":
+                        $('#add').addClass('disabled');
+                        break;
+                    case "add-custom":
+                        $('#addCustomTemplate').addClass('disabled');
+                        $("#customTemplateName").prop('disabled', true);
+                        $("#customTemplateIssueTypeField").prop('disabled', true);
+                        break;
+                    case "add-default":
+                        $('#addDefaultDropdownButton').addClass('disabled');
+                        break;
+
+                }
+            });
+        }
 
         if (callback) {
             callback();
@@ -139,23 +207,16 @@ function loadTemplateEditor(callback = false) {
 
 $(document).ready(function () {
 
-    //noinspection JSLint
     document.addEventListener("focusin", onInitialFocus);
-    //noinspection JSLint
     loadTemplateEditor();
 
     // Click Handlers
-    $('.newTabLinks').click(function () {
-        chrome.tabs.create({url: $(this).attr('href')});
-        return false;
-    });
-
     $('#reset').click(function () {
         chrome.runtime.sendMessage({
             JDTIfunction: "reset"
         }, function (response) {
             if (response.status === "success") {
-                loadTemplateEditor();
+                location.reload();
                 Materialize.toast('Default templates successfully loaded', 2000, 'toastNotification');
             } else {
                 $('#templateEditor').empty();
@@ -169,146 +230,190 @@ $(document).ready(function () {
     });
 
     $('#upload').click(function () {
-        if (!$('#fileSelector')[0].files[0]) {
-            Materialize.toast('No file selected. Please select a file and try again', 2000, 'toastNotification');
-        } else {
-            //noinspection JSLint
-            var reader = new FileReader();
-            // Read file into memory
-            reader.readAsText($('input#fileSelector')[0].files[0]);
-            // Handle success and errors
-            reader.onerror = function () {
-                Materialize.toast('Error reading file. Please try again', 2000, 'toastNotification');
-            };
-            reader.onload = function () {
-                var data = $.parseJSON(reader.result);
-                chrome.runtime.sendMessage({
-                    JDTIfunction: "upload",
-                    fileContents: data
-                }, function (response) {
-                    if (response.status === "success") {
-                        loadTemplateEditor();
-                        Materialize.toast('Templates successfully loaded from file', 2000, 'toastNotification');
-                    } else {
-                        if (response.message) {
-                            Materialize.toast(response.message, 2000, 'toastNotification');
+        if (!$(this).hasClass('disabled')) {
+            if (!$('#fileSelector')[0].files[0]) {
+                Materialize.toast('No file selected. Please select a file and try again', 2000, 'toastNotification');
+            } else {
+                //noinspection JSLint
+                var reader = new FileReader();
+                // Read file into memory
+                reader.readAsText($('input#fileSelector')[0].files[0]);
+                // Handle success and errors
+                reader.onerror = function () {
+                    Materialize.toast('Error reading file. Please try again', 2000, 'toastNotification');
+                };
+                reader.onload = function () {
+                    var data = $.parseJSON(reader.result);
+                    chrome.runtime.sendMessage({
+                        JDTIfunction: "upload",
+                        fileContents: data
+                    }, function (response) {
+                        if (response.status === "success") {
+                            location.reload();
+                            Materialize.toast('Templates successfully loaded from file', 2000, 'toastNotification');
                         } else {
-                            Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                            if (response.message) {
+                                Materialize.toast(response.message, 2000, 'toastNotification');
+                            } else {
+                                Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                            }
                         }
-                    }
-                });
-            };
+                    });
+                };
+            }
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
         }
     });
 
     $('#download').click(function () {
-        chrome.runtime.sendMessage({
-            JDTIfunction: "download",
-            "url": $('#jsonURLInput').val()
-        }, function (response) {
-            if (response.status === "success") {
-                loadTemplateEditor();
-                Materialize.toast('Templates successfully loaded from URL', 2000, 'toastNotification');
-            } else {
-                if (response.message) {
-                    Materialize.toast(response.message, 2000, 'toastNotification');
+        if (!$(this).hasClass('disabled')) {
+            chrome.runtime.sendMessage({
+                JDTIfunction: "download",
+                "url": $('#jsonURLInput').val()
+            }, function (response) {
+                if (response.status === "success") {
+                    location.reload();
+                    Materialize.toast('Templates successfully loaded from URL', 2000, 'toastNotification');
                 } else {
-                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
-                }
-            }
-        });
-    });
-
-    $('#delete').click(function () {
-        chrome.runtime.sendMessage({
-            JDTIfunction: "clear"
-        }, function (response) {
-            if (response.status === "success") {
-                loadTemplateEditor();
-                Materialize.toast('All templates deleted', 2000, 'toastNotification');
-            } else {
-                $('#templateEditor').empty();
-                if (response.message) {
-                    Materialize.toast(response.message, 2000, 'toastNotification');
-                } else {
-                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
-                }
-            }
-        });
-    });
-
-    $('#addCustomTemplate').click(function () {
-        var templateName = $('#customTemplateName').val();
-        var issueTypeField = $('#customTemplateIssueTypeField').val();
-
-        chrome.runtime.sendMessage({
-            JDTIfunction: "add",
-            templateName: templateName,
-            issueTypeField: issueTypeField,
-            text:""
-        }, function (response) {
-            $('#addTemplateModal').closeModal();
-            if (response.status === "success") {
-                loadTemplateEditor(function () {
-                    openCollapsible(issueTypeField);
-                });
-                Materialize.toast('Template successfully added', 2000, 'toastNotification');
-            } else {
-                loadTemplateEditor(function () {
                     if (response.message) {
                         Materialize.toast(response.message, 2000, 'toastNotification');
-                        if (response.data === 'open') {
-                            openCollapsible(issueTypeField);
-                        }
                     } else {
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
-                });
-            }
-        });
+                }
+            });
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
+    });
+
+    $('#clear').click(function () {
+        if (!$(this).hasClass('disabled')) {
+            chrome.runtime.sendMessage({
+                JDTIfunction: "clear"
+            }, function (response) {
+                if (response.status === "success") {
+                    location.reload();
+                    Materialize.toast('All templates deleted', 2000, 'toastNotification');
+                } else {
+                    $('#templateEditor').empty();
+                    if (response.message) {
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                    } else {
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    }
+                }
+            });
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
+    });
+
+    $('#add').click(function () {
+        event.preventDefault();
+        if (!$(this).hasClass('disabled')) {
+            $('#addTemplateModal').openModal();
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
+    });
+
+    $('#addCustomTemplate').click(function () {
+        if (!$(this).hasClass('disabled')) {
+            var templateName = $('#customTemplateName').val();
+            var issueTypeField = $('#customTemplateIssueTypeField').val();
+
+            chrome.runtime.sendMessage({
+                JDTIfunction: "add",
+                templateName: templateName,
+                issueTypeField: issueTypeField,
+                text:""
+            }, function (response) {
+                $('#addTemplateModal').closeModal();
+                if (response.status === "success") {
+                    loadTemplateEditor(function () {
+                        openCollapsible(issueTypeField);
+                    });
+                    Materialize.toast('Template successfully added', 2000, 'toastNotification');
+                } else {
+                    loadTemplateEditor(function () {
+                        if (response.message) {
+                            Materialize.toast(response.message, 2000, 'toastNotification');
+                            if (response.data === 'open') {
+                                openCollapsible(issueTypeField);
+                            }
+                        } else {
+                            Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                        }
+                    });
+                }
+            });
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
     });
 
     $('#addDefaultDropdownButton').click(function () {
-        if ($( "#addDefaultDropdownButton" ).hasClass( "disabled" )) {
+        if ($( "#addDefaultDropdownButton" ).hasClass( "emptyDropdown" )) {
             Materialize.toast('All default templates have already been added', 2000, 'toastNotification');
+        } else if ($( "#addDefaultDropdownButton" ).hasClass( "disabled" )) {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        } else {
+            // Dropdown is not initialized on load to support disabling through json options
+            // If it's not disabled initialize it on click
+            var attr = $(this).attr('data-activates');
+            if (typeof attr == typeof undefined || attr == false) {
+                $(this).attr('data-activates', 'addDefaultDropdown');
+                $('.dropdown-button').dropdown({constrain_width: false});
+                $(this).click();
+            }
         }
     });
 
     // Because the template editing section is dynamically build, need to monitor document rather then the classes directly
     $(document).on('click', "a.removeSingleTemplate", function () {
-        chrome.runtime.sendMessage({
-            JDTIfunction: "delete",
-            templateName: $(this).attr("id")
-        }, function (response) {
-            if (response.status === "success") {
-                loadTemplateEditor();
-                Materialize.toast('Template successfully removed', 2000, 'toastNotification');
-            } else {
-                if (response.message) {
-                    Materialize.toast(response.message, 2000, 'toastNotification');
+        if (!$(this).hasClass('disabled')) {
+            chrome.runtime.sendMessage({
+                JDTIfunction: "delete",
+                templateName: $(this).attr("id")
+            }, function (response) {
+                if (response.status === "success") {
+                    loadTemplateEditor();
+                    Materialize.toast('Template successfully removed', 2000, 'toastNotification');
                 } else {
-                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    if (response.message) {
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                    } else {
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
     });
 
     $(document).on('click', "a.updateSingleTemplate", function () {
-        chrome.runtime.sendMessage({
-            JDTIfunction: "save",
-            templateName: $(this).attr("id"),
-            templateText: $('textarea[name="'+ $(this).attr("id") +'"]').val()
-        }, function (response) {
-            if (response.status === "success") {
-                Materialize.toast('Template successfully updated', 2000, 'toastNotification');
-            } else {
-                if(response.message){
-                    Materialize.toast(response.message, 2000, 'toastNotification');
+        if (!$(this).hasClass('disabled')) {
+            chrome.runtime.sendMessage({
+                JDTIfunction: "save",
+                templateName: $(this).attr("id"),
+                templateText: $('textarea[name="'+ $(this).attr("id") +'"]').val()
+            }, function (response) {
+                if (response.status === "success") {
+                    Materialize.toast('Template successfully updated', 2000, 'toastNotification');
                 } else {
-                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    if(response.message){
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                    } else {
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
     });
 
     $(document).on('click', ".dropdownOption", function() {
@@ -351,8 +456,12 @@ $(document).ready(function () {
 
     });
 
-    // Enable Modals
-    $('.modal-trigger').leanModal();
+    // Force links to open in new tab
+    $(document).on('click', ".newTabLinks",function () {
+        console.log("Hello!!!");
+        chrome.tabs.create({url: $(this).attr('href')});
+        return false;
+    });
 
     // Onchange Handlers
     $('#fileSelector').change(function () {

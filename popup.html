@@ -92,7 +92,7 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                     <div class="col s7">
                         <form action="#">
                             <div class="file-field input-field">
-                                <div class="btn btn-Small red darken-4">
+                                <div id="fileSelectorButton" class="btn btn-Small red darken-4">
                                     <span>File</span>
                                     <input type="file" id="fileSelector">
                                 </div>
@@ -119,7 +119,7 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                     </div>
                     <div class="col s4">
                         <div class="right-align">
-                            <a id="delete" class="btn-floating btn-Medium waves-effect waves-light red darken-4 tooltipped" data-position="left" data-delay="50" data-tooltip="Delete all templates">
+                            <a id="clear" class="btn-floating btn-Medium waves-effect waves-light red darken-4 tooltipped" data-position="left" data-delay="50" data-tooltip="Delete all templates">
                                 <i class="material-icons">delete</i>
                             </a>
                         </div>
@@ -134,7 +134,7 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                 <div class="col s4">
                     <div class="right-align">
                         <!-- Modal Trigger -->
-                        <a id="add" class="btn-floating btn-Medium waves-effect waves-light red darken-4 tooltipped modal-trigger" href="#addTemplateModal" data-position="left" data-delay="50" data-tooltip="Add a Template">
+                        <a id="add" class="btn-floating btn-Medium waves-effect waves-light red darken-4 tooltipped modal-trigger" data-position="left" data-delay="50" data-tooltip="Add a Template">
                             <i class="material-icons">add</i>
                         </a>
                     </div>
@@ -182,7 +182,7 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                 <div class="row" id="addDefaultDropdownRow">
                     <div class="col s7">
                         <!-- Dropdown Trigger -->
-                        <a class='dropdown-button waves-effect waves-light btn red darken-4' id="addDefaultDropdownButton" href='#' data-activates='addDefaultDropdown'>
+                        <a class='dropdown-button waves-effect waves-light btn red darken-4' id="addDefaultDropdownButton" href='#'>
                             <i class="material-icons left">expand_more</i>
                             Default Templates
                         </a>
@@ -190,7 +190,7 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                     <div class="col s5 valign-wrapper">
                         <p>
                             <input type="checkbox" class="filled-in disabled red darken-4" id="loadDefault" checked="checked" />
-                            <label for="loadDefault">Load default</label>
+                            <label for="loadDefault">Load default text</label>
                         </p>
                     </div>
                 </div>
