@@ -115,6 +115,23 @@ textarea.materialize-textarea:focus:not([readonly]) {
 .addTemplateLabel {
     padding-left: 10px;
 }
+
+.dropdown-button.emptyDropdown {
+    background-color: #DFDFDF !important;
+    box-shadow: none;
+    color: #9F9F9F !important;
+    cursor: default;
+}
+
+.dropdown-button.emptyDropdown * {
+    pointer-events: none;
+}
+
+.dropdown-button.emptyDropdown:hover {
+    background-color: #DFDFDF !important;
+    color: #9F9F9F !important;
+}
+
 [type="checkbox"].filled-in:checked+label:after {
     border: 2px solid #b71c1c !important;
     background-color: #b71c1c !important;

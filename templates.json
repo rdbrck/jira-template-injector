@@ -9,6 +9,6 @@
       "EPIC TEMPLATE":{"issuetype-field":"Epic", "text":"*Epic*\nAs a <TI>type of user/persona</TI>, I want <TI>to perform some task</TI>, so that I can <TI>achieve some goal/benefit/value</TI>.\n\n*Details*\n<TI>Enter any other details such as examples, use cases, etc. that will help with developing the feature. More detail is better.</TI>"}
    },
    "options":{
-
+     "limit": []
    }
 }

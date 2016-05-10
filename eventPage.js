@@ -1,11 +1,13 @@
 /* Copyright 2016 TBD */
 /* https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE */
 
-var StorageID = "rdbrck-JiraDescriptions-test2";
+var StorageID = "Jira-Template-Injector";
 
 function saveTemplates(templateJSON, callback) {
     var data = {};
     data[StorageID] = templateJSON;
+    console.log("here");
+    console.log(data);
     chrome.storage.sync.set(data, function () {
         if (chrome.runtime.lastError) {
             callback(false, "Error saving data. Please try again");
@@ -38,9 +40,6 @@ function clearStorage(callback) {
 function fetchDefaultTemplates(callback) {
     var url = chrome.extension.getURL('templates.json');
     fetchJSON(url, function (status, message, data) {
-        if (data.templates) {
-            data = data.templates;
-        }
         callback(status, message, data);
     });
 }
@@ -58,7 +57,7 @@ function setDefaultTemplates(callback) {
 function downloadJSONData(url, callback) {
     fetchJSON(url, function (status, message, data) {
         if (status) {
-            saveTemplates(data.templates, callback);
+            saveTemplates(data, callback);
         } else {
             callback(false, message);
         }
@@ -69,7 +68,7 @@ function removeTemplate(templateName, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         if (templates[StorageID]) {
             var templateJSON = templates[StorageID];
-            delete templateJSON[templateName];
+            delete templateJSON.templates[templateName];
             saveTemplates(templateJSON, callback);
         } else {
             callback(false, "No data available to remove");
@@ -81,7 +80,7 @@ function updateTemplate(templateName, templateText, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         if (templates[StorageID]) {
             var templateJSON = templates[StorageID];
-            templateJSON[templateName].text = templateText;
+            templateJSON.templates[templateName].text = templateText;
             saveTemplates(templateJSON, callback);
         } else {
             callback(false, "No data available to update. Please recreate the template");
@@ -98,7 +97,7 @@ function addTemplate(templateName, issueTypeField, text, callback) {
             templateJSON = templates[StorageID];
         }
 
-        $.each(templateJSON, function (name, template) {
+        $.each(templateJSON.templates, function (name, template) {
             if (issueTypeField === template['issuetype-field']) {
                 save = false;
                 callback(false, "Template with same issuetype-field already exists", "open");
@@ -106,7 +105,7 @@ function addTemplate(templateName, issueTypeField, text, callback) {
         });
 
         if (save) {
-            templateJSON[templateName] = {"issuetype-field": issueTypeField, "text": text};
+            templateJSON.templates[templateName] = {"issuetype-field": issueTypeField, "text": text};
             saveTemplates(templateJSON, callback);
         }
     });
