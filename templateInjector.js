@@ -1,7 +1,7 @@
 /* Copyright 2016 TBD */
 /* https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE */
 
-var StorageID = "rdbrck-JiraDescriptions-test2";
+var StorageID = "Jira-Template-Injector";
 
 $(document).on('click', "#description", function () {
     var text = $(this).val(),
@@ -53,7 +53,7 @@ $(document).on('click', "#description", function () {
 
 function isDefaultDescription(value, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
-        templates = templates[StorageID];
+        templates = templates[StorageID].templates;
         var match = false;
 
         // Check if it's empty
@@ -79,11 +79,11 @@ function isDefaultDescription(value, callback) {
 function injectDescriptionTemplate(descriptionElement) {
     // Each issue type can have its own template
     chrome.storage.sync.get(StorageID, function (templates) {
-        templates = templates[StorageID];
+        templates = templates[StorageID].templates;
 
         // Load default template if set. Individual Templates will over ride it.
         var templateText = "",
-            issueTypeElement = document.getElementById('issuetype-field');
+            issueTypeElement = $('#issuetype-field');
 
         if (templates['DEFAULT TEMPLATE']) {
             templateText = templates['DEFAULT TEMPLATE'].text;
@@ -91,7 +91,7 @@ function injectDescriptionTemplate(descriptionElement) {
 
         if (issueTypeElement !== null) {
             $.each(templates, function (key, template) {
-                if (issueTypeElement.value === template['issuetype-field']) {
+                if (issueTypeElement.val() === template['issuetype-field']) {
                     templateText = template.text;
                     return false;
                 }
@@ -127,9 +127,32 @@ function observeDocumentBody(mutation) {
     }
 }
 
+// Inject confirmation Proxy into the DOM
+var confirmProxy = '(' +
+    function(proxied) {
+        window.confirm = function() {
+            // Check for 'ajs-dirty-warning-exempt' class on description textArea.
+            // Jira sometimes doesn't recognise it, so we need to proxy the confirmation alert.
+            // *****************************************************************
+            // Currently no way to know if any of the other fields were changed.
+            // *****************************************************************
+            if ($('#description').hasClass('ajs-dirty-warning-exempt')) {
+                // Don't show alert
+                return true;
+            } else {
+                // continue as normal
+                return proxied.apply(this, arguments);
+            }
+        };
+    } + ')(window.confirm);';
+
+var script = document.createElement('script');
+script.textContent = confirmProxy;
+(document.head||document.documentElement).appendChild(script);
+script.parentNode.removeChild(script);
+
+// Create observer to monitor for description field
 var observer = new MutationObserver(function (mutations) {
     mutations.forEach(observeDocumentBody);
 });
-
-//noinspection JSCheckFunctionSignatures
 observer.observe(document.body, {subtree: true, attributes: true, attributeFilter: ["resolved"]});

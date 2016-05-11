@@ -52,10 +52,10 @@ The JSON format is:
         * "add"         -> disable add new template menu
         * "add-custom"  -> disable adding custom template
         * "add-default" -> disable adding default template
+* Export Templates to JSON file. Easily share template JSON file.
 
 ### Future Features:
 
-* Export Templates to JSON file. Easily share template JSON file.
 * Expand tag detection to include pre population of various options.
   * Example: ```</TI_date>``` would pre populate with 2016-04-11.
 

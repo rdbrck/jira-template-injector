@@ -2,12 +2,11 @@
 /* https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE */
 
 var StorageID = "Jira-Template-Injector";
+var emptyData = {"options": {"limit": []},"templates": {}}
 
 function saveTemplates(templateJSON, callback) {
     var data = {};
     data[StorageID] = templateJSON;
-    console.log("here");
-    console.log(data);
     chrome.storage.sync.set(data, function () {
         if (chrome.runtime.lastError) {
             callback(false, "Error saving data. Please try again");
@@ -27,11 +26,22 @@ function fetchJSON(url, callback) {
         });
 }
 
+function getData(callback) {
+    chrome.storage.sync.get(StorageID, function (templates) {
+        if (templates[StorageID]) {
+            callback(true, "", templates[StorageID]);
+        } else {
+            callback(false, "No data is currently loaded");
+        }
+    });
+}
+
 function clearStorage(callback) {
     chrome.storage.sync.clear(function () {
         if (chrome.runtime.lastError) {
             callback(false, "Error clearing data. Please try again");
         } else {
+            saveTemplates(emptyData, callback);
             callback(true);
         }
     });
@@ -74,8 +84,8 @@ function removeTemplate(templateName, callback) {
             callback(false, "No data available to remove");
         }
     });
-
 }
+
 function updateTemplate(templateName, templateText, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         if (templates[StorageID]) {
@@ -189,6 +199,12 @@ chrome.runtime.onMessage.addListener(
                 break;
             case "add":
                 addTemplate(request.templateName, request.issueTypeField, request.text, function(status, message = null, data = null){
+                    var response = responseMessage(status, message, data);
+                    sendResponse(response);
+                });
+                break;
+            case "getData":
+                getData(function (status, message = null, data = null) {
                     var response = responseMessage(status, message, data);
                     sendResponse(response);
                 });

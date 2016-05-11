@@ -85,7 +85,7 @@ textarea.materialize-textarea:focus:not([readonly]) {
 }
 
 .modal-content {
-    padding: 5px 0 !important;
+    padding: 5px !important;
 }
 
 .dropdown-content {
@@ -113,7 +113,7 @@ textarea.materialize-textarea:focus:not([readonly]) {
 }
 
 .addTemplateLabel {
-    padding-left: 10px;
+    padding-left: 0px;
 }
 
 .dropdown-button.emptyDropdown {
@@ -151,7 +151,6 @@ textarea.materialize-textarea:focus:not([readonly]) {
 
 #jsonURLInput {
     margin-bottom: 0 !important;
-    border-bottom-color: #b71c1c !important;
 }
 
 #templateEditorTitle {
