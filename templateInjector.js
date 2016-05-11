@@ -127,30 +127,6 @@ function observeDocumentBody(mutation) {
     }
 }
 
-// Inject confirmation Proxy into the DOM
-var confirmProxy = '(' +
-    function(proxied) {
-        window.confirm = function() {
-            // Check for 'ajs-dirty-warning-exempt' class on description textArea.
-            // Jira sometimes doesn't recognise it, so we need to proxy the confirmation alert.
-            // *****************************************************************
-            // Currently no way to know if any of the other fields were changed.
-            // *****************************************************************
-            if ($('#description').hasClass('ajs-dirty-warning-exempt')) {
-                // Don't show alert
-                return true;
-            } else {
-                // continue as normal
-                return proxied.apply(this, arguments);
-            }
-        };
-    } + ')(window.confirm);';
-
-var script = document.createElement('script');
-script.textContent = confirmProxy;
-(document.head||document.documentElement).appendChild(script);
-script.parentNode.removeChild(script);
-
 // Create observer to monitor for description field
 var observer = new MutationObserver(function (mutations) {
     mutations.forEach(observeDocumentBody);
