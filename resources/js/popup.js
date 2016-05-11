@@ -149,10 +149,10 @@ function limitAccess(callback = false) {
 
         if (data[StorageID].options.limit) {
             var limits = data[StorageID].options.limit;
-            console.log(limits);
             $.each(limits, function(key, limit){
                 switch (limit) {
                     case "all":
+                        $("#jsonURLInput").prop('disabled', true);
                         $('#download').addClass('disabled');
                         $('#fileSelectorButton').addClass('disabled');
                         $("input[title='filePath']").prop('disabled', true);
@@ -165,8 +165,11 @@ function limitAccess(callback = false) {
                         $("#customTemplateName").prop('disabled', true);
                         $("#customTemplateIssueTypeField").prop('disabled', true);
                         $('#addDefaultDropdownButton').addClass('disabled');
+                        return false;
                         break;
                     case "url":
+                        console.log("In the url!!");
+                        $("#jsonURLInput").prop('disabled', true);
                         $('#download').addClass('disabled');
                         break;
                     case "file":
@@ -371,6 +374,26 @@ $(document).ready(function () {
         }
     });
 
+    $('#export').click(function () {
+        chrome.runtime.sendMessage({
+            JDTIfunction: "getData"
+        }, function (response) {
+            if (response.status === "success") {
+                var data = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(response.data, undefined, 4));
+                chrome.downloads.download({
+                    url: data,
+                    filename: 'templates.json'
+                });
+            } else {
+                if (response.message) {
+                    Materialize.toast(response.message, 2000, 'toastNotification');
+                } else {
+                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                }
+            }
+        });
+    });
+
     // Because the template editing section is dynamically build, need to monitor document rather then the classes directly
     $(document).on('click', "a.removeSingleTemplate", function () {
         if (!$(this).hasClass('disabled')) {
@@ -458,7 +481,6 @@ $(document).ready(function () {
 
     // Force links to open in new tab
     $(document).on('click', ".newTabLinks",function () {
-        console.log("Hello!!!");
         chrome.tabs.create({url: $(this).attr('href')});
         return false;
     });

@@ -33,6 +33,7 @@
     ],
     "permissions":[
         "storage",
+        "downloads",
         "*://*/*.json",
         "file:///*.json"
     ]
