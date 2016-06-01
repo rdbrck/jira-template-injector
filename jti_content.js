@@ -51,6 +51,19 @@ $(document).on('click', "#description", function () {
     }
 });
 
+// On submit send analytics to Desk Metrics
+$(document).on('click', "#create-issue-submit", function () {
+    chrome.runtime.sendMessage({type: 'analytics', name: 'issue_type', body:
+        {
+            "type": $('#issuetype-field').val(),
+            "version": chrome.runtime.getManifest().version,
+            "ip_address": "${dm.meta:request_ip}",
+            "geo": "${dm.meta:request_geo}",
+            "ua": "${dm.ua:user_agent}"
+        }
+    });
+});
+
 function isDefaultDescription(value, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;
@@ -105,6 +118,8 @@ function injectDescriptionTemplate(descriptionElement) {
 
 
 function descriptionChangeEvent(changeEvent) {
+    console.log("Hello");
+    console.log(changeEvent);
     // the description field has been changed, turn the dirtyDialogMessage back on and remove the listener
     changeEvent.target.className = changeEvent.target.className.replace(" ajs-dirty-warning-exempt", "");
     changeEvent.target.removeEventListener("change", descriptionChangeEvent);

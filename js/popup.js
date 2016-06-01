@@ -208,24 +208,70 @@ function limitAccess(callback = false) {
     });
 }
 
+function dm_ui_click(element){
+    chrome.runtime.sendMessage({
+        type: 'analytics', name: 'ui_click', body: {
+            "element": element,
+            "ip_address": "${dm.meta:request_ip}",
+            "geo": "${dm.meta:request_geo}",
+            "ua": "${dm.ua:user_agent}"
+        }
+    });
+}
+
+function dm_template_update(action){
+    chrome.runtime.sendMessage({
+        type: 'analytics', name: 'template_update', body: {
+            "action": action,
+            "ip_address": "${dm.meta:request_ip}",
+            "geo": "${dm.meta:request_geo}",
+            "ua": "${dm.ua:user_agent}"
+        }
+    });
+}
+
+function dm_error(action, message){
+    chrome.runtime.sendMessage({
+        type: 'analytics', name: 'error', body: {
+            "action" : action,
+            "message": message,
+            "ip_address": "${dm.meta:request_ip}",
+            "geo": "${dm.meta:request_geo}",
+            "ua": "${dm.ua:user_agent}"
+        }
+    });
+}
+
 $(document).ready(function () {
+
+    chrome.runtime.sendMessage({
+        type: 'analytics', name: 'launch', body: {
+            "ip_address": "${dm.meta:request_ip}",
+            "geo": "${dm.meta:request_geo}",
+            "ua": "${dm.ua:user_agent}"
+        }
+    });
 
     document.addEventListener("focusin", onInitialFocus);
     loadTemplateEditor();
 
     // Click Handlers
     $('#reset').click(function () {
+        dm_ui_click("reset");
         chrome.runtime.sendMessage({
             JDTIfunction: "reset"
         }, function (response) {
             if (response.status === "success") {
                 location.reload();
                 Materialize.toast('Default templates successfully loaded', 2000, 'toastNotification');
+                dm_template_update("reset");
             } else {
                 $('#templateEditor').empty();
                 if (response.message) {
+                    dm_error("reset", response.message);
                     Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
+                    dm_error("reset", "generic");
                     Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
@@ -234,6 +280,7 @@ $(document).ready(function () {
 
     $('#upload').click(function () {
         if (!$(this).hasClass('disabled')) {
+            dm_ui_click("upload");
             if (!$('#fileSelector')[0].files[0]) {
                 Materialize.toast('No file selected. Please select a file and try again', 2000, 'toastNotification');
             } else {
@@ -243,6 +290,7 @@ $(document).ready(function () {
                 reader.readAsText($('input#fileSelector')[0].files[0]);
                 // Handle success and errors
                 reader.onerror = function () {
+                    dm_error("upload", "Error reading file");
                     Materialize.toast('Error reading file. Please try again', 2000, 'toastNotification');
                 };
                 reader.onload = function () {
@@ -254,10 +302,13 @@ $(document).ready(function () {
                         if (response.status === "success") {
                             location.reload();
                             Materialize.toast('Templates successfully loaded from file', 2000, 'toastNotification');
+                            dm_template_update("upload");
                         } else {
                             if (response.message) {
+                                dm_error("reset", response.message);
                                 Materialize.toast(response.message, 2000, 'toastNotification');
                             } else {
+                                dm_error("reset", "generic");
                                 Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                             }
                         }
@@ -271,6 +322,7 @@ $(document).ready(function () {
 
     $('#download').click(function () {
         if (!$(this).hasClass('disabled')) {
+            dm_ui_click("download");
             chrome.runtime.sendMessage({
                 JDTIfunction: "download",
                 "url": $('#jsonURLInput').val()
@@ -278,10 +330,13 @@ $(document).ready(function () {
                 if (response.status === "success") {
                     location.reload();
                     Materialize.toast('Templates successfully loaded from URL', 2000, 'toastNotification');
+                    dm_template_update("download");
                 } else {
                     if (response.message) {
+                        dm_error("reset", response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
+                        dm_error("reset", "generic");
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -293,17 +348,21 @@ $(document).ready(function () {
 
     $('#clear').click(function () {
         if (!$(this).hasClass('disabled')) {
+            dm_ui_click("clear");
             chrome.runtime.sendMessage({
                 JDTIfunction: "clear"
             }, function (response) {
                 if (response.status === "success") {
                     location.reload();
                     Materialize.toast('All templates deleted', 2000, 'toastNotification');
+                    dm_template_update("clear");
                 } else {
                     $('#templateEditor').empty();
                     if (response.message) {
+                        dm_error("reset", response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
+                        dm_error("reset", "generic");
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -315,6 +374,7 @@ $(document).ready(function () {
 
     $('#add').click(function () {
         event.preventDefault();
+        dm_ui_click("add");
         if (!$(this).hasClass('disabled')) {
             $('#addTemplateModal').openModal();
         } else {
@@ -324,6 +384,7 @@ $(document).ready(function () {
 
     $('#addCustomTemplate').click(function () {
         if (!$(this).hasClass('disabled')) {
+            dm_ui_click("add-custom");
             var templateName = $('#customTemplateName').val();
             var issueTypeField = $('#customTemplateIssueTypeField').val();
 
@@ -339,14 +400,17 @@ $(document).ready(function () {
                         openCollapsible(issueTypeField);
                     });
                     Materialize.toast('Template successfully added', 2000, 'toastNotification');
+                    dm_template_update("add-custom");
                 } else {
                     loadTemplateEditor(function () {
                         if (response.message) {
+                            dm_error("reset", response.message);
                             Materialize.toast(response.message, 2000, 'toastNotification');
                             if (response.data === 'open') {
                                 openCollapsible(issueTypeField);
                             }
                         } else {
+                            dm_error("reset", "generic");
                             Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                         }
                     });
@@ -363,6 +427,7 @@ $(document).ready(function () {
         } else if ($( "#addDefaultDropdownButton" ).hasClass( "disabled" )) {
             Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
         } else {
+            dm_ui_click("add-default-dropdown");
             // Dropdown is not initialized on load to support disabling through json options
             // If it's not disabled initialize it on click
             var attr = $(this).attr('data-activates');
@@ -375,6 +440,7 @@ $(document).ready(function () {
     });
 
     $('#export').click(function () {
+        dm_ui_click("export");
         chrome.runtime.sendMessage({
             JDTIfunction: "getData"
         }, function (response) {
@@ -386,8 +452,10 @@ $(document).ready(function () {
                 });
             } else {
                 if (response.message) {
+                    dm_error("reset", response.message);
                     Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
+                    dm_error("reset", "generic");
                     Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
@@ -397,6 +465,7 @@ $(document).ready(function () {
     // Because the template editing section is dynamically build, need to monitor document rather then the classes directly
     $(document).on('click', "a.removeSingleTemplate", function () {
         if (!$(this).hasClass('disabled')) {
+            dm_ui_click("remove-single");
             chrome.runtime.sendMessage({
                 JDTIfunction: "delete",
                 templateName: $(this).attr("id")
@@ -404,10 +473,13 @@ $(document).ready(function () {
                 if (response.status === "success") {
                     loadTemplateEditor();
                     Materialize.toast('Template successfully removed', 2000, 'toastNotification');
+                    dm_template_update("remove-single");
                 } else {
                     if (response.message) {
+                        dm_error("reset", response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
+                        dm_error("reset", "generic");
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -419,6 +491,7 @@ $(document).ready(function () {
 
     $(document).on('click', "a.updateSingleTemplate", function () {
         if (!$(this).hasClass('disabled')) {
+            dm_ui_click("update-single");
             chrome.runtime.sendMessage({
                 JDTIfunction: "save",
                 templateName: $(this).attr("id"),
@@ -426,10 +499,13 @@ $(document).ready(function () {
             }, function (response) {
                 if (response.status === "success") {
                     Materialize.toast('Template successfully updated', 2000, 'toastNotification');
+                    dm_template_update("update-single");
                 } else {
                     if(response.message){
+                        dm_error("reset", response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
+                        dm_error("reset", "generic");
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -440,6 +516,7 @@ $(document).ready(function () {
     });
 
     $(document).on('click', ".dropdownOption", function() {
+        dm_ui_click("add-default-dropdown-selection");
         // Close the Modal
         var templateName = $(this).text();
         var issueTypeField = $(this).data('issuefieldtype');
@@ -460,11 +537,14 @@ $(document).ready(function () {
                     openCollapsible(issueTypeField);
                 });
                 Materialize.toast('Template successfully added', 2000, 'toastNotification');
+                dm_template_update("add-default");
             } else {
                 loadTemplateEditor();
                 if (response.message) {
+                    dm_error("reset", response.message);
                     Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
+                    dm_error("reset", "generic");
                     Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
@@ -481,6 +561,7 @@ $(document).ready(function () {
 
     // Force links to open in new tab
     $(document).on('click', ".newTabLinks",function () {
+        dm_ui_click("help");
         chrome.tabs.create({url: $(this).attr('href')});
         return false;
     });

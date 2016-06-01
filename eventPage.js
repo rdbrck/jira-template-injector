@@ -1,6 +1,18 @@
 /* Copyright 2016 Redbrick Technologies, Inc. */
 /* https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE */
 
+//---------------------- Desk Metrics --------------------------------------//
+
+$dm.start({ 'appId': '<appID>' });
+
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+    if(message.type == 'analytics') {
+        $dm.send(message.name, message.body);
+    }
+});
+
+//--------------------------------------------------------------------------//
+
 var StorageID = "Jira-Template-Injector";
 var emptyData = {"options": {"limit": []},"templates": {}}
 
