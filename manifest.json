@@ -13,7 +13,8 @@
     },
     "background": {
         "scripts": [
-			"lib/jquery/jquery-2.2.3.js",
+            "lib/deskmetrics/deskmetrics-2.0.0-min.js",
+            "lib/jquery/jquery-2.2.3.js",
 			"eventPage.js"
 		],
         "persistent": false
@@ -35,6 +36,7 @@
         "storage",
         "downloads",
         "*://*/*.json",
-        "file:///*.json"
+        "file:///*.json",
+        "https://*.pingstatsnet.com/"
     ]
 }
