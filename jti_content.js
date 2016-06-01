@@ -118,8 +118,6 @@ function injectDescriptionTemplate(descriptionElement) {
 
 
 function descriptionChangeEvent(changeEvent) {
-    console.log("Hello");
-    console.log(changeEvent);
     // the description field has been changed, turn the dirtyDialogMessage back on and remove the listener
     changeEvent.target.className = changeEvent.target.className.replace(" ajs-dirty-warning-exempt", "");
     changeEvent.target.removeEventListener("change", descriptionChangeEvent);
