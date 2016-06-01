@@ -4,7 +4,7 @@ This extension automatically inserts a template of your choosing into the JIRA C
 
 On initial install a default list of templates are pre populated for you. These can easily be removed/restored at any time.
 
-You can add templates individually, or bulk add them through a local or remote json file. See [templates.json](https://github.com/rdbrck/jira-description-extension/blob/master/templates.json) for an example JSON file.
+You can add templates individually, or bulk add them through a local or remote json file. See [templates.json](https://github.com/rdbrck/jira-description-extension/blob/master/data/templates.json) for an example JSON file.
 
 The JSON format is:
 
@@ -26,8 +26,8 @@ The JSON format is:
 ### HELP:
 
 * Why are some buttons disabled?
-    * By default no button are disabled, but if you were provided a url or a json file to load into the extension, it may have contained some options to limit the interface (see Limit interface options below)
-    * If you need to use one of the options disabled you can always "Reload the default templates" but be ware this will override any existing templates. It may be a good idea to export your current templates first so that you have a backup
+    * By default no buttons are disabled, but if you were provided a url or a json file to load into the extension, it may have contained some options to limit the interface (see Limit Interface Options below)
+    * If you need to use one of the options disabled you can always reset the extension to it's default by clicking the "Reload default templates" button. **Howerver this will override any existing templates**. It is always a good idea to export your current templates first so that you have a backup
 
 ### Current Features:
 
