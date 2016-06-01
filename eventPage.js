@@ -48,7 +48,7 @@ function clearStorage(callback) {
 }
 
 function fetchDefaultTemplates(callback) {
-    var url = chrome.extension.getURL('templates.json');
+    var url = chrome.extension.getURL('data/templates.json');
     fetchJSON(url, function (status, message, data) {
         callback(status, message, data);
     });
