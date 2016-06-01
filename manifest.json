@@ -9,21 +9,24 @@
         "128": "resources/images/icons/icon-red-128.png"
     },
     "browser_action": {
-        "default_popup": "popup.html"
+        "default_popup": "html/popup.html"
     },
     "background": {
-        "scripts": ["resources/js/jquery-2.2.3.js", "eventPage.js"],
+        "scripts": [
+			"lib/jquery/jquery-2.2.3.js",
+			"eventPage.js"
+		],
         "persistent": false
     },
     "content_scripts": [
         {
             "matches": [
-                "http://redbrickmedia.atlassian.net/*",
-                "https://redbrickmedia.atlassian.net/*"
+                "http://*.atlassian.net/*",
+                "https://*.atlassian.net/*"
             ],
             "js": [
-                "resources/js/jquery-2.2.3.js",
-                "templateInjector.js"
+                "lib/jquery/jquery-2.2.3.js",
+                "jti_content.js"
             ],
             "run_at": "document_end"
         }
