@@ -305,10 +305,10 @@ $(document).ready(function () {
                             dm_template_update("upload");
                         } else {
                             if (response.message) {
-                                dm_error("reset", response.message);
+                                dm_error("upload", response.message);
                                 Materialize.toast(response.message, 2000, 'toastNotification');
                             } else {
-                                dm_error("reset", "generic");
+                                dm_error("upload", "generic");
                                 Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                             }
                         }
@@ -333,10 +333,10 @@ $(document).ready(function () {
                     dm_template_update("download");
                 } else {
                     if (response.message) {
-                        dm_error("reset", response.message);
+                        dm_error("download", response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
-                        dm_error("reset", "generic");
+                        dm_error("download", "generic");
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -359,10 +359,10 @@ $(document).ready(function () {
                 } else {
                     $('#templateEditor').empty();
                     if (response.message) {
-                        dm_error("reset", response.message);
+                        dm_error("clear", response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
-                        dm_error("reset", "generic");
+                        dm_error("clear", "generic");
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -404,13 +404,13 @@ $(document).ready(function () {
                 } else {
                     loadTemplateEditor(function () {
                         if (response.message) {
-                            dm_error("reset", response.message);
+                            dm_error("add-custom", response.message);
                             Materialize.toast(response.message, 2000, 'toastNotification');
                             if (response.data === 'open') {
                                 openCollapsible(issueTypeField);
                             }
                         } else {
-                            dm_error("reset", "generic");
+                            dm_error("add-custom", "generic");
                             Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                         }
                     });
@@ -452,10 +452,10 @@ $(document).ready(function () {
                 });
             } else {
                 if (response.message) {
-                    dm_error("reset", response.message);
+                    dm_error("export", response.message);
                     Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
-                    dm_error("reset", "generic");
+                    dm_error("export", "generic");
                     Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
@@ -476,10 +476,10 @@ $(document).ready(function () {
                     dm_template_update("remove-single");
                 } else {
                     if (response.message) {
-                        dm_error("reset", response.message);
+                        dm_error("remove-single", response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
-                        dm_error("reset", "generic");
+                        dm_error("remove-single", "generic");
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -502,10 +502,10 @@ $(document).ready(function () {
                     dm_template_update("update-single");
                 } else {
                     if(response.message){
-                        dm_error("reset", response.message);
+                        dm_error("update-single", response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
-                        dm_error("reset", "generic");
+                        dm_error("update-single", "generic");
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -541,10 +541,10 @@ $(document).ready(function () {
             } else {
                 loadTemplateEditor();
                 if (response.message) {
-                    dm_error("reset", response.message);
+                    dm_error("add-default-dropdown-selection", response.message);
                     Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
-                    dm_error("reset", "generic");
+                    dm_error("add-default-dropdown-selection", "generic");
                     Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
