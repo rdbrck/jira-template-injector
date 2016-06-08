@@ -15,7 +15,7 @@
         "scripts": [
             "lib/deskmetrics/deskmetrics-2.0.0-min.js",
             "lib/jquery/jquery-2.2.3.js",
-			"eventPage.js"
+            "jti_background.js"
 		],
         "persistent": false
     },

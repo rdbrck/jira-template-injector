@@ -3,7 +3,7 @@
 
 //---------------------- Desk Metrics --------------------------------------//
 
-$dm.start({ 'appId': '<appID>' });
+$dm.start({ 'appId': 'qdc9bb613' });
 
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     if(message.type == 'analytics') {
