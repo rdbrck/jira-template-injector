@@ -25,7 +25,7 @@
   "bugs": {
     "url": "https://github.com/rdbrck/jira-template-injector/issues"
   },
-  "dependencies": {
+  "devDependencies": {
     "crx": "^3.0.3",
     "json": "^9.0.4",
     "versiony-cli": "^1.3.0"
