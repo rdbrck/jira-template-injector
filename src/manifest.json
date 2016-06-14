@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "JIRA Template Injector",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "The description field of new JIRA issues will automatically be populated with a template relevant to the issue type",
     "icons": {
         "16": "images/icon-red-16.png",
@@ -16,7 +16,7 @@
             "lib/deskmetrics/deskmetrics-2.0.0-min.js",
             "lib/jquery/jquery-2.2.3.js",
             "jti_background.js"
-		],
+        ],
         "persistent": false
     },
     "content_scripts": [
@@ -32,7 +32,7 @@
             "run_at": "document_end"
         }
     ],
-    "permissions":[
+    "permissions": [
         "storage",
         "downloads",
         "*://*/*.json",
