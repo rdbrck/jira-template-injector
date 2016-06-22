@@ -7,7 +7,7 @@
     "clean": "rm -f jti.crx jti.zip",
     "bump": "versiony src/manifest.json --patch",
     "pack": "crx pack src -o jti.crx --zip-output jti.zip",
-    "build": "npm run bump && npm run pack",
+    "build": "npm run pack",
     "rebuild": "npm run clean && npm run build"
   },
   "repository": {
