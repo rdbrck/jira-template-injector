@@ -1,7 +1,8 @@
 {
     "manifest_version": 2,
     "name": "JIRA Template Injector",
-    "version": "0.1.2",
+    "short_name": "JTI"
+    "version": "0.1.6",
     "description": "The description field of new JIRA issues will automatically be populated with a template relevant to the issue type",
     "icons": {
         "16": "images/icon-red-16.png",
