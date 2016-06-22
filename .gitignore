@@ -1,5 +1,7 @@
 .idea/
 node_modules/
+npm-debug.log
 jti.zip
 jti.crx
 key.pem
+credentials.yaml
