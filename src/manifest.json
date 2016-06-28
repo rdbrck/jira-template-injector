@@ -23,8 +23,8 @@
   "content_scripts": [
     {
       "matches": [
-        "http://*.atlassian.net",
-        "https://*.atlassian.net"
+        "http://*.atlassian.net/*",
+        "https://*.atlassian.net/*"
       ],
       "js": [
         "lib/jquery/jquery-2.2.3.js",
