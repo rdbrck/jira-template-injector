@@ -4,6 +4,7 @@
   "description": "A browser extension that automatically populates a JIRA issue's description field with a predefined template based on issue type.",
   "scripts": {
     "test": "echo \"Error: no test specified.\" && exit 1",
+    "lint": "eslint src/jti_content.js -o lintErrors.txt",
     "clean": "rm -f jti.crx jti.zip",
     "bump": "versiony src/manifest.json --patch",
     "pack": "crx pack src -o jti.crx --zip-output jti.zip",
@@ -27,6 +28,9 @@
   },
   "devDependencies": {
     "crx": "^3.0.3",
+    "eslint": "^2.13.1",
+    "eslint-config-standard": "^5.3.1",
+    "eslint-plugin-standard": "^1.3.2",
     "json": "^9.0.4",
     "versiony-cli": "^1.3.0"
   }
