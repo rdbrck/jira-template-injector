@@ -34,7 +34,6 @@ $(document).on('click', '#description', function () {
         if (selectStart) {
             // Look for closing tag '</DT>'
             for (i = cursorStart; i <= end; i++) {
-
                 if (text.slice(i, (i + 4)) === '<TI>') {
                     // Found another opening bracket before closing bracket. Exit search
                     break;
@@ -56,17 +55,17 @@ $(document).on('click', '#description', function () {
 // On submit send analytics to Desk Metrics
 $(document).on('click', '#create-issue-submit', function () {
     chrome.runtime.sendMessage({type: 'analytics', name: 'issue_type', body:
-        {
-            'type': $('#issuetype-field').val(),
-            'version': chrome.runtime.getManifest().version,
-            'ip_address': '${dm.meta:request_ip}',
-            'geo': '${dm.meta:request_geo}',
-            'ua': '${dm.ua:user_agent}'
-        }
+    {
+        'type': $('#issuetype-field').val(),
+        'version': chrome.runtime.getManifest().version,
+        'ip_address': '${dm.meta:request_ip}',
+        'geo': '${dm.meta:request_geo}',
+        'ua': '${dm.ua:user_agent}'
+    }
     });
 });
 
-function isDefaultDescription(value, callback) {
+function isDefaultDescription (value, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;
         var match = false;
@@ -76,7 +75,7 @@ function isDefaultDescription(value, callback) {
             match = true;
         }
 
-        //Check if we've already loaded a template
+        // Check if we've already loaded a template
         if (!match) {
             $.each(templates, function (key, template) {
                 if (value === template.text) {
@@ -90,8 +89,7 @@ function isDefaultDescription(value, callback) {
     });
 }
 
-
-function injectDescriptionTemplate(descriptionElement) {
+function injectDescriptionTemplate (descriptionElement) {
     // Each issue type can have its own template
     chrome.storage.sync.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;
@@ -118,14 +116,13 @@ function injectDescriptionTemplate(descriptionElement) {
     });
 }
 
-
-function descriptionChangeEvent(changeEvent) {
+function descriptionChangeEvent (changeEvent) {
     // the description field has been changed, turn the dirtyDialogMessage back on and remove the listener
     changeEvent.target.className = changeEvent.target.className.replace(' ajs-dirty-warning-exempt', '');
     changeEvent.target.removeEventListener('change', descriptionChangeEvent);
 }
 
-function observeDocumentBody(mutation) {
+function observeDocumentBody (mutation) {
     if (document.getElementById('create-issue-dialog') !== null) { // only interested in document changes related to Create Issue Dialog box
         if (mutation.target.id === 'description') { // only interested in the description field
             var descriptionElement = mutation.target;
