@@ -1,57 +1,58 @@
 /* Copyright 2016 Redbrick Technologies, Inc. */
 /* https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE */
 
-//---------------------- Desk Metrics --------------------------------------//
+/* global $dm, chrome */
+
+// ---------------------- Desk Metrics -------------------------------------- //
 
 $dm.start({ 'appId': '<appID>' });
 
-chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
-    if(message.type == 'analytics') {
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+    if (message.type === 'analytics') {
         $dm.send(message.name, message.body);
     }
 });
 
-//--------------------------------------------------------------------------//
+// -------------------------------------------------------------------------- //
 
-var StorageID = "Jira-Template-Injector";
-var emptyData = {"options": {"limit": []},"templates": {}}
+var StorageID = 'Jira-Template-Injector';
+var emptyData = {'options': {'limit': []}, 'templates': {}};
 
-function saveTemplates(templateJSON, callback) {
+function saveTemplates (templateJSON, callback) {
     var data = {};
     data[StorageID] = templateJSON;
     chrome.storage.sync.set(data, function () {
         if (chrome.runtime.lastError) {
-            callback(false, "Error saving data. Please try again");
+            callback(false, 'Error saving data. Please try again');
         } else {
             callback(true);
         }
     });
 }
 
-function fetchJSON(url, callback) {
-    //noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols
+function fetchJSON (url, callback) {
     $.getJSON(url, function (templateJSON) {
         callback(true, null, templateJSON);
     })
         .error(function () {
-            callback(false, "Invalid URL. Please correct the URL and try again", null);
+            callback(false, 'Invalid URL. Please correct the URL and try again', null);
         });
 }
 
-function getData(callback) {
+function getData (callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         if (templates[StorageID]) {
-            callback(true, "", templates[StorageID]);
+            callback(true, '', templates[StorageID]);
         } else {
-            callback(false, "No data is currently loaded");
+            callback(false, 'No data is currently loaded');
         }
     });
 }
 
-function clearStorage(callback) {
+function clearStorage (callback) {
     chrome.storage.sync.clear(function () {
         if (chrome.runtime.lastError) {
-            callback(false, "Error clearing data. Please try again");
+            callback(false, 'Error clearing data. Please try again');
         } else {
             saveTemplates(emptyData, callback);
             callback(true);
@@ -59,14 +60,14 @@ function clearStorage(callback) {
     });
 }
 
-function fetchDefaultTemplates(callback) {
+function fetchDefaultTemplates (callback) {
     var url = chrome.extension.getURL('data/templates.json');
     fetchJSON(url, function (status, message, data) {
         callback(status, message, data);
     });
 }
 
-function setDefaultTemplates(callback) {
+function setDefaultTemplates (callback) {
     fetchDefaultTemplates(function (status, message, data) {
         if (status) {
             saveTemplates(data, callback);
@@ -76,7 +77,7 @@ function setDefaultTemplates(callback) {
     });
 }
 
-function downloadJSONData(url, callback) {
+function downloadJSONData (url, callback) {
     fetchJSON(url, function (status, message, data) {
         if (status) {
             saveTemplates(data, callback);
@@ -86,34 +87,34 @@ function downloadJSONData(url, callback) {
     });
 }
 
-function removeTemplate(templateName, callback) {
+function removeTemplate (templateName, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         if (templates[StorageID]) {
             var templateJSON = templates[StorageID];
             delete templateJSON.templates[templateName];
             saveTemplates(templateJSON, callback);
         } else {
-            callback(false, "No data available to remove");
+            callback(false, 'No data available to remove');
         }
     });
 }
 
-function updateTemplate(templateName, templateText, callback) {
+function updateTemplate (templateName, templateText, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         if (templates[StorageID]) {
             var templateJSON = templates[StorageID];
             templateJSON.templates[templateName].text = templateText;
             saveTemplates(templateJSON, callback);
         } else {
-            callback(false, "No data available to update. Please recreate the template");
+            callback(false, 'No data available to update. Please recreate the template');
         }
     });
 }
 
-function addTemplate(templateName, issueTypeField, text, callback) {
+function addTemplate (templateName, issueTypeField, text, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
-        var templateJSON = {},
-            save = true;
+        var templateJSON = {};
+        var save = true;
 
         if (templates[StorageID]) {
             templateJSON = templates[StorageID];
@@ -122,43 +123,43 @@ function addTemplate(templateName, issueTypeField, text, callback) {
         $.each(templateJSON.templates, function (name, template) {
             if (issueTypeField === template['issuetype-field']) {
                 save = false;
-                callback(false, "Template with same issuetype-field already exists", "open");
+                callback(false, 'Template with same issuetype-field already exists', 'open');
             }
         });
 
         if (save) {
-            templateJSON.templates[templateName] = {"issuetype-field": issueTypeField, "text": text};
+            templateJSON.templates[templateName] = {'issuetype-field': issueTypeField, 'text': text};
             saveTemplates(templateJSON, callback);
         }
     });
 }
 
-function loadLocalFile(fileContents, callback) {
+function loadLocalFile (fileContents, callback) {
     try {
         var templateJSON = $.parseJSON(JSON.stringify(fileContents));
         saveTemplates(templateJSON, callback);
     } catch (e) {
-        callback(false, "Error parsing JSON. Please verify file contents ");
+        callback(false, 'Error parsing JSON. Please verify file contents');
     }
 }
 
-function responseMessage(status, message = null, data = null) {
+function responseMessage (status, message = null, data = null) {
     var response = {};
 
     if (status) {
-        response = {status: "success", message: message, data: data};
+        response = {status: 'success', message: message, data: data};
     } else {
-        response = {status: "error", message: message, data: data};
+        response = {status: 'error', message: message, data: data};
     }
 
     return response;
 }
 
-//This file will load the default templates into storage on install or update if no previous versions are already loaded
+// This file will load the default templates into storage on install or update if no previous versions are already loaded
 chrome.storage.sync.get(StorageID, function (templates) {
-    //Check if we have any loaded templates in storage
+    // Check if we have any loaded templates in storage
     if (Object.keys(templates).length === 0 && JSON.stringify(templates) === JSON.stringify({})) {
-        //No data in storage yet - Load default templates
+        // No data in storage yet - Load default templates
         setDefaultTemplates(function (status, result) {});
     }
 });
@@ -167,62 +168,62 @@ chrome.storage.sync.get(StorageID, function (templates) {
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
         switch (request.JDTIfunction) {
-            case "fetchDefault":
-                fetchDefaultTemplates(function (status, message = null, data = null) {
-                    var response = responseMessage(status, message, data);
-                    sendResponse(response);
-                });
-                break;
-            case "reset":
-                setDefaultTemplates(function (status, message = null, data = null) {
-                    var response = responseMessage(status, message, data);
-                    sendResponse(response);
-                });
-                break;
-            case "upload":
-                loadLocalFile(request.fileContents, function (status, message = null, data = null) {
-                    var response = responseMessage(status, message, data);
-                    sendResponse(response);
-                });
-                break;
-            case "download":
-                downloadJSONData(request.url, function (status, message = null, data = null) {
-                    var response = responseMessage(status, message, data);
-                    sendResponse(response);
-                });
-                break;
-            case "clear":
-                clearStorage(function (status, message = null, data = null) {
-                    var response = responseMessage(status, message, data);
-                    sendResponse(response);
-                });
-                break;
-            case "delete":
-                removeTemplate(request.templateName, function (status, message = null, data = null) {
-                    var response = responseMessage(status, message, data);
-                    sendResponse(response);
-                });
-                break;
-            case "save":
-                updateTemplate(request.templateName, request.templateText, function (status, message = null, data = null) {
-                    var response = responseMessage(status, message, data);
-                    sendResponse(response);
-                });
-                break;
-            case "add":
-                addTemplate(request.templateName, request.issueTypeField, request.text, function(status, message = null, data = null){
-                    var response = responseMessage(status, message, data);
-                    sendResponse(response);
-                });
-                break;
-            case "getData":
-                getData(function (status, message = null, data = null) {
-                    var response = responseMessage(status, message, data);
-                    sendResponse(response);
-                });
-                break;
-            default:
-                sendResponse({status: "error", message: "Invalid Action"});
+        case 'fetchDefault':
+            fetchDefaultTemplates(function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'reset':
+            setDefaultTemplates(function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'upload':
+            loadLocalFile(request.fileContents, function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'download':
+            downloadJSONData(request.url, function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'clear':
+            clearStorage(function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'delete':
+            removeTemplate(request.templateName, function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'save':
+            updateTemplate(request.templateName, request.templateText, function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'add':
+            addTemplate(request.templateName, request.issueTypeField, request.text, function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'getData':
+            getData(function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        default:
+            sendResponse({status: 'error', message: 'Invalid Action'});
         }
         return true;
     }
