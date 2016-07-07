@@ -6,7 +6,7 @@
     "test": "echo \"Error: no test specified.\" && exit 1",
     "lint": "eslint src/js/** src/jti_*",
     "clean": "rm -f jti.crx jti.zip",
-    "bump": "versiony src/manifest.json --patch",
+    "bump": "versiony src/manifest.json",
     "pack": "crx pack src -o jti.crx --zip-output jti.zip",
     "build": "npm run lint && npm run pack",
     "rebuild": "npm run clean && npm run build"
