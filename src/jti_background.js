@@ -3,10 +3,18 @@
 
 /* global $dm, chrome */
 
-// ---------------------- Desk Metrics -------------------------------------- //
+// -------------------------- Desk Metrics ---------------------------------- //
 
+// Initialise and start the DeskMetrics (DM) SDK with our app ID.
+// $dm.start({ 'appId': '<YOUR-APP-ID>' });
 $dm.start({ 'appId': 'qdc9bb613' });
 
+/*
+   Initialize a chrome message listener for DM events.
+   As this is in the extension background page, this message listener will
+   continuously to run in the background allowing us to send DM events from
+   anywhere.
+ */
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     if (message.type === 'analytics') {
         $dm.send(message.name, message.body);
@@ -155,16 +163,16 @@ function responseMessage (status, message = null, data = null) {
     return response;
 }
 
-// This file will load the default templates into storage on install or update if no previous versions are already loaded
+// This file will load the default templates into storage on install or update if no previous versions are already loaded.
 chrome.storage.sync.get(StorageID, function (templates) {
-    // Check if we have any loaded templates in storage
+    // Check if we have any loaded templates in storage.
     if (Object.keys(templates).length === 0 && JSON.stringify(templates) === JSON.stringify({})) {
-        // No data in storage yet - Load default templates
+        // No data in storage yet - Load default templates.
         setDefaultTemplates(function (status, result) {});
     }
 });
 
-// Listen for Messages
+// Listen for Messages.
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
         switch (request.JDTIfunction) {
