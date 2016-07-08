@@ -248,6 +248,11 @@ function dmUIClick (element) {
         'add-default'   - A default template was added back.
         'remove-single' - A single template (custom or default) was removed.
         'update-single' - A single template was updated.
+
+        Why collect this information?
+        We are collecting this information to better understand how users use the
+        extension. Is a feature heavily used? Maybe we can improve it. Is a feature
+        hardly used? Maybe it is not needed.
  */
 function dmTemplateUpdate (action) {
     chrome.runtime.sendMessage({
@@ -265,6 +270,9 @@ function dmTemplateUpdate (action) {
     Arguments:
         Action performed resulting in error.
         Error message.
+     
+    Why collect this information?
+    This one is pretty self explanatory. If errors are occurring we need to fix them.
  */
 function dmError (action, message) {
     chrome.runtime.sendMessage({

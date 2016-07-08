@@ -59,6 +59,10 @@ $(document).on('click', '#description', function () {
     '${dm.meta:request_ip}' DM Metadata enrichment to pass back the originating IP.
     '${dm.meta:request_geo}' DM Metadata enrichment to pass back standard geo-ip properties.
     '${dm.ua:user_agent}' DM Metadata enrichment to pass back standard user-agent properties.
+
+    Why collect this information?
+    This information will allow us to better set the default templates.
+    If we find a template is used very often we can add it as a default to simply peoples ticket creation.
  */
 $(document).on('click', '#create-issue-submit', function () {
     chrome.runtime.sendMessage({type: 'analytics', name: 'issue_type', body:
