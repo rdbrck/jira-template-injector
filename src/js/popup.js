@@ -270,9 +270,9 @@ function dmTemplateUpdate (action) {
     Arguments:
         Action performed resulting in error.
         Error message.
-     
+
     Why collect this information?
-    This one is pretty self explanatory. If errors are occurring we need to fix them.
+    If errors are occurring we need to fix them.
  */
 function dmError (action, message) {
     chrome.runtime.sendMessage({
