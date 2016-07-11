@@ -5,6 +5,7 @@
 
 var StorageID = 'Jira-Template-Injector';
 
+// Handle <TI> tag selection.
 $(document).on('click', '#description', function () {
     var text = $(this).val(),
         cursorStart = $(this).prop('selectionStart'),
@@ -14,13 +15,13 @@ $(document).on('click', '#description', function () {
         selectEnd = null,
         i = 0;
 
-    // Only proceed if this is a click. i.e. not a highlight
+    // Only proceed if this is a click. i.e. not a highlight.
     if (cursorStart === cursorFinish) {
-        // Look for opening tag '<DT>'
+        // Look for opening tag '<TI>'.
         for (i = cursorStart; i >= 4; i--) {
             if (i !== 4) {
                 if (text.slice((i - 5), i) === '</TI>') {
-                    // Found closing tag before opening tag -> We are not withing any valid tags
+                    // Found closing tag before opening tag -> We are not withing any valid tags.
                     break;
                 }
             }
@@ -32,10 +33,10 @@ $(document).on('click', '#description', function () {
         }
 
         if (selectStart) {
-            // Look for closing tag '</DT>'
+            // Look for closing tag '</TI>'
             for (i = cursorStart; i <= end; i++) {
                 if (text.slice(i, (i + 4)) === '<TI>') {
-                    // Found another opening bracket before closing bracket. Exit search
+                    // Found another opening bracket before closing bracket. Exit search.
                     break;
                 }
                 if (text.slice(i, (i + 5)) === '</TI>') {
@@ -45,14 +46,24 @@ $(document).on('click', '#description', function () {
                 }
             }
             if (selectEnd) {
-                // Select all the text between the two tags
+                // Select all the text between the two tags.
                 $(this)[0].setSelectionRange(selectStart, selectEnd);
             }
         }
     }
 });
 
-// On submit send analytics to Desk Metrics
+/*
+    When user submits a ticket track the ticket type.
+    Send DM event 'issue_type' to learn what the most commonly used ticket types are.
+    '${dm.meta:request_ip}' DM Metadata enrichment to pass back the originating IP.
+    '${dm.meta:request_geo}' DM Metadata enrichment to pass back standard geo-ip properties.
+    '${dm.ua:user_agent}' DM Metadata enrichment to pass back standard user-agent properties.
+
+    Why collect this information?
+    This information will allow us to better set the default templates.
+    If we find a template is used very often we can add it as a default to simplify peoples' ticket creation.
+ */
 $(document).on('click', '#create-issue-submit', function () {
     chrome.runtime.sendMessage({type: 'analytics', name: 'issue_type', body:
     {
@@ -70,12 +81,12 @@ function isDefaultDescription (value, callback) {
         templates = templates[StorageID].templates;
         var match = false;
 
-        // Check if it's empty
+        // Check if it's empty.
         if (value === '') {
             match = true;
         }
 
-        // Check if we've already loaded a template
+        // Check if we've already loaded a template.
         if (!match) {
             $.each(templates, function (key, template) {
                 if (value === template.text) {
@@ -90,7 +101,7 @@ function isDefaultDescription (value, callback) {
 }
 
 function injectDescriptionTemplate (descriptionElement) {
-    // Each issue type can have its own template
+    // Each issue type can have its own template.
     chrome.storage.sync.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;
 
@@ -117,19 +128,19 @@ function injectDescriptionTemplate (descriptionElement) {
 }
 
 function descriptionChangeEvent (changeEvent) {
-    // the description field has been changed, turn the dirtyDialogMessage back on and remove the listener
+    // The description field has been changed, turn the dirtyDialogMessage back on and remove the listener.
     changeEvent.target.className = changeEvent.target.className.replace(' ajs-dirty-warning-exempt', '');
     changeEvent.target.removeEventListener('change', descriptionChangeEvent);
 }
 
 function observeDocumentBody (mutation) {
-    if (document.getElementById('create-issue-dialog') !== null) { // only interested in document changes related to Create Issue Dialog box
-        if (mutation.target.id === 'description') { // only interested in the description field
+    if (document.getElementById('create-issue-dialog') !== null) { // Only interested in document changes related to Create Issue Dialog box.
+        if (mutation.target.id === 'description') { // Only interested in the description field.
             var descriptionElement = mutation.target;
             isDefaultDescription(descriptionElement.value, function (result) {
-                if (result) { // only inject if description field has not been modified by the user
+                if (result) { // Only inject if description field has not been modified by the user.
                     injectDescriptionTemplate(descriptionElement);
-                    if (descriptionElement.className.indexOf('ajs-dirty-warning-exempt') === -1) { // default template injection should not pop up dirtyDialogMessage
+                    if (descriptionElement.className.indexOf('ajs-dirty-warning-exempt') === -1) { // Default template injection should not pop up dirtyDialogMessage.
                         descriptionElement.className += ' ajs-dirty-warning-exempt';
                         descriptionElement.addEventListener('change', descriptionChangeEvent);
                     }

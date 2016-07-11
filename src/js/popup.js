@@ -17,7 +17,7 @@ function sortObject (o) {
         }
     }
     a.sort();
-    // Move "DEFAULT TEMPLATE" to top of list
+    // Move "DEFAULT TEMPLATE" to top of list.
     if (a.indexOf('DEFAULT TEMPLATE') > -1) {
         a.splice(a.indexOf('DEFAULT TEMPLATE'), 1);
         a.unshift('DEFAULT TEMPLATE');
@@ -29,30 +29,30 @@ function sortObject (o) {
 }
 
 function openCollapsible (issueFieldType) {
-    // Click header to open
+    // Click header to open.
     $('.collapsible-header[data-issuefieldtype="' + issueFieldType + '"]').click();
 }
 
 function onInitialFocus (event) {
-    // If this is an anchor tag, remove focus
+    // If this is an anchor tag, remove focus.
     if (event.target.tagName === 'A') {
         event.target.blur();
     }
-    // Remove this event listener after it is triggered,
+    // Remove this event listener after it is triggered.
     document.removeEventListener('focusin', onInitialFocus);
 }
 
 function loadTemplateEditor (callback = false) {
-    // Dynamically build the template editor from stored json
+    // Dynamically build the template editor from stored json.
     chrome.storage.sync.get(StorageID, function (templates) {
         var dropdownExcludeList = [];
 
-        // Clear previous templates in the Collapsible Template Editor
+        // Clear previous templates in the Collapsible Template Editor.
         $('#templateEditor').empty();
-        // Clear the custom template fields
+        // Clear the custom template fields.
         $('#customTemplateName').val('');
         $('#customTemplateIssueTypeField').val('');
-        // Clear the add default template dropdown
+        // Clear the add default template dropdown.
         $('#addDefaultDropdown').empty();
 
         if (templates[StorageID].templates) {
@@ -60,10 +60,10 @@ function loadTemplateEditor (callback = false) {
 
             $('#templateEditorTitle').text('Templates:');
 
-            // Sort Alphabetically except with DEFAULT TEMPLATE at the top
+            // Sort Alphabetically except with DEFAULT TEMPLATE at the top.
             templates = sortObject(templates);
 
-            // Build the Collapsible Template Editor
+            // Build the Collapsible Template Editor.
             $.each(templates, function (key, template) {
                 var templateTitle = '';
                 if (key === 'DEFAULT TEMPLATE') {
@@ -90,7 +90,7 @@ function loadTemplateEditor (callback = false) {
                     '</div>';
                 $('#templateEditor').append('<li>' + templateTitle + templateData + '</li>');
 
-                // Add templateName to dropdown exclude list
+                // Add templateName to dropdown exclude list.
                 dropdownExcludeList.push(template['issuetype-field']);
             });
 
@@ -101,12 +101,12 @@ function loadTemplateEditor (callback = false) {
             $('#templateEditorTitle').text('No templates are currently loaded');
         }
 
-        // Populate the add default template dropdown - excluding any templates already loaded
+        // Populate the add default template dropdown - excluding any templates already loaded.
         chrome.runtime.sendMessage({JDTIfunction: 'fetchDefault'}, function (response) {
             if (response.status === 'success') {
                 var defaultTemplates = response.data.templates;
 
-                // Remove default templates from dropdown list if already added
+                // Remove default templates from dropdown list if already added.
                 $.each(dropdownExcludeList, function (index, issueTypeField) {
                     $.each(defaultTemplates, function (name, template) {
                         if (issueTypeField === template['issuetype-field']) {
@@ -126,7 +126,7 @@ function loadTemplateEditor (callback = false) {
                     $('#addDefaultDropdownButton').addClass('emptyDropdown').removeClass('waves-effect waves-light');
                 }
 
-                // Reload the dropdown
+                // Reload the dropdown.
                 $('.dropdown-button').dropdown({constrain_width: false});
             } else {
                 $('#addTemplateDropdown').empty();
@@ -144,7 +144,7 @@ function loadTemplateEditor (callback = false) {
 }
 
 function limitAccess (callback = false) {
-    // Limit interface actions from parameters passed in through json
+    // Limit interface actions from parameters passed in through json.
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID].options.limit) {
             var limits = data[StorageID].options.limit;
@@ -204,6 +204,26 @@ function limitAccess (callback = false) {
     });
 }
 
+/*
+    For this extension we have broken down the DM events into three categories.
+    1. UI events (when the user interacts with a UI element)
+    2. Template Update events (when the user updates the templates)
+    3. Errors (when something goes wrong)
+
+    The following three functions minimises code redundancy allowing simple one line DM
+    events to be placed throughout the code.
+ */
+
+/*
+    Simple function to fire DM 'ui_click' events.
+    Arguments: UI element that was interacted with.
+    In this extension this is generally the DOM element ID.
+
+    Why collect this information?
+    We are collecting this information to determine which UI elements are most used
+    and are least used. With this information we can determine how best to improve
+    UI design. I.E simplifying the UI by removing rarely used elements
+ */
 function dmUIClick (element) {
     chrome.runtime.sendMessage({
         type: 'analytics', name: 'ui_click', body: {
@@ -215,6 +235,25 @@ function dmUIClick (element) {
     });
 }
 
+/*
+    Simple function to fire DM 'template_update' events.
+    Arguments: Action performed on the template.
+    Currently the extension performs the following actions:
+        'reset'         - Templates were reset to their default state.
+        'upload'        - Templates were loaded from local json file.
+        'download'      - Templates were loaded from remote json file.
+        'clear'         - All templates were deleted.
+        'add-custom'    - A custom template was created for a ticket type
+                            not included with the default templates.
+        'add-default'   - A default template was added back.
+        'remove-single' - A single template (custom or default) was removed.
+        'update-single' - A single template was updated.
+
+        Why collect this information?
+        We are collecting this information to better understand how users use the
+        extension. Is a feature heavily used? Maybe we can improve it. Is a feature
+        hardly used? Maybe it is not needed.
+ */
 function dmTemplateUpdate (action) {
     chrome.runtime.sendMessage({
         type: 'analytics', name: 'template_update', body: {
@@ -226,6 +265,15 @@ function dmTemplateUpdate (action) {
     });
 }
 
+/*
+    Simple function to fire DM 'error' events.
+    Arguments:
+        Action performed resulting in error.
+        Error message.
+
+    Why collect this information?
+    If errors are occurring we need to fix them.
+ */
 function dmError (action, message) {
     chrome.runtime.sendMessage({
         type: 'analytics', name: 'error', body: {
