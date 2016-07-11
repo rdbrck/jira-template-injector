@@ -62,7 +62,7 @@ $(document).on('click', '#description', function () {
 
     Why collect this information?
     This information will allow us to better set the default templates.
-    If we find a template is used very often we can add it as a default to simply peoples ticket creation.
+    If we find a template is used very often we can add it as a default to simplify peoples' ticket creation.
  */
 $(document).on('click', '#create-issue-submit', function () {
     chrome.runtime.sendMessage({type: 'analytics', name: 'issue_type', body:
