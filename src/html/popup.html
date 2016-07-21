@@ -29,11 +29,11 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
 <body>
     <div class="navbar-fixed">
       <nav>
-          <div class="nav-wrapper red darken-4">
+          <div class="nav-wrapper">
               <div class="brand-logo center">
                   <p id="mainTitle">
                       <a class="newTabLinks" href="https://rdbrck.com/">
-                          <img src="../images/icon-white-128.png" id="logoIcon">
+                          <img src="../images/JTI-128.png" id="logoIcon">
                       </a>
                       <a class="newTabLinks" href="https://github.com/rdbrck/jira-description-extension">
                           Jira Template Injector
@@ -41,15 +41,16 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                   </p>
               </div>
           </div>
-      </nav>
-    </div>
-
-    <main>
-        <div id="help" class="row center-align">
+          <div id="help" class="row center-align">
             <a class="newTabLinks" href="https://github.com/rdbrck/jira-description-extension">
                 Help?
             </a>
         </div>
+
+      </nav>
+    </div>
+
+    <main>
         <div class="container">
             <div class="section">
                 <div class="row">
@@ -58,7 +59,7 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                     </div>
                     <div class="col s4">
                         <div class="right-align">
-                            <a id="reset" class="btn-floating btn-Medium waves-effect waves-light red darken-4 tooltipped" data-position="left" data-delay="50" data-tooltip="Reload Templates">
+                            <a id="reset" class="btn-floating btn-Medium btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Reload Templates">
                                 <i class="material-icons">replay</i>
                             </a>
                         </div>
@@ -76,7 +77,7 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                     </div>
                     <div class="col s2">
                         <div class="right-align">
-                            <a id="download" class="btn-floating btn-Small waves-effect waves-light red darken-4 tooltipped" data-position="left" data-delay="50" data-tooltip="Download Templates">
+                            <a id="download" class="btn-floating btn-small btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Download Templates">
                                 <i class="material-icons">cloud_download</i>
                             </a>
                         </div>
@@ -92,7 +93,7 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                     <div class="col s7">
                         <form action="#">
                             <div class="file-field input-field">
-                                <div id="fileSelectorButton" class="btn btn-Small red darken-4">
+                                <div id="fileSelectorButton" class="btn btn-Small btn-jti">
                                     <span>File</span>
                                     <input type="file" id="fileSelector">
                                 </div>
@@ -104,7 +105,7 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                     </div>
                     <div class="col s2">
                         <div class="right-align">
-                            <a id="upload" class="btn-floating btn-Small waves-effect waves-light red darken-4 tooltipped" data-position="left" data-delay="50" data-tooltip="Upload File">
+                            <a id="upload" class="btn-floating btn-jti btn-Small tooltipped" data-position="left" data-delay="50" data-tooltip="Upload File">
                                 <i class="material-icons">file_upload</i>
                             </a>
                         </div>
@@ -119,7 +120,7 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                     </div>
                     <div class="col s4">
                         <div class="right-align">
-                            <a id="clear" class="btn-floating btn-Medium waves-effect waves-light red darken-4 tooltipped" data-position="left" data-delay="50" data-tooltip="Delete all templates">
+                            <a id="clear" class="btn-floating btn-Medium btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Delete all templates">
                                 <i class="material-icons">delete</i>
                             </a>
                         </div>
@@ -134,7 +135,7 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                 <div class="col s4">
                     <div class="right-align">
                         <!-- Modal Trigger -->
-                        <a id="add" class="btn-floating btn-Medium waves-effect waves-light red darken-4 tooltipped modal-trigger" data-position="left" data-delay="50" data-tooltip="Add a Template">
+                        <a id="add" class="btn-floating btn-Medium btn-jti tooltipped modal-trigger" data-position="left" data-delay="50" data-tooltip="Add a Template">
                             <i class="material-icons">add</i>
                         </a>
                     </div>
@@ -146,7 +147,7 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
             </div>
             <div class="row">
                 <div class="col s6 offset-s3 valign-wrapper">
-                    <a id="export" class="btn waves-effect waves-light red darken-4 ">Export Templates</a>
+                    <a id="export" class="btn btn-jti ">Export Templates</a>
             </div>
         </div>
 
@@ -175,7 +176,7 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                     </div>
                     <div class="col s1">
                         <div class="right-align">
-                            <a id="addCustomTemplate" class="btn-floating btn-Small waves-effect waves-light red darken-4">
+                            <a id="addCustomTemplate" class="btn-floating btn-Small btn-jti">
                                 <i class="material-icons">forward</i>
                             </a>
                         </div>
@@ -186,14 +187,14 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                 <div class="row" id="addDefaultDropdownRow">
                     <div class="col s7">
                         <!-- Dropdown Trigger -->
-                        <a class='dropdown-button waves-effect waves-light btn red darken-4' id="addDefaultDropdownButton" href='#'>
+                        <a class='dropdown-button btn btn-jti' id="addDefaultDropdownButton" href='#'>
                             <i class="material-icons left">expand_more</i>
                             Default Templates
                         </a>
                     </div>
                     <div class="col s5 valign-wrapper">
                         <p>
-                            <input type="checkbox" class="filled-in disabled red darken-4" id="loadDefault" checked="checked" />
+                            <input type="checkbox" class="filled-in disabled btn-jti" id="loadDefault" checked="checked" />
                             <label for="loadDefault">Load default text</label>
                         </p>
                     </div>

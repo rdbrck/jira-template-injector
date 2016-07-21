@@ -81,9 +81,9 @@ function loadTemplateEditor (callback = false) {
                     '<div class="row">' +
                     '<div class="col s4 offset-s4">' +
                     '<div class="center-align">' +
-                    '<a class="btn-floating btn-Tiny waves-effect waves-light red darken-4 removeSingleTemplate" id="' + key + '"><i class="material-icons">delete</i></a>' +
+                    '<a class="btn-floating btn-Tiny waves-effect waves-light btn-jti removeSingleTemplate" id="' + key + '"><i class="material-icons">delete</i></a>' +
                     '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp' +
-                    '<a class="btn-floating btn-Tiny waves-effect waves-light red darken-4 updateSingleTemplate" id="' + key + '"><i class="material-icons">save</i></a>' +
+                    '<a class="btn-floating btn-Tiny waves-effect waves-light btn-jti updateSingleTemplate" id="' + key + '"><i class="material-icons">save</i></a>' +
                     '</div>' +
                     '</div>' +
                     '</div>' +
