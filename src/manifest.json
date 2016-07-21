@@ -5,9 +5,10 @@
     "version": "1.0.0",
     "description": "The description field of new JIRA issues will automatically be populated with a template relevant to the issue type",
     "icons": {
-        "16": "images/icon-red-16.png",
-        "48": "images/icon-red-48.png",
-        "128": "images/icon-red-128.png"
+        "16": "images/JTI-16.png",
+        "48": "images/JTI-48.png",
+        "64": "images/JTI-64.png",
+        "128": "images/JTI-128.png"
     },
     "browser_action": {
         "default_popup": "html/popup.html"
