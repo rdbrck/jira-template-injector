@@ -1,5 +1,8 @@
 # Jira Template Injector
 
+Chrome Web Store [Link](https://chrome.google.com/webstore/detail/jira-template-injector/hmhpegjieopgbdmpocdmfkafjgcdmhha).
+If you find it useful please leave a [review](https://chrome.google.com/webstore/detail/jira-template-injector/hmhpegjieopgbdmpocdmfkafjgcdmhha/reviews)!
+
 This extension automatically inserts a template of your choosing into the JIRA Create Issue Description field. The template injected is relative to the selected “Issue Type” within the Create Issue modal on JIRA.
 
 On initial install a default list of templates are pre populated for you. These can easily be removed/restored at any time.
