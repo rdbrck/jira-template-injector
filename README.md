@@ -3,6 +3,8 @@
 Chrome Web Store [Link](https://chrome.google.com/webstore/detail/jira-template-injector/hmhpegjieopgbdmpocdmfkafjgcdmhha).
 If you find it useful please leave a [review](https://chrome.google.com/webstore/detail/jira-template-injector/hmhpegjieopgbdmpocdmfkafjgcdmhha/reviews)!
 
+### About:
+
 This extension automatically inserts a template of your choosing into the JIRA Create Issue Description field. The template injected is relative to the selected “Issue Type” within the Create Issue modal on JIRA.
 
 On initial install a default list of templates are pre populated for you. These can easily be removed/restored at any time.
@@ -26,7 +28,7 @@ The JSON format is:
 }
 ```
 
-### HELP:
+### Help:
 
 * Why are some buttons disabled?
     * By default no buttons are disabled, but if you were provided a url or a json file to load into the extension, it may have contained some options to limit the interface (see Limit Interface Options below)
