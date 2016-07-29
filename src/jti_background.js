@@ -5,14 +5,20 @@
 
 // -------------------------- Desk Metrics ---------------------------------- //
 
-// Initialise and start the DeskMetrics (DM) SDK with our app ID.
-$dm.start({ 'appId': '<appID>' });
+// Initialise and start the DeskMetrics (DM) SDK with the appropriate app ID.
+$dm.start({ 'appId': '<appID>' }, function () {
+    /*
+        Set the extension uninstall URL. When the extension is uninstalled DM
+        will fire an uninstall event and redirect the user to the supplied URL.
+    */
+    $dm.setUninstallURL('http://jiratemplate.com/remove');
+});
 
 /*
    Initialize a chrome message listener for DM events.
    As this is in the extension background page, this message listener will
-   continuously to run in the background allowing us to send DM events from
-   anywhere.
+   continuously run in the background allowing us to send DM events from
+   anywhere in our extension.
  */
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     if (message.type === 'analytics') {
