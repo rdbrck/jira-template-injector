@@ -5,6 +5,10 @@
 
 var StorageID = 'Jira-Template-Injector';
 
+if (navigator.userAgent.indexOf('Firefox') !== -1) {
+    chrome.storage.sync = chrome.storage.local;
+}
+
 // Handle <TI> tag selection.
 $(document).on('click', '#description', function () {
     var text = $(this).val(),

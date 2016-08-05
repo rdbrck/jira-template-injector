@@ -9,6 +9,10 @@ var disabledOptionToast =
     '<a class="newTabLinks" href="https://github.com/rdbrck/jira-description-extension">Help?</a>' +
     ' for details</span>';
 
+if (navigator.userAgent.indexOf('Firefox') !== -1) {
+    chrome.storage.sync = chrome.storage.local;
+}
+
 function sortObject (o) {
     var sorted = {}, key, a = [];
     for (key in o) {
@@ -414,7 +418,7 @@ $(document).ready(function () {
         }
     });
 
-    $('#add').click(function () {
+    $('#add').click(function (event) {
         event.preventDefault();
         dmUIClick('add');
         if (!$(this).hasClass('disabled')) {
@@ -487,11 +491,16 @@ $(document).ready(function () {
             JDTIfunction: 'getData'
         }, function (response) {
             if (response.status === 'success') {
-                var data = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(response.data, undefined, 4));
-                chrome.downloads.download({
-                    url: data,
-                    filename: 'templates.json'
-                });
+                var data = JSON.stringify(response.data, undefined, 4),
+                    blob = new Blob([data], {type: 'text/json'}),
+                    e = document.createEvent('MouseEvents'),
+                    a = document.createElement('a');
+
+                a.download = 'templates.json';
+                a.href = window.URL.createObjectURL(blob);
+                a.dataset.downloadurl = ['text/json', a.download, a.href].join(':');
+                e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+                a.dispatchEvent(e);
             } else {
                 if (response.message) {
                     dmError('export', response.message);

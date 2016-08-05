@@ -6,13 +6,13 @@
 // -------------------------- Desk Metrics ---------------------------------- //
 
 // Initialise and start the DeskMetrics (DM) SDK with the appropriate app ID.
-$dm.start({ 'appId': '<appID>' }, function () {
+// $dm.start({ 'appId': '<appID>' }, function () {
     /*
         Set the extension uninstall URL. When the extension is uninstalled DM
         will fire an uninstall event and redirect the user to the supplied URL.
     */
-    $dm.setUninstallURL('http://jiratemplate.com/remove');
-});
+    // $dm.setUninstallURL('http://jiratemplate.com/remove');
+// });
 
 /*
    Initialize a chrome message listener for DM events.
@@ -22,11 +22,17 @@ $dm.start({ 'appId': '<appID>' }, function () {
  */
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     if (message.type === 'analytics') {
-        $dm.send(message.name, message.body);
+        // $dm.send(message.name, message.body);
     }
 });
 
 // -------------------------------------------------------------------------- //
+
+
+if (navigator.userAgent.indexOf('Firefox') !== -1) {
+    console.log('Firefox-Extension');
+    chrome.storage.sync = chrome.storage.local;
+}
 
 var StorageID = 'Jira-Template-Injector';
 var emptyData = {'options': {'limit': []}, 'templates': {}};

@@ -4,6 +4,12 @@
 /* Copyright 2016 Redbrick Technologies, Inc. */
 /* https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE */
 
+html, body {
+  min-width: 500px;
+  min-height: 400px;
+  max-height: 600px; 
+  overflow: auto;
+}
 
 body {
 	font-family: 'Source Sans Pro',Arial,sans-serif;
