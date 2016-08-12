@@ -13,7 +13,6 @@
     },
     "browser_action": {
         "default_icon": {
-            "16": "images/JTI-16.png",
             "40": "images/JTI-48.png",
             "48": "images/JTI-48.png",
             "64": "images/JTI-64.png",
