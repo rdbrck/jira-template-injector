@@ -1,6 +1,7 @@
 {
     "manifest_version": 2,
     "name": "JIRA Template Injector",
+    "author": "Redbrick",
     "short_name": "JTI",
     "version": "1.1.1",
     "description": "The description field of new JIRA issues will automatically be populated with a template relevant to the issue type",
@@ -11,6 +12,12 @@
         "128": "images/JTI-128.png"
     },
     "browser_action": {
+        "default_icon": {
+            "40": "images/JTI-48.png",
+            "48": "images/JTI-48.png",
+            "64": "images/JTI-64.png",
+            "128": "images/JTI-128.png"
+        },
         "default_popup": "html/popup.html"
     },
     "background": {
@@ -36,9 +43,7 @@
     ],
     "permissions": [
         "storage",
-        "downloads",
         "*://*/*.json",
-        "file:///*.json",
         "https://*.pingstatsnet.com/"
     ]
 }

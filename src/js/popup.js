@@ -1,13 +1,25 @@
 /* Copyright 2016 Redbrick Technologies, Inc. */
 /* https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE */
 
-/* global chrome, Materialize */
+/* global chrome, browser, saveAs, Materialize */
 
 var StorageID = 'Jira-Template-Injector';
 var disabledOptionToast =
     '<span>Option is currently disabled. See ' +
     '<a class="newTabLinks" href="https://github.com/rdbrck/jira-description-extension">Help?</a>' +
     ' for details</span>';
+
+var browserType = 'Chrome'; // eslint-disable-line no-unused-vars
+if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf('Edge') !== -1) {
+    chrome = browser; // eslint-disable-line no-native-reassign
+    chrome.storage.sync = browser.storage.local;
+    if (navigator.userAgent.indexOf('Firefox') !== -1) {
+        browserType = 'Firefox';
+    }
+    if (navigator.userAgent.indexOf('Edge') !== -1) {
+        browserType = 'Edge';
+    }
+}
 
 function sortObject (o) {
     var sorted = {}, key, a = [];
@@ -414,7 +426,7 @@ $(document).ready(function () {
         }
     });
 
-    $('#add').click(function () {
+    $('#add').click(function (event) {
         event.preventDefault();
         dmUIClick('add');
         if (!$(this).hasClass('disabled')) {
@@ -483,25 +495,29 @@ $(document).ready(function () {
 
     $('#export').click(function () {
         dmUIClick('export');
-        chrome.runtime.sendMessage({
-            JDTIfunction: 'getData'
-        }, function (response) {
-            if (response.status === 'success') {
-                var data = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(response.data, undefined, 4));
-                chrome.downloads.download({
-                    url: data,
-                    filename: 'templates.json'
-                });
-            } else {
-                if (response.message) {
-                    dmError('export', response.message);
-                    Materialize.toast(response.message, 2000, 'toastNotification');
+        if (browserType !== 'Edge') {
+            chrome.runtime.sendMessage({
+                JDTIfunction: 'getData'
+            }, function (response) {
+                if (response.status === 'success') {
+                    var data = JSON.stringify(response.data, undefined, 4);
+                    var blob = new Blob([data], {type: 'text/json;charset=utf-8'});
+                    saveAs(blob, 'templates.json');
                 } else {
-                    dmError('export', 'generic');
-                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    if (response.message) {
+                        dmError('export', response.message);
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                    } else {
+                        dmError('export', 'generic');
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            chrome.tabs.create({'url': chrome.extension.getURL('/html/download.html')}, function (tab) {
+                // Tab opened.
+            });
+        }
     });
 
     // Because the template editing section is dynamically build, need to monitor document rather then the classes directly
@@ -596,7 +612,7 @@ $(document).ready(function () {
     // Resize textarea on click of collapsible header because doing it earlier doesn't resize it 100$ correctly.
     $(document).on('click', '.collapsible-header', function () {
         $('html, body').animate({
-            scrollTop: $(this).siblings('.collapsible-body').find('textarea').focus().trigger('autoresize').offset().top - 90
+            scrollTop: $(this).siblings('.collapsible-body').find('textarea').focus().trigger('autoresize').offset().top - 100
         }, 500);
     });
 
@@ -610,9 +626,16 @@ $(document).ready(function () {
     // Onchange Handlers
     $('#fileSelector').change(function () {
         var file = $(this)[0].files[0];
-        if (file.type !== 'application/json') {
-            Materialize.toast('File must be of type JSON. Please select a valid file', 4000, 'toastNotification');
-            $(this).val('');
+        if (browserType !== 'Edge') {
+            if (file.type !== 'application/json') {
+                Materialize.toast('File must be of type JSON. Please select a valid file', 4000, 'toastNotification');
+                $(this).val('');
+            }
+        } else {
+            if (file.name.split('.').pop() !== 'json') {
+                Materialize.toast('File must be of type JSON. Please select a valid file', 4000, 'toastNotification');
+                $(this).val('');
+            }
         }
     });
 });
