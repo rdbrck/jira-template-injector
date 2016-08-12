@@ -1,18 +1,30 @@
 /* Copyright 2016 Redbrick Technologies, Inc. */
 /* https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE */
 
-/* global $dm, chrome */
+/* global $dm, chrome, browser */
+
+var browserType = 'Chrome'; // eslint-disable-line no-unused-vars
+if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf('Edge') !== -1) {
+    chrome = browser; // eslint-disable-line no-native-reassign
+    chrome.storage.sync = browser.storage.local;
+    if (navigator.userAgent.indexOf('Firefox') !== -1) {
+        browserType = 'Firefox';
+    }
+    if (navigator.userAgent.indexOf('Edge') !== -1) {
+        browserType = 'Edge';
+    }
+}
 
 // -------------------------- Desk Metrics ---------------------------------- //
 
 // Initialise and start the DeskMetrics (DM) SDK with the appropriate app ID.
-// $dm.start({ 'appId': '<appID>' }, function () {
+$dm.start({ 'appId': '<appID>' }, function () {
     /*
         Set the extension uninstall URL. When the extension is uninstalled DM
         will fire an uninstall event and redirect the user to the supplied URL.
     */
-    // $dm.setUninstallURL('http://jiratemplate.com/remove');
-// });
+    $dm.setUninstallURL('http://jiratemplate.com/remove');
+});
 
 /*
    Initialize a chrome message listener for DM events.
@@ -22,17 +34,11 @@
  */
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     if (message.type === 'analytics') {
-        // $dm.send(message.name, message.body);
+        $dm.send(message.name, message.body);
     }
 });
 
 // -------------------------------------------------------------------------- //
-
-
-if (navigator.userAgent.indexOf('Firefox') !== -1) {
-    console.log('Firefox-Extension');
-    chrome.storage.sync = chrome.storage.local;
-}
 
 var StorageID = 'Jira-Template-Injector';
 var emptyData = {'options': {'limit': []}, 'templates': {}};

@@ -14,6 +14,7 @@
     "browser_action": {
         "default_icon": {
             "16": "images/JTI-16.png",
+            "40": "images/JTI-48.png",
             "48": "images/JTI-48.png",
             "64": "images/JTI-64.png",
             "128": "images/JTI-128.png"
@@ -22,6 +23,7 @@
     },
     "background": {
         "scripts": [
+            "lib/deskmetrics/deskmetrics-2.2.0.js",
             "lib/jquery/jquery-2.2.3.js",
             "jti_background.js"
         ],

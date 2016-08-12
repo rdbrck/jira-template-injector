@@ -1,213 +1,205 @@
+<!doctype html>
+
 <!--
 Copyright 2016 Redbrick Technologies, Inc.
 https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
 -->
 
-<!doctype html>
 <html>
-<head>
-
+    <head>
         <title>Jira Template Injector</title>
-
         <!--Import Google Icon Font-->
         <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
         <!-- Javascript -->
         <script type="text/javascript" src="../lib/jquery/jquery-2.2.3.js"></script>
         <script type="text/javascript" src="../lib/materialize/materialize.js"></script>
+        <script type="text/javascript" src="../lib/filesaver/FileSaver.js"></script>
         <script type="text/javascript" src="../js/popup.js"></script>
-
         <!-- CSS -->
         <link type="text/css" rel="stylesheet" href="../lib/materialize/materialize.css"  media="screen,projection"/>
         <link type="text/css" rel="stylesheet" href="../css/popup.css">
-
         <!--Let browser know website is optimized for mobile-->
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    </head>
 
-</head>
-
-<body>
-    <div class="navbar-fixed">
-      <nav>
-          <div class="nav-wrapper">
-              <div class="brand-logo center">
-                  <p id="mainTitle">
-                      <a class="newTabLinks" href="https://rdbrck.com/">
-                          <img src="../images/JTI-128.png" id="logoIcon">
-                      </a>
-                      <a class="newTabLinks" href="https://github.com/rdbrck/jira-description-extension">
-                          Jira Template Injector
-                      </a>
-                  </p>
-              </div>
-          </div>
-          <div id="help" class="row center-align">
-            <a class="newTabLinks" href="https://github.com/rdbrck/jira-description-extension">
-                Help?
-            </a>
-        </div>
-
-      </nav>
-    </div>
-
-    <main>
-        <div class="container">
-            <div class="section">
-                <div class="row">
-                    <div class="col s8 valign-wrapper">
-                        <h6 class="left-align"> Reload default Templates:</h6>
-                    </div>
-                    <div class="col s4">
-                        <div class="right-align">
-                            <a id="reset" class="btn-floating btn-Medium btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Reload Templates">
-                                <i class="material-icons">replay</i>
+    <body>
+        <div class="navbar-fixed">
+            <nav>
+                <div class="nav-wrapper">
+                    <div class="brand-logo center">
+                        <p id="mainTitle">
+                            <a class="newTabLinks" href="https://rdbrck.com/">
+                                <img src="../images/JTI-128.png" id="logoIcon">
                             </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="divider"></div>
-            <div class="section">
-                <div class="row">
-                    <div class="col s5 valign-wrapper">
-                        <h6 class="valign"> Load JSON from URL:</h6>
-                    </div>
-                    <div class="col s5">
-                        <input id="jsonURLInput" type="text" name="url" placeholder="URL to JSON file">
-                    </div>
-                    <div class="col s2">
-                        <div class="right-align">
-                            <a id="download" class="btn-floating btn-small btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Download Templates">
-                                <i class="material-icons">cloud_download</i>
+                            <a class="newTabLinks" href="https://github.com/rdbrck/jira-description-extension">
+                                Jira Template Injector
                             </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="divider"></div>
-            <div class="section">
-                <div class="row">
-                    <div class="col s3 valign-wrapper">
-                        <h6 class="valign"> Select file:</h6>
-                    </div>
-                    <div class="col s7">
-                        <form action="#">
-                            <div class="file-field input-field">
-                                <div id="fileSelectorButton" class="btn btn-Small btn-jti">
-                                    <span>File</span>
-                                    <input type="file" id="fileSelector">
-                                </div>
-                                <div class="file-path-wrapper">
-                                    <input title="filePath" class="file-path validate" type="text">
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="col s2">
-                        <div class="right-align">
-                            <a id="upload" class="btn-floating btn-jti btn-Small tooltipped" data-position="left" data-delay="50" data-tooltip="Upload File">
-                                <i class="material-icons">file_upload</i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="divider"></div>
-            <div class="section">
-                <div class="row">
-                    <div class="col s8 valign-wrapper">
-                        <h6 class="left-align"> Clear all Templates:</h6>
-                    </div>
-                    <div class="col s4">
-                        <div class="right-align">
-                            <a id="clear" class="btn-floating btn-Medium btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Delete all templates">
-                                <i class="material-icons">delete</i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="divider"></div>
-            <div class="row">
-                <div class="col s8 valign-wrapper">
-                    <h6 id="templateEditorTitle">Templates:</h6>
-                </div>
-                <div class="col s4">
-                    <div class="right-align">
-                        <!-- Modal Trigger -->
-                        <a id="add" class="btn-floating btn-Medium btn-jti tooltipped modal-trigger" data-position="left" data-delay="50" data-tooltip="Add a Template">
-                            <i class="material-icons">add</i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="section">
-                <ul class="collapsible popout" data-collapsible="accordion" id="templateEditor">
-                </ul>
-            </div>
-            <div class="row">
-                <div class="col s6 offset-s3 valign-wrapper">
-                    <a id="export" class="btn btn-jti ">Export Templates</a>
-            </div>
-        </div>
-
-        <!-- Modal Structure -->
-        <div id="addTemplateModal" class="modal bottom-sheet">
-            <div class="modal-content">
-                <div class="row">
-                    <div class="col s12">
-                        <h5 id="addTemplateTitle">Add Default or Custom Template</h5>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <label class="addTemplateLabel">Custom:</label>
-                <div class="row">
-                    <div class="col s2 valign-wrapper zpr">
-                        <h6>Name:</h6>
-                    </div>
-                    <div class="col s4 zpl">
-                        <input id="customTemplateName" type="text" name="customName" placeholder='BUG TEMPLATE' >
-                    </div>
-                    <div class="col s2 valign-wrapper zpr zpl text-center">
-                        <h6>Issue Type Field:</h6>
-                    </div>
-                    <div class="col s3">
-                        <input id="customTemplateIssueTypeField" type="text" name="issueTypeField" placeholder='Bug' >
-                    </div>
-                    <div class="col s1">
-                        <div class="right-align">
-                            <a id="addCustomTemplate" class="btn-floating btn-Small btn-jti">
-                                <i class="material-icons">forward</i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <label class="addTemplateLabel">Default:</label>
-                <div class="row" id="addDefaultDropdownRow">
-                    <div class="col s7">
-                        <!-- Dropdown Trigger -->
-                        <a class='dropdown-button btn btn-jti' id="addDefaultDropdownButton" href='#'>
-                            <i class="material-icons left">expand_more</i>
-                            Default Templates
-                        </a>
-                    </div>
-                    <div class="col s5 valign-wrapper">
-                        <p>
-                            <input type="checkbox" class="filled-in disabled btn-jti" id="loadDefault" checked="checked" />
-                            <label for="loadDefault">Load default text</label>
                         </p>
                     </div>
                 </div>
-            </div>
+                <div id="help" class="row center-align">
+                    <a class="newTabLinks" href="https://github.com/rdbrck/jira-description-extension">Help?</a>
+                </div>
+            </nav>
         </div>
 
-        <!-- Dropdown Structure -->
-        <ul id='addDefaultDropdown' class='dropdown-content'>
-            <!-- Dynamically built -->
-        </ul>
+        <main>
+            <div class="container">
+                <div class="section">
+                    <div class="row">
+                        <div class="col s8 valign-wrapper">
+                            <h6 class="left-align"> Reload default Templates:</h6>
+                        </div>
+                        <div class="col s4">
+                            <div class="right-align">
+                                <a id="reset" class="btn-floating btn-Medium btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Reload Templates">
+                                    <i class="material-icons">replay</i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                <div class="section">
+                    <div class="row">
+                        <div class="col s5 valign-wrapper">
+                            <h6 class="valign"> Load JSON from URL:</h6>
+                        </div>
+                        <div class="col s5">
+                            <input id="jsonURLInput" type="text" name="url" placeholder="URL to JSON file">
+                        </div>
+                        <div class="col s2">
+                            <div class="right-align">
+                                <a id="download" class="btn-floating btn-small btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Download Templates">
+                                    <i class="material-icons">cloud_download</i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                <div class="section">
+                    <div class="row">
+                        <div class="col s3 valign-wrapper">
+                            <h6 class="valign"> Select file:</h6>
+                        </div>
+                        <div class="col s7">
+                            <form action="#">
+                                <div class="file-field input-field">
+                                    <div id="fileSelectorButton" class="btn btn-Small btn-jti">
+                                        <span>File</span>
+                                        <input type="file" id="fileSelector">
+                                    </div>
+                                    <div class="file-path-wrapper">
+                                        <input title="filePath" class="file-path validate" type="text">
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col s2">
+                            <div class="right-align">
+                                <a id="upload" class="btn-floating btn-jti btn-Small tooltipped" data-position="left" data-delay="50" data-tooltip="Upload File">
+                                    <i class="material-icons">file_upload</i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                <div class="section">
+                    <div class="row">
+                        <div class="col s8 valign-wrapper">
+                            <h6 class="left-align"> Clear all Templates:</h6>
+                        </div>
+                        <div class="col s4">
+                            <div class="right-align">
+                                <a id="clear" class="btn-floating btn-Medium btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Delete all templates">
+                                    <i class="material-icons">delete</i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                <div class="row">
+                    <div class="col s8 valign-wrapper">
+                        <h6 id="templateEditorTitle">Templates:</h6>
+                    </div>
+                    <div class="col s4">
+                        <div class="right-align">
+                            <!-- Modal Trigger -->
+                            <a id="add" class="btn-floating btn-Medium btn-jti tooltipped modal-trigger" data-position="left" data-delay="50" data-tooltip="Add a Template">
+                                <i class="material-icons">add</i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="section">
+                    <ul class="collapsible popout" data-collapsible="accordion" id="templateEditor">
+                    </ul>
+                </div>
+                <div class="row">
+                    <div class="col s6 offset-s3 valign-wrapper">
+                        <a id="export" class="btn btn-jti ">Export Templates</a>
+                    </div>
+                </div>
+            </div>
 
-    </main>
-</body>
+            <!-- Modal Structure -->
+            <div id="addTemplateModal" class="modal bottom-sheet">
+                <div class="modal-content">
+                    <div class="row">
+                        <div class="col s12">
+                            <h5 id="addTemplateTitle">Add Default or Custom Template</h5>
+                        </div>
+                    </div>
+                    <div class="divider"></div>
+                    <label class="addTemplateLabel">Custom:</label>
+                    <div class="row">
+                        <div class="col s2 valign-wrapper zpr">
+                            <h6>Name:</h6>
+                        </div>
+                        <div class="col s4 zpl">
+                            <input id="customTemplateName" type="text" name="customName" placeholder="BUG TEMPLATE" >
+                        </div>
+                        <div class="col s2 valign-wrapper zpr zpl text-center">
+                            <h6>Issue Type Field:</h6>
+                        </div>
+                        <div class="col s3">
+                            <input id="customTemplateIssueTypeField" type="text" name="issueTypeField" placeholder="Bug" >
+                        </div>
+                        <div class="col s1">
+                            <div class="right-align">
+                                <a id="addCustomTemplate" class="btn-floating btn-Small btn-jti">
+                                    <i class="material-icons">forward</i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="divider"></div>
+                    <label class="addTemplateLabel">Default:</label>
+                    <div class="row" id="addDefaultDropdownRow">
+                        <div class="col s7">
+                            <!-- Dropdown Trigger -->
+                            <a class="dropdown-button btn btn-jti" id="addDefaultDropdownButton" href="#">
+                                <i class="material-icons left">expand_more</i>
+                                Default Templates
+                            </a>
+                        </div>
+                        <div class="col s5 valign-wrapper">
+                            <p>
+                                <input type="checkbox" class="filled-in disabled btn-jti" id="loadDefault" checked="checked" />
+                                <label for="loadDefault">Load default text</label>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Dropdown Structure -->
+            <ul id="addDefaultDropdown" class="dropdown-content">
+                <!-- Dynamically built -->
+            </ul>
+        </main>
+    </body>
 </html>

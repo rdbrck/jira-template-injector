@@ -1,12 +1,20 @@
 /* Copyright 2016 Redbrick Technologies, Inc. */
 /* https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE */
 
-/* global chrome */
+/* global chrome, browser */
 
 var StorageID = 'Jira-Template-Injector';
 
-if (navigator.userAgent.indexOf('Firefox') !== -1) {
-    chrome.storage.sync = chrome.storage.local;
+var browserType = 'Chrome'; // eslint-disable-line no-unused-vars
+if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf('Edge') !== -1) {
+    chrome = browser; // eslint-disable-line no-native-reassign
+    chrome.storage.sync = browser.storage.local;
+    if (navigator.userAgent.indexOf('Firefox') !== -1) {
+        browserType = 'Firefox';
+    }
+    if (navigator.userAgent.indexOf('Edge') !== -1) {
+        browserType = 'Edge';
+    }
 }
 
 // Handle <TI> tag selection.
@@ -81,7 +89,7 @@ $(document).on('click', '#create-issue-submit', function () {
 });
 
 function isDefaultDescription (value, callback) {
-    chrome.storage.sync.get(StorageID, function (templates) {
+    chrome.storage.local.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;
         var match = false;
 
@@ -106,7 +114,7 @@ function isDefaultDescription (value, callback) {
 
 function injectDescriptionTemplate (descriptionElement) {
     // Each issue type can have its own template.
-    chrome.storage.sync.get(StorageID, function (templates) {
+    chrome.storage.local.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;
 
         // Load default template if set. Individual Templates will over ride it.
