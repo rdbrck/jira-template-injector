@@ -499,7 +499,6 @@ $(document).ready(function () {
             chrome.runtime.sendMessage({
                 JDTIfunction: 'getData'
             }, function (response) {
-                console.log(response);
                 if (response.status === 'success') {
                     var data = JSON.stringify(response.data, undefined, 4);
                     var blob = new Blob([data], {type: 'text/json;charset=utf-8'});

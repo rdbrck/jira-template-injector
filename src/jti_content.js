@@ -89,7 +89,7 @@ $(document).on('click', '#create-issue-submit', function () {
 });
 
 function isDefaultDescription (value, callback) {
-    chrome.storage.local.get(StorageID, function (templates) {
+    chrome.storage.sync.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;
         var match = false;
 
@@ -114,7 +114,7 @@ function isDefaultDescription (value, callback) {
 
 function injectDescriptionTemplate (descriptionElement) {
     // Each issue type can have its own template.
-    chrome.storage.local.get(StorageID, function (templates) {
+    chrome.storage.sync.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;
 
         // Load default template if set. Individual Templates will over ride it.

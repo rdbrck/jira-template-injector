@@ -1,6 +1,6 @@
 /* global chrome, browser, saveAs */
 
-var browserType = 'Chrome';
+var browserType = 'Chrome'; // eslint-disable-line no-unused-vars
 if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf('Edge') !== -1) {
     chrome = browser; // eslint-disable-line no-native-reassign
     chrome.storage.sync = browser.storage.local;
