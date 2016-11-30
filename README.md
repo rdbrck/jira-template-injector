@@ -9,7 +9,7 @@ This extension automatically inserts a template of your choosing into the JIRA C
 
 On initial install a default list of templates are pre populated for you. These can easily be removed/restored at any time.
 
-You can add templates individually, or bulk add them through a local or remote json file. See [templates.json](https://github.com/rdbrck/jira-description-extension/blob/master/data/templates.json) for an example JSON file.
+You can add templates individually, or bulk add them through a local or remote json file. See [templates.json](https://github.com/rdbrck/jira-description-extension/blob/master/src/data/templates.json) for an example JSON file.
 
 The JSON format is:
 
