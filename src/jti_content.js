@@ -20,6 +20,10 @@ if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf
 // Handle <TI> tag selection.
 $(document).on('click', '#description', function () {
     var text = $(this).val(),
+        ctrlDown = false,
+        ctrlKey = 17,
+        cmdKey = 91,
+        backtickKey = 192,
         cursorStart = $(this).prop('selectionStart'),
         cursorFinish = $(this).prop('selectionEnd'),
         end = (text.length - 5),
@@ -64,36 +68,42 @@ $(document).on('click', '#description', function () {
         }
     }
 
-    //keypree listener
-    $('#description').keypress("q", function (e) {
+    // detect ctrl or cmd pressed
+    $('#description').keydown(function (e) {
+        if (e.keyCode === ctrlKey || e.keyCode === cmdKey) ctrlDown = true;
+    }).keyup(function (e) {
+        if (e.keyCode === ctrlKey || e.keyCode === cmdKey) ctrlDown = false;
+    });
 
-        if (e.ctrlKey) { //if ctrl is pressed
-            TI_StartIndex = []; //store index of <TI>
-            TI_EndIndex = []; //store index of </TI>
-            TI_index = getAllIndexes($(this).val(), TI_StartIndex, TI_EndIndex); //find all <TI> and </TI> tags in selected template.
-            TI_StartIndex = TI_index.start;
-            TI_EndIndex = TI_index.end;
-            if (TI_StartIndex.length != 0 && TI_EndIndex.length != 0) { //works only if the selected template contains any <TI> tag
-                if (selectStart == null && selectEnd == null) { //start from first <TI>
-                    var StartPos = FindNextTI(cursorStart, TI_StartIndex, TI_EndIndex); //find the starting <TI> tag
+    // keypree listener
+    $('#description').keydown(function (e) {
+        if (ctrlDown && (e.keyCode === backtickKey)) { // if ctrl is pressed
+            var tagStartIndex = []; // store index of <TI>
+            var tagEndIndex = []; // store index of </TI>
+            var tagindex = getAllIndexes($(this).val(), tagStartIndex, tagEndIndex); // find all <TI> and </TI> tags in selected template.
+            tagStartIndex = tagindex.start;
+            tagEndIndex = tagindex.end;
+            if (tagStartIndex.length !== 0 && tagEndIndex.length !== 0) { // works only if the selected template contains any <TI> tag
+                if (selectStart === null && selectEnd === null) { // start from first <TI>
+                    var StartPos = FindNextTI(cursorStart, tagStartIndex, tagEndIndex); // find the starting <TI> tag
                     $(this)[0].setSelectionRange(StartPos.start, StartPos.end);
-                    selectStart = StartPos.start; //set Start Index
-                    selectEnd = StartPos.end; //set End Index
-                } else { //select next <TI> set
-                    if (TI_StartIndex.indexOf(selectStart) == TI_StartIndex.length - 1 && TI_EndIndex.indexOf(selectEnd) == TI_EndIndex.length - 1) { //currently selecting the last set of <TI>,back to first set
-                        $(this)[0].setSelectionRange(TI_StartIndex[0], TI_EndIndex[0]);
-                        selectStart = TI_StartIndex[0];
-                        selectEnd = TI_EndIndex[0];
+                    selectStart = StartPos.start; // set Start Index
+                    selectEnd = StartPos.end; // set End Index
+                } else { // select next <TI> set
+                    if (tagStartIndex.indexOf(selectStart) === tagStartIndex.length - 1 && tagEndIndex.indexOf(selectEnd) === tagEndIndex.length - 1) { // currently selecting the last set of <TI>,back to first set
+                        $(this)[0].setSelectionRange(tagStartIndex[0], tagEndIndex[0]);
+                        selectStart = tagStartIndex[0];
+                        selectEnd = tagEndIndex[0];
                     } else {
-                        if (TI_StartIndex.indexOf(selectStart) == -1 && TI_EndIndex.indexOf(selectEnd) == -1) { //highlighted <TI> tag is modified by user. Now we need search for the next <TI>.
-                            var StartPos = FindNextTI(cursorStart, TI_StartIndex, TI_EndIndex); //find the starting <TI> tag
+                        if (tagStartIndex.indexOf(selectStart) === -1 && tagEndIndex.indexOf(selectEnd) === -1) { // highlighted <TI> tag is modified by user. Now we need search for the next <TI>.
+                            StartPos = FindNextTI(cursorStart, tagStartIndex, tagEndIndex); // find the starting <TI> tag
                             $(this)[0].setSelectionRange(StartPos.start, StartPos.end);
-                            selectStart = StartPos.start; //set Start Index
-                            selectEnd = StartPos.end; //set End Index
+                            selectStart = StartPos.start; // set Start Index
+                            selectEnd = StartPos.end; // set End Index
                         } else {
-                            $(this)[0].setSelectionRange(TI_StartIndex[TI_StartIndex.indexOf(selectStart) + 1], TI_EndIndex[TI_EndIndex.indexOf(selectEnd) + 1]); //find next set of <TI>
-                            selectStart = TI_StartIndex[TI_StartIndex.indexOf(selectStart) + 1];
-                            selectEnd = TI_EndIndex[TI_EndIndex.indexOf(selectEnd) + 1];
+                            $(this)[0].setSelectionRange(tagStartIndex[tagStartIndex.indexOf(selectStart) + 1], tagEndIndex[tagEndIndex.indexOf(selectEnd) + 1]); // find next set of <TI>
+                            selectStart = tagStartIndex[tagStartIndex.indexOf(selectStart) + 1];
+                            selectEnd = tagEndIndex[tagEndIndex.indexOf(selectEnd) + 1];
                         }
                     }
                 }
@@ -102,31 +112,32 @@ $(document).on('click', '#description', function () {
     });
 });
 
-//Helper method. Find next <TI> based on cursor position
-function FindNextTI(CursorPos, TI_Start, TI_End) {
-    for (i = 0; i < TI_Start.length; i++) {
-        if (TI_Start[i] >= CursorPos) {
-            return { start: TI_Start[i], end: TI_End[i] };
+// Helper method. Find next <TI> based on cursor position
+function FindNextTI (CursorPos, tagStart, tagEnd) {
+    for (var i = 0; i < tagStart.length; i++) {
+        if (tagStart[i] >= CursorPos) {
+            return { start: tagStart[i], end: tagEnd[i] };
         }
     }
 }
 
-//Helper method. Find index(start and end) of all occurrences of a given substring in a string
-function getAllIndexes(str, arr1, arr2) {
-    var re = /<TI>/g, //start
-        match;
-    while (match = re.exec(str)) {
+// Helper method. Find index(start and end) of all occurrences of a given substring in a string
+function getAllIndexes (str, arr1, arr2) {
+    var re = /<TI>/g, // start
+        match = re.exec(str);
+    while (match) {
         arr1.push(match.index);
+        match = re.exec(str);
     }
 
-    var re2 = /<\/TI>/g, //end
-        match2;
-    while (match2 = re2.exec(str)) {
+    var re2 = /<\/TI>/g, // end
+        match2 = re2.exec(str);
+    while (match2) {
         arr2.push(match2.index + 5);
+        match2 = re2.exec(str);
     }
     return { start: arr1, end: arr2 };
 }
-
 
 /*
     When user submits a ticket track the ticket type.
@@ -152,7 +163,7 @@ $(document).on('click', '#create-issue-submit', function () {
     });
 });
 
-function isDefaultDescription(value, callback) {
+function isDefaultDescription (value, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;
         var match = false;
@@ -176,7 +187,7 @@ function isDefaultDescription(value, callback) {
     });
 }
 
-function injectDescriptionTemplate(descriptionElement) {
+function injectDescriptionTemplate (descriptionElement) {
     // Each issue type can have its own template.
     chrome.storage.sync.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;
@@ -203,13 +214,13 @@ function injectDescriptionTemplate(descriptionElement) {
     });
 }
 
-function descriptionChangeEvent(changeEvent) {
+function descriptionChangeEvent (changeEvent) {
     // The description field has been changed, turn the dirtyDialogMessage back on and remove the listener.
     changeEvent.target.className = changeEvent.target.className.replace(' ajs-dirty-warning-exempt', '');
     changeEvent.target.removeEventListener('change', descriptionChangeEvent);
 }
 
-function observeDocumentBody(mutation) {
+function observeDocumentBody (mutation) {
     if (document.getElementById('create-issue-dialog') !== null || document.getElementById('create-subtask-dialog') !== null) { // Only interested in document changes related to Create Issue Dialog box or Create Sub-task Dialog box.
         if (mutation.target.id === 'description') { // Only interested in the description field.
             var descriptionElement = mutation.target;
