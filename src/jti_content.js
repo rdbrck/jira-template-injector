@@ -20,18 +20,12 @@ if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf
 // Handle <TI> tag selection.
 $(document).on('click', '#description', function () {
     var text = $(this).val(),
-        TI_StartIndex = [],
-        TI_EndIndex = [],
         cursorStart = $(this).prop('selectionStart'),
         cursorFinish = $(this).prop('selectionEnd'),
         end = (text.length - 5),
         selectStart = null,
         selectEnd = null,
         i = 0;
-
-    TI_index = getAllIndexes(text, TI_StartIndex, TI_EndIndex);
-    TI_StartIndex = TI_index.start;
-    TI_EndIndex = TI_index.end;
 
     // Only proceed if this is a click. i.e. not a highlight.
     if (cursorStart === cursorFinish) {
@@ -72,7 +66,13 @@ $(document).on('click', '#description', function () {
 
     //keypree listener
     $('#description').keypress("q", function (e) {
+
         if (e.ctrlKey) { //if ctrl is pressed
+            TI_StartIndex = []; //store index of <TI>
+            TI_EndIndex = []; //store index of </TI>
+            TI_index = getAllIndexes($(this).val(), TI_StartIndex, TI_EndIndex); //find all <TI> and </TI> tags in selected template.
+            TI_StartIndex = TI_index.start;
+            TI_EndIndex = TI_index.end;
             if (TI_StartIndex.length != 0 && TI_EndIndex.length != 0) { //works only if the selected template contains any <TI> tag
                 if (selectStart == null && selectEnd == null) { //start from first <TI>
                     $(this)[0].setSelectionRange(TI_StartIndex[0], TI_EndIndex[0]);
