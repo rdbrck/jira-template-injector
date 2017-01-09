@@ -146,7 +146,7 @@ function descriptionChangeEvent (changeEvent) {
 }
 
 function observeDocumentBody (mutation) {
-    if (document.getElementById('create-issue-dialog') !== null || document.getElementById('create-subtask-dialog') !== null) { // Only interested in document changes related to Create Issue Dialog box.
+    if (document.getElementById('create-issue-dialog') !== null || document.getElementById('create-subtask-dialog') !== null) { // Only interested in document changes related to Create Issue Dialog box or Create Sub-task Dialog box.
         if (mutation.target.id === 'description') { // Only interested in the description field.
             var descriptionElement = mutation.target;
             isDefaultDescription(descriptionElement.value, function (result) {
