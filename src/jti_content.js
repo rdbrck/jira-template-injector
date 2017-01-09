@@ -75,24 +75,41 @@ $(document).on('click', '#description', function () {
             TI_EndIndex = TI_index.end;
             if (TI_StartIndex.length != 0 && TI_EndIndex.length != 0) { //works only if the selected template contains any <TI> tag
                 if (selectStart == null && selectEnd == null) { //start from first <TI>
-                    $(this)[0].setSelectionRange(TI_StartIndex[0], TI_EndIndex[0]);
-                    selectStart = TI_StartIndex[0]; //set Start Index
-                    selectEnd = TI_EndIndex[0]; //set End Index
+                    var StartPos = FindNextTI(cursorStart, TI_StartIndex, TI_EndIndex); //find the starting <TI> tag
+                    $(this)[0].setSelectionRange(StartPos.start, StartPos.end);
+                    selectStart = StartPos.start; //set Start Index
+                    selectEnd = StartPos.end; //set End Index
                 } else { //select next <TI> set
                     if (TI_StartIndex.indexOf(selectStart) == TI_StartIndex.length - 1 && TI_EndIndex.indexOf(selectEnd) == TI_EndIndex.length - 1) { //currently selecting the last set of <TI>,back to first set
                         $(this)[0].setSelectionRange(TI_StartIndex[0], TI_EndIndex[0]);
                         selectStart = TI_StartIndex[0];
                         selectEnd = TI_EndIndex[0];
                     } else {
-                        $(this)[0].setSelectionRange(TI_StartIndex[TI_StartIndex.indexOf(selectStart) + 1], TI_EndIndex[TI_EndIndex.indexOf(selectEnd) + 1]); //find next set of <TI>
-                        selectStart = TI_StartIndex[TI_StartIndex.indexOf(selectStart) + 1];
-                        selectEnd = TI_EndIndex[TI_EndIndex.indexOf(selectEnd) + 1];
+                        if (TI_StartIndex.indexOf(selectStart) == -1 && TI_EndIndex.indexOf(selectEnd) == -1) { //highlighted <TI> tag is modified by user. Now we need search for the next <TI>.
+                            var StartPos = FindNextTI(cursorStart, TI_StartIndex, TI_EndIndex); //find the starting <TI> tag
+                            $(this)[0].setSelectionRange(StartPos.start, StartPos.end);
+                            selectStart = StartPos.start; //set Start Index
+                            selectEnd = StartPos.end; //set End Index
+                        } else {
+                            $(this)[0].setSelectionRange(TI_StartIndex[TI_StartIndex.indexOf(selectStart) + 1], TI_EndIndex[TI_EndIndex.indexOf(selectEnd) + 1]); //find next set of <TI>
+                            selectStart = TI_StartIndex[TI_StartIndex.indexOf(selectStart) + 1];
+                            selectEnd = TI_EndIndex[TI_EndIndex.indexOf(selectEnd) + 1];
+                        }
                     }
                 }
             }
         }
     });
 });
+
+//Helper method. Find next <TI> based on cursor position
+function FindNextTI(CursorPos, TI_Start, TI_End) {
+    for (i = 0; i < TI_Start.length; i++) {
+        if (TI_Start[i] >= CursorPos) {
+            return { start: TI_Start[i], end: TI_End[i] };
+        }
+    }
+}
 
 //Helper method. Find index(start and end) of all occurrences of a given substring in a string
 function getAllIndexes(str, arr1, arr2) {
