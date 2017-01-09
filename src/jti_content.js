@@ -20,12 +20,18 @@ if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf
 // Handle <TI> tag selection.
 $(document).on('click', '#description', function () {
     var text = $(this).val(),
+        TI_StartIndex = [],
+        TI_EndIndex = [],
         cursorStart = $(this).prop('selectionStart'),
         cursorFinish = $(this).prop('selectionEnd'),
         end = (text.length - 5),
         selectStart = null,
         selectEnd = null,
         i = 0;
+
+    TI_index = getAllIndexes(text, TI_StartIndex, TI_EndIndex);
+    TI_StartIndex = TI_index.start;
+    TI_EndIndex = TI_index.end;
 
     // Only proceed if this is a click. i.e. not a highlight.
     if (cursorStart === cursorFinish) {
@@ -63,7 +69,47 @@ $(document).on('click', '#description', function () {
             }
         }
     }
+
+    //keypree listener
+    $('#description').keypress("q", function (e) {
+        if (e.ctrlKey) { //if ctrl is pressed
+            if (TI_StartIndex.length != 0 && TI_EndIndex.length != 0) { //works only if the selected template contains any <TI> tag
+                if (selectStart == null && selectEnd == null) { //start from first <TI>
+                    $(this)[0].setSelectionRange(TI_StartIndex[0], TI_EndIndex[0]);
+                    selectStart = TI_StartIndex[0]; //set Start Index
+                    selectEnd = TI_EndIndex[0]; //set End Index
+                } else { //select next <TI> set
+                    if (TI_StartIndex.indexOf(selectStart) == TI_StartIndex.length - 1 && TI_EndIndex.indexOf(selectEnd) == TI_EndIndex.length - 1) { //currently selecting the last set of <TI>,back to first set
+                        $(this)[0].setSelectionRange(TI_StartIndex[0], TI_EndIndex[0]);
+                        selectStart = TI_StartIndex[0];
+                        selectEnd = TI_EndIndex[0];
+                    } else {
+                        $(this)[0].setSelectionRange(TI_StartIndex[TI_StartIndex.indexOf(selectStart) + 1], TI_EndIndex[TI_EndIndex.indexOf(selectEnd) + 1]); //find next set of <TI>
+                        selectStart = TI_StartIndex[TI_StartIndex.indexOf(selectStart) + 1];
+                        selectEnd = TI_EndIndex[TI_EndIndex.indexOf(selectEnd) + 1];
+                    }
+                }
+            }
+        }
+    });
 });
+
+//Helper method. Find index(start and end) of all occurrences of a given substring in a string
+function getAllIndexes(str, arr1, arr2) {
+    var re = /<TI>/g, //start
+        match;
+    while (match = re.exec(str)) {
+        arr1.push(match.index);
+    }
+
+    var re2 = /<\/TI>/g, //end
+        match2;
+    while (match2 = re2.exec(str)) {
+        arr2.push(match2.index + 5);
+    }
+    return { start: arr1, end: arr2 };
+}
+
 
 /*
     When user submits a ticket track the ticket type.
@@ -77,18 +123,19 @@ $(document).on('click', '#description', function () {
     If we find a template is used very often we can add it as a default to simplify peoples' ticket creation.
  */
 $(document).on('click', '#create-issue-submit', function () {
-    chrome.runtime.sendMessage({type: 'analytics', name: 'issue_type', body:
-    {
-        'type': $('#issuetype-field').val(),
-        'version': chrome.runtime.getManifest().version,
-        'ip_address': '${dm.meta:request_ip}',
-        'geo': '${dm.meta:request_geo}',
-        'ua': '${dm.ua:user_agent}'
-    }
+    chrome.runtime.sendMessage({
+        type: 'analytics', name: 'issue_type', body:
+        {
+            'type': $('#issuetype-field').val(),
+            'version': chrome.runtime.getManifest().version,
+            'ip_address': '${dm.meta:request_ip}',
+            'geo': '${dm.meta:request_geo}',
+            'ua': '${dm.ua:user_agent}'
+        }
     });
 });
 
-function isDefaultDescription (value, callback) {
+function isDefaultDescription(value, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;
         var match = false;
@@ -112,7 +159,7 @@ function isDefaultDescription (value, callback) {
     });
 }
 
-function injectDescriptionTemplate (descriptionElement) {
+function injectDescriptionTemplate(descriptionElement) {
     // Each issue type can have its own template.
     chrome.storage.sync.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;
@@ -139,13 +186,13 @@ function injectDescriptionTemplate (descriptionElement) {
     });
 }
 
-function descriptionChangeEvent (changeEvent) {
+function descriptionChangeEvent(changeEvent) {
     // The description field has been changed, turn the dirtyDialogMessage back on and remove the listener.
     changeEvent.target.className = changeEvent.target.className.replace(' ajs-dirty-warning-exempt', '');
     changeEvent.target.removeEventListener('change', descriptionChangeEvent);
 }
 
-function observeDocumentBody (mutation) {
+function observeDocumentBody(mutation) {
     if (document.getElementById('create-issue-dialog') !== null || document.getElementById('create-subtask-dialog') !== null) { // Only interested in document changes related to Create Issue Dialog box or Create Sub-task Dialog box.
         if (mutation.target.id === 'description') { // Only interested in the description field.
             var descriptionElement = mutation.target;
@@ -166,4 +213,4 @@ function observeDocumentBody (mutation) {
 var observer = new MutationObserver(function (mutations) {
     mutations.forEach(observeDocumentBody);
 });
-observer.observe(document.body, {subtree: true, attributes: true, attributeFilter: ['resolved']});
+observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['resolved'] });
