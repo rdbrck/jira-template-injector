@@ -234,18 +234,7 @@ textarea.materialize-textarea:focus:not([readonly]) {
 	padding-bottom: 5px;
 	position: absolute;
 	color: #fff;
-	right: 5px;
-	top: 18px;
-}
-
-#rate {
-	height: 25px;
-	margin-bottom: 0;
-	padding-top: 5px;
-	padding-bottom: 5px;
-	position: absolute;
-	color: #fff;
-	right: 32.5px;
+	right: 10px;
 	top: 18px;
 }
 
