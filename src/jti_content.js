@@ -130,8 +130,8 @@ function FindNextTI (CursorPos, tagStart, tagEnd) {
 // Helper method. Find index(start and end) of all occurrences of a given substring in a string
 function getAllIndexes (str) {
     var startIndexes = [],
-        endIndexes = [];
-    var re = /<TI>/g, // Start
+        endIndexes = [],
+        re = /<TI>/g, // Start
         match = re.exec(str);
     while (match) {
         startIndexes.push(match.index);
