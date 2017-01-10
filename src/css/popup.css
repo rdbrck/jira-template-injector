@@ -154,6 +154,10 @@ textarea.materialize-textarea:focus:not([readonly]) {
 	text-align: center;
 }
 
+#rateSection{
+	display: none;
+}
+
 .addTemplateLabel {
 	padding-left: 0;
 }

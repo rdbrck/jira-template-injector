@@ -44,7 +44,8 @@ if (browserType !== 'Firefox') {
 // -------------------------------------------------------------------------- //
 
 var StorageID = 'Jira-Template-Injector';
-var emptyData = {'options': {'limit': []}, 'templates': {}};
+var rateStatus = 'JTI-Rate-Status';
+var emptyData = {'options': {'limit': []}, 'templates': {}, 'status': {}};
 
 function saveTemplates (templateJSON, callback) {
     var data = {};
@@ -73,6 +74,28 @@ function getData (callback) {
             callback(true, '', templates[StorageID]);
         } else {
             callback(false, 'No data is currently loaded');
+        }
+    });
+}
+
+function getRateStatus (callback) {
+    chrome.storage.sync.get(rateStatus, function (status) {
+        if (status[rateStatus]) {
+            callback(true, '', status[rateStatus]);
+        } else {
+            callback(false, 'No data is currently loaded');
+        }
+    });
+}
+
+function setRateStatus (callback) {
+    var data = {};
+    data[rateStatus] = true;
+    chrome.storage.sync.set(data, function () {
+        if (chrome.runtime.lastError) {
+            callback(false, 'Error saving data. Please try again');
+        } else {
+            callback(true);
         }
     });
 }
@@ -246,6 +269,18 @@ chrome.runtime.onMessage.addListener(
             break;
         case 'getData':
             getData(function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'setRateStatus':
+            setRateStatus(function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'getRateStatus':
+            getRateStatus(function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });
