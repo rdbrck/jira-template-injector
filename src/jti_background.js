@@ -78,6 +78,7 @@ function getData (callback) {
     });
 }
 
+// Return the "rate it now" flag
 function getRateStatus (callback) {
     chrome.storage.sync.get(rateStatus, function (status) {
         if (status[rateStatus]) {
@@ -88,6 +89,7 @@ function getRateStatus (callback) {
     });
 }
 
+// Set the "rate it now" flag to be true
 function setRateStatus (callback) {
     var data = {};
     data[rateStatus] = true;

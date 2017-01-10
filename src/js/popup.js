@@ -160,10 +160,10 @@ function loadTemplateEditor (callback = false) {
             if (response.data === true) {
                 // Hide button
             } else {
-                $('#rateSection').fadeIn();
+                $('#rateSection').fadeIn(); // Show button
             }
         } else {
-            $('#rateSection').fadeIn();
+            $('#rateSection').fadeIn(); // Show button
         }
     });
 }
