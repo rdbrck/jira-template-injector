@@ -21,8 +21,6 @@ if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf
 $(document).on('click', '#description', function () {
     var text = $(this).val(),
         ctrlDown = false,
-        ctrlKey = 17,
-        cmdKey = 91,
         backtickKey = 192,
         cursorStart = $(this).prop('selectionStart'),
         cursorFinish = $(this).prop('selectionEnd'),
@@ -68,40 +66,37 @@ $(document).on('click', '#description', function () {
         }
     }
 
-    // detect ctrl or cmd pressed
+    // Detect ctrl or cmd pressed
     $('#description').keydown(function (e) {
-        if (e.keyCode === ctrlKey || e.keyCode === cmdKey) ctrlDown = true;
+        if (e.keyCode === getKeyCodeOfCtrlOrCmd()) ctrlDown = true;
     }).keyup(function (e) {
-        if (e.keyCode === ctrlKey || e.keyCode === cmdKey) ctrlDown = false;
+        if (e.keyCode === getKeyCodeOfCtrlOrCmd()) ctrlDown = false;
     });
 
-    // keypree listener
+    // Keypress listener
     $('#description').keydown(function (e) {
-        if (ctrlDown && (e.keyCode === backtickKey)) { // if ctrl is pressed
-            var tagStartIndex = []; // store index of <TI>
-            var tagEndIndex = []; // store index of </TI>
-            var tagindex = getAllIndexes($(this).val(), tagStartIndex, tagEndIndex); // find all <TI> and </TI> tags in selected template.
-            tagStartIndex = tagindex.start;
-            tagEndIndex = tagindex.end;
-            if (tagStartIndex.length !== 0 && tagEndIndex.length !== 0) { // works only if the selected template contains any <TI> tag
-                if (selectStart === null && selectEnd === null) { // start from first <TI>
-                    var StartPos = FindNextTI(cursorStart, tagStartIndex, tagEndIndex); // find the starting <TI> tag
+        if (ctrlDown && (e.keyCode === backtickKey)) { // If ctrl is pressed
+            let {start: tagStartIndex, end: tagEndIndex} = getAllIndexes($(this).val()); // Find all <TI> and </TI> tags in selected template.
+            if (tagStartIndex.length !== 0 && tagEndIndex.length !== 0) { // Works only if the selected template contains any <TI> tag
+                if (selectStart === null && selectEnd === null) { // Start from first <TI>
+                    var StartPos = FindNextTI(cursorStart, tagStartIndex, tagEndIndex); // Find the starting <TI> tag
                     $(this)[0].setSelectionRange(StartPos.start, StartPos.end);
-                    selectStart = StartPos.start; // set Start Index
-                    selectEnd = StartPos.end; // set End Index
-                } else { // select next <TI> set
-                    if (tagStartIndex.indexOf(selectStart) === tagStartIndex.length - 1 && tagEndIndex.indexOf(selectEnd) === tagEndIndex.length - 1) { // currently selecting the last set of <TI>,back to first set
+                    selectStart = StartPos.start; // Set Start Index
+                    selectEnd = StartPos.end; // Set End Index
+                } else { // Select next <TI> set
+                    if (tagStartIndex.indexOf(selectStart) === tagStartIndex.length - 1 && tagEndIndex.indexOf(selectEnd) === tagEndIndex.length - 1) { // Currently selecting the last set of <TI>, back to first set
                         $(this)[0].setSelectionRange(tagStartIndex[0], tagEndIndex[0]);
                         selectStart = tagStartIndex[0];
                         selectEnd = tagEndIndex[0];
                     } else {
-                        if (tagStartIndex.indexOf(selectStart) === -1 && tagEndIndex.indexOf(selectEnd) === -1) { // highlighted <TI> tag is modified by user. Now we need search for the next <TI>.
-                            StartPos = FindNextTI(cursorStart, tagStartIndex, tagEndIndex); // find the starting <TI> tag
+                        if (tagStartIndex.indexOf(selectStart) === -1 && tagEndIndex.indexOf(selectEnd) === -1) { // Highlighted <TI> tag is modified by user. Now we need search for the next <TI>.
+                            if (cursorStart < selectStart) cursorStart = selectStart;
+                            StartPos = FindNextTI(cursorStart, tagStartIndex, tagEndIndex); // Find the starting <TI> tag
                             $(this)[0].setSelectionRange(StartPos.start, StartPos.end);
-                            selectStart = StartPos.start; // set Start Index
-                            selectEnd = StartPos.end; // set End Index
+                            selectStart = StartPos.start; // Set Start Index
+                            selectEnd = StartPos.end; // Set End Index
                         } else {
-                            $(this)[0].setSelectionRange(tagStartIndex[tagStartIndex.indexOf(selectStart) + 1], tagEndIndex[tagEndIndex.indexOf(selectEnd) + 1]); // find next set of <TI>
+                            $(this)[0].setSelectionRange(tagStartIndex[tagStartIndex.indexOf(selectStart) + 1], tagEndIndex[tagEndIndex.indexOf(selectEnd) + 1]); // Find next set of <TI>
                             selectStart = tagStartIndex[tagStartIndex.indexOf(selectStart) + 1];
                             selectEnd = tagEndIndex[tagEndIndex.indexOf(selectEnd) + 1];
                         }
@@ -112,6 +107,16 @@ $(document).on('click', '#description', function () {
     });
 });
 
+// Helper method. Return the keyCode of either ctrl or cmd based on OS
+function getKeyCodeOfCtrlOrCmd () {
+    var ctrlKey = 17,
+        cmdKey = 91;
+    if (navigator.appVersion.indexOf('Win') !== -1) return ctrlKey;
+    if (navigator.appVersion.indexOf('X11') !== -1) return ctrlKey;
+    if (navigator.appVersion.indexOf('Linux') !== -1) return ctrlKey;
+    if (navigator.appVersion.indexOf('Mac') !== -1) return cmdKey;
+}
+
 // Helper method. Find next <TI> based on cursor position
 function FindNextTI (CursorPos, tagStart, tagEnd) {
     for (var i = 0; i < tagStart.length; i++) {
@@ -119,24 +124,27 @@ function FindNextTI (CursorPos, tagStart, tagEnd) {
             return { start: tagStart[i], end: tagEnd[i] };
         }
     }
+    return { start: tagStart[0], end: tagEnd[0] };
 }
 
 // Helper method. Find index(start and end) of all occurrences of a given substring in a string
-function getAllIndexes (str, arr1, arr2) {
-    var re = /<TI>/g, // start
+function getAllIndexes (str) {
+    var startIndexes = [],
+        endIndexes = [];
+    var re = /<TI>/g, // Start
         match = re.exec(str);
     while (match) {
-        arr1.push(match.index);
+        startIndexes.push(match.index);
         match = re.exec(str);
     }
 
-    var re2 = /<\/TI>/g, // end
-        match2 = re2.exec(str);
-    while (match2) {
-        arr2.push(match2.index + 5);
-        match2 = re2.exec(str);
+    re = /<\/TI>/g; // End
+    match = re.exec(str);
+    while (match) {
+        endIndexes.push(match.index + 5);
+        match = re.exec(str);
     }
-    return { start: arr1, end: arr2 };
+    return { start: startIndexes, end: endIndexes };
 }
 
 /*
