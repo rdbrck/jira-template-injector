@@ -156,13 +156,7 @@ function loadTemplateEditor (callback = false) {
 
     // Check the "rate" flag. If the flag is not set, display "rate it now" button
     chrome.runtime.sendMessage({JDTIfunction: 'getRateStatus'}, function (response) {
-        if (response.status === 'success') {
-            if (response.data === true) {
-                // Hide button
-            } else {
-                $('#rateSection').fadeIn(); // Show button
-            }
-        } else {
+        if (response.data !== true) {
             $('#rateSection').fadeIn(); // Show button
         }
     });
@@ -351,15 +345,13 @@ $(document).ready(function () {
         chrome.runtime.sendMessage({
             JDTIfunction: 'setRateStatus'
         }, function (response) {
-            if (response.status === 'success') {
-                // Flag set
-                window.open('https://chrome.google.com/webstore/detail/jira-template-injector/hmhpegjieopgbdmpocdmfkafjgcdmhha/reviews?hl=en', '_blank'); // Open extension user reviews page
-            } else {
+            window.open('https://chrome.google.com/webstore/detail/jira-template-injector/hmhpegjieopgbdmpocdmfkafjgcdmhha/reviews?hl=en', '_blank'); // Open extension user reviews page
+            if (response.status !== 'success') {
                 if (response.message) {
-                    dmError('export', response.message);
+                    dmError('rate', response.message);
                     Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
-                    dmError('export', 'generic');
+                    dmError('rate', 'Error saving Rate Now click status');
                     Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
