@@ -62,6 +62,7 @@ $(document).on('click', '#description', function () {
             if (selectEnd) {
                 // Select all the text between the two tags.
                 $(this)[0].setSelectionRange(selectStart, selectEnd);
+                cursorStart = cursorFinish = selectStart; // Set the cursor position to the select start point. This will ensure we find the next <TI> tag when using keyboard shortcut
             }
         }
     }
@@ -102,6 +103,7 @@ $(document).on('click', '#description', function () {
                         }
                     }
                 }
+                cursorStart = cursorFinish = selectStart; // Set the cursor position to the select start point. This will ensure we find the next <TI> tag when using keyboard shortcut
             }
         }
     });
