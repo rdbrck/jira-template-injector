@@ -95,9 +95,9 @@ function getToggleStatus (toggleType, callback) {
 }
 
 // Set toggle status based on 'toggleType'
-function setToggleStatus (toggleType, callback) {
+function setToggleStatus (toggleType, toggleInput, callback) {
     var data = {};
-    toggles[toggleType] = true;
+    toggles[toggleType] = toggleInput;
     data[StorageToggleID] = toggles;
     chrome.storage.sync.set(data, function () {
         if (chrome.runtime.lastError) {
@@ -282,7 +282,7 @@ chrome.runtime.onMessage.addListener(
             });
             break;
         case 'setToggleStatus':
-            setToggleStatus(request.toggleType, function (status, message = null, data = null) {
+            setToggleStatus(request.toggleType, request.toggleInput, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });

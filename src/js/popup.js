@@ -344,7 +344,8 @@ $(document).ready(function () {
         dmUIClick('rate');
         chrome.runtime.sendMessage({
             JDTIfunction: 'setToggleStatus',
-            toggleType: 'rateClicked'
+            toggleType: 'rateClicked',
+            toggleInput: true
         }, function (response) {
             window.open('https://chrome.google.com/webstore/detail/jira-template-injector/' + chrome.runtime.id + '/reviews?hl=en', '_blank'); // Open extension user reviews page
             if (response.status !== 'success') {
