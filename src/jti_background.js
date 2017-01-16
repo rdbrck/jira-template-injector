@@ -44,7 +44,9 @@ if (browserType !== 'Firefox') {
 // -------------------------------------------------------------------------- //
 
 var StorageID = 'Jira-Template-Injector';
+var StorageToggleID = 'JTI-Toggle';
 var emptyData = {'options': {'limit': []}, 'templates': {}};
+var toggles = {'rateClicked': false};
 
 function saveTemplates (templateJSON, callback) {
     var data = {};
@@ -73,6 +75,35 @@ function getData (callback) {
             callback(true, '', templates[StorageID]);
         } else {
             callback(false, 'No data is currently loaded');
+        }
+    });
+}
+
+// Get toggle status based on 'toggleType'
+function getToggleStatus (toggleType, callback) {
+    chrome.storage.sync.get(StorageToggleID, function (toggles) {
+        if (jQuery.isEmptyObject(toggles)) { // If user does not have any toggle settings in storage
+            callback(false, 'No data is currently loaded');
+        } else {
+            if (toggles[StorageToggleID][toggleType]) {
+                callback(true, '', toggles[StorageToggleID][toggleType]);
+            } else {
+                callback(false, 'No data is currently loaded');
+            }
+        }
+    });
+}
+
+// Set toggle status based on 'toggleType'
+function setToggleStatus (toggleType, toggleInput, callback) {
+    var data = {};
+    toggles[toggleType] = toggleInput;
+    data[StorageToggleID] = toggles;
+    chrome.storage.sync.set(data, function () {
+        if (chrome.runtime.lastError) {
+            callback(false, 'Error saving data. Please try again');
+        } else {
+            callback(true);
         }
     });
 }
@@ -246,6 +277,18 @@ chrome.runtime.onMessage.addListener(
             break;
         case 'getData':
             getData(function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'setToggleStatus':
+            setToggleStatus(request.toggleType, request.toggleInput, function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'getToggleStatus':
+            getToggleStatus(request.toggleType, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });
