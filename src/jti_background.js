@@ -79,21 +79,26 @@ function getData (callback) {
     });
 }
 
-// Return the "rate it now" flag
-function getRateStatus (callback) {
-    chrome.storage.sync.get(StorageToggleID, function (rateClicked) {
-        if (rateClicked[StorageToggleID]) {
-            callback(true, '', rateClicked[StorageToggleID]);
-        } else {
+// Get toggle status based on 'toggleType'
+function getToggleStatus (toggleType, callback) {
+    chrome.storage.sync.get(StorageToggleID, function (toggles) {
+        if (jQuery.isEmptyObject(toggles)) { // If user does not have any toggle settings in storage
             callback(false, 'No data is currently loaded');
+        } else {
+            if (toggles[StorageToggleID][toggleType]) {
+                callback(true, '', toggles[StorageToggleID][toggleType]);
+            } else {
+                callback(false, 'No data is currently loaded');
+            }
         }
     });
 }
 
-// Set the "rate it now" flag to be true
-function setRateStatus (callback) {
+// Set toggle status based on 'toggleType'
+function setToggleStatus (toggleType, callback) {
     var data = {};
-    data[StorageToggleID] = !toggles.rateClicked;
+    toggles[toggleType] = true;
+    data[StorageToggleID] = toggles;
     chrome.storage.sync.set(data, function () {
         if (chrome.runtime.lastError) {
             callback(false, 'Error saving data. Please try again');
@@ -276,14 +281,14 @@ chrome.runtime.onMessage.addListener(
                 sendResponse(response);
             });
             break;
-        case 'setRateStatus':
-            setRateStatus(function (status, message = null, data = null) {
+        case 'setToggleStatus':
+            setToggleStatus(request.toggleType, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });
             break;
-        case 'getRateStatus':
-            getRateStatus(function (status, message = null, data = null) {
+        case 'getToggleStatus':
+            getToggleStatus(request.toggleType, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });

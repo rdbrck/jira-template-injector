@@ -155,7 +155,7 @@ function loadTemplateEditor (callback = false) {
     });
 
     // Check the "rate" flag. If the flag is not set, display "rate it now" button
-    chrome.runtime.sendMessage({JDTIfunction: 'getRateStatus'}, function (response) {
+    chrome.runtime.sendMessage({JDTIfunction: 'getToggleStatus', toggleType: 'rateClicked'}, function (response) {
         if (response.data !== true) {
             $('#rateSection').fadeIn(); // Show button
         }
@@ -343,9 +343,10 @@ $(document).ready(function () {
     $('#rate').click(function () {
         dmUIClick('rate');
         chrome.runtime.sendMessage({
-            JDTIfunction: 'setRateStatus'
+            JDTIfunction: 'setToggleStatus',
+            toggleType: 'rateClicked'
         }, function (response) {
-            window.open('https://chrome.google.com/webstore/detail/jira-template-injector/hmhpegjieopgbdmpocdmfkafjgcdmhha/reviews?hl=en', '_blank'); // Open extension user reviews page
+            window.open('https://chrome.google.com/webstore/detail/jira-template-injector/' + chrome.runtime.id + '/reviews?hl=en', '_blank'); // Open extension user reviews page
             if (response.status !== 'success') {
                 if (response.message) {
                     dmError('rate', response.message);
