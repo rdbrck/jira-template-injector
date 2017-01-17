@@ -167,15 +167,14 @@ function getAllIndexes (str) {
     If we find a template is used very often we can add it as a default to simplify peoples' ticket creation.
  */
 $(document).on('click', '#create-issue-submit', function () {
-    chrome.runtime.sendMessage({
-        type: 'analytics', name: 'issue_type', body:
-        {
-            'type': $('#issuetype-field').val(),
-            'version': chrome.runtime.getManifest().version,
-            'ip_address': '${dm.meta:request_ip}',
-            'geo': '${dm.meta:request_geo}',
-            'ua': '${dm.ua:user_agent}'
-        }
+    chrome.runtime.sendMessage({type: 'analytics', name: 'issue_type', body:
+    {
+        'type': $('#issuetype-field').val(),
+        'version': chrome.runtime.getManifest().version,
+        'ip_address': '${dm.meta:request_ip}',
+        'geo': '${dm.meta:request_geo}',
+        'ua': '${dm.ua:user_agent}'
+    }
     });
 });
 
@@ -257,4 +256,6 @@ function observeDocumentBody (mutation) {
 var observer = new MutationObserver(function (mutations) {
     mutations.forEach(observeDocumentBody);
 });
+
 observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['resolved'] });
+
