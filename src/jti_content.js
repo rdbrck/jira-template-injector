@@ -82,10 +82,9 @@ $(document).on('click', '#description', function () {
             let {start: tagStartIndex, end: tagEndIndex} = getAllIndexes($(this).val()); // Find all <TI> and </TI> tags in selected template.
             if (tagStartIndex.length !== 0 && tagEndIndex.length !== 0) { // Works only if the selected template contains any <TI> tag
                 if (selectStart === null && selectEnd === null) { // Start from first <TI>
-                    var StartPos = FindNextTI(cursorStart, tagStartIndex, tagEndIndex); // Find the starting <TI> tag
-                    $(this)[0].setSelectionRange(StartPos.start, StartPos.end);
-                    selectStart = StartPos.start; // Set Start Index
-                    selectEnd = StartPos.end; // Set End Index
+                    var startPos = selectNextSelectionRange($(this)[0], cursorStart, tagStartIndex, tagEndIndex);
+                    selectStart = startPos.start; // Set Start Index
+                    selectEnd = startPos.end; // Set End Index
                 } else { // Select next <TI> set
                     if (tagStartIndex.indexOf(selectStart) === tagStartIndex.length - 1 && tagEndIndex.indexOf(selectEnd) === tagEndIndex.length - 1) { // Currently selecting the last set of <TI>, back to first set
                         $(this)[0].setSelectionRange(tagStartIndex[0], tagEndIndex[0]);
@@ -94,10 +93,9 @@ $(document).on('click', '#description', function () {
                     } else {
                         if (tagStartIndex.indexOf(selectStart) === -1 && tagEndIndex.indexOf(selectEnd) === -1) { // Highlighted <TI> tag is modified by user. Now we need search for the next <TI>.
                             if (cursorStart < selectStart) cursorStart = selectStart;
-                            StartPos = FindNextTI(cursorStart, tagStartIndex, tagEndIndex); // Find the starting <TI> tag
-                            $(this)[0].setSelectionRange(StartPos.start, StartPos.end);
-                            selectStart = StartPos.start; // Set Start Index
-                            selectEnd = StartPos.end; // Set End Index
+                            startPos = selectNextSelectionRange($(this)[0], cursorStart, tagStartIndex, tagEndIndex);
+                            selectStart = startPos.start; // Set Start Index
+                            selectEnd = startPos.end; // Set End Index
                         } else {
                             $(this)[0].setSelectionRange(tagStartIndex[tagStartIndex.indexOf(selectStart) + 1], tagEndIndex[tagEndIndex.indexOf(selectEnd) + 1]); // Find next set of <TI>
                             selectStart = tagStartIndex[tagStartIndex.indexOf(selectStart) + 1];
@@ -110,6 +108,12 @@ $(document).on('click', '#description', function () {
         }
     });
 });
+
+function selectNextSelectionRange (selector, cursorStart, tagStartIndex, tagEndIndex) {
+    var startPos = FindNextTI(cursorStart, tagStartIndex, tagEndIndex); // Find the starting <TI> tag
+    selector.setSelectionRange(startPos.start, startPos.end);
+    return startPos;
+}
 
 // Helper method. Return the keyCode of either ctrl or cmd based on OS
 function getKeyCodeOfCtrlOrCmd () {
