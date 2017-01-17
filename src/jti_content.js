@@ -22,6 +22,7 @@ $(document).on('click', '#description', function () {
     var text = $(this).val(),
         ctrlDown = false,
         backtickKey = 192,
+        ctrlKey = 17,
         cursorStart = $(this).prop('selectionStart'),
         cursorFinish = $(this).prop('selectionEnd'),
         end = (text.length - 5),
@@ -71,9 +72,9 @@ $(document).on('click', '#description', function () {
 
     // Detect ctrl or cmd pressed
     $('#description').keydown(function (e) {
-        if (e.keyCode === 17) ctrlDown = true;
+        if (e.keyCode === ctrlKey) ctrlDown = true;
     }).keyup(function (e) {
-        if (e.keyCode === 17) ctrlDown = false;
+        if (e.keyCode === ctrlKey) ctrlDown = false;
     });
 
     // Keypress listener
