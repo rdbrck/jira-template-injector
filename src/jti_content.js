@@ -71,9 +71,9 @@ $(document).on('click', '#description', function () {
 
     // Detect ctrl or cmd pressed
     $('#description').keydown(function (e) {
-        if (e.keyCode === getKeyCodeOfCtrlOrCmd()) ctrlDown = true;
+        if (e.keyCode === 17) ctrlDown = true;
     }).keyup(function (e) {
-        if (e.keyCode === getKeyCodeOfCtrlOrCmd()) ctrlDown = false;
+        if (e.keyCode === 17) ctrlDown = false;
     });
 
     // Keypress listener
@@ -113,16 +113,6 @@ function selectNextSelectionRange (selector, cursorStart, tagStartIndex, tagEndI
     var startPos = FindNextTI(cursorStart, tagStartIndex, tagEndIndex); // Find the starting <TI> tag
     selector.setSelectionRange(startPos.start, startPos.end);
     return startPos;
-}
-
-// Helper method. Return the keyCode of either ctrl or cmd based on OS
-function getKeyCodeOfCtrlOrCmd () {
-    var ctrlKey = 17,
-        cmdKey = 91;
-    if (navigator.appVersion.indexOf('Win') !== -1) return ctrlKey;
-    if (navigator.appVersion.indexOf('X11') !== -1) return ctrlKey;
-    if (navigator.appVersion.indexOf('Linux') !== -1) return ctrlKey;
-    if (navigator.appVersion.indexOf('Mac') !== -1) return cmdKey;
 }
 
 // Helper method. Find next <TI> based on cursor position
