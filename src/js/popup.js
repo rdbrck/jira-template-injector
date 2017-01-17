@@ -153,6 +153,13 @@ function loadTemplateEditor (callback = false) {
             callback();
         }
     });
+
+    // Check the "rate" flag. If the flag is not set, display "rate it now" button
+    chrome.runtime.sendMessage({JDTIfunction: 'getToggleStatus', toggleType: 'rateClicked'}, function (response) {
+        if (response.data !== true) {
+            $('#rateSection').fadeIn(); // Show button
+        }
+    });
 }
 
 function limitAccess (callback = false) {
@@ -327,6 +334,26 @@ $(document).ready(function () {
                     Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
                     dmError('reset', 'generic');
+                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                }
+            }
+        });
+    });
+
+    $('#rate').click(function () {
+        dmUIClick('rate');
+        chrome.runtime.sendMessage({
+            JDTIfunction: 'setToggleStatus',
+            toggleType: 'rateClicked',
+            toggleInput: true
+        }, function (response) {
+            window.open('https://chrome.google.com/webstore/detail/jira-template-injector/' + chrome.runtime.id + '/reviews?hl=en', '_blank'); // Open extension user reviews page
+            if (response.status !== 'success') {
+                if (response.message) {
+                    dmError('rate', response.message);
+                    Materialize.toast(response.message, 2000, 'toastNotification');
+                } else {
+                    dmError('rate', 'Error saving Rate Now click status');
                     Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
