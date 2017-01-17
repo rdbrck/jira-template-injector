@@ -20,6 +20,8 @@ if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf
 // Handle <TI> tag selection.
 $(document).on('click', '#description', function () {
     var text = $(this).val(),
+        ctrlDown = false,
+        backtickKey = 192,
         cursorStart = $(this).prop('selectionStart'),
         cursorFinish = $(this).prop('selectionEnd'),
         end = (text.length - 5),
@@ -60,10 +62,98 @@ $(document).on('click', '#description', function () {
             if (selectEnd) {
                 // Select all the text between the two tags.
                 $(this)[0].setSelectionRange(selectStart, selectEnd);
+                cursorStart = cursorFinish = selectStart; // Set the cursor position to the select start point. This will ensure we find the next <TI> tag when using keyboard shortcut
+            } else { // This only happens when user clicks on the the closing <TI> tag. Set selectStart to null so that it wont break the keyborad functionality
+                selectStart = null;
             }
         }
     }
+
+    // Detect ctrl or cmd pressed
+    $('#description').keydown(function (e) {
+        if (e.keyCode === getKeyCodeOfCtrlOrCmd()) ctrlDown = true;
+    }).keyup(function (e) {
+        if (e.keyCode === getKeyCodeOfCtrlOrCmd()) ctrlDown = false;
+    });
+
+    // Keypress listener
+    $('#description').keydown(function (e) {
+        if (ctrlDown && (e.keyCode === backtickKey)) { // If ctrl is pressed
+            let {start: tagStartIndex, end: tagEndIndex} = getAllIndexes($(this).val()); // Find all <TI> and </TI> tags in selected template.
+            if (tagStartIndex.length !== 0 && tagEndIndex.length !== 0) { // Works only if the selected template contains any <TI> tag
+                if (selectStart === null && selectEnd === null) { // Start from first <TI>
+                    var startPos = selectNextSelectionRange($(this)[0], cursorStart, tagStartIndex, tagEndIndex);
+                    selectStart = startPos.start; // Set Start Index
+                    selectEnd = startPos.end; // Set End Index
+                } else { // Select next <TI> set
+                    if (tagStartIndex.indexOf(selectStart) === tagStartIndex.length - 1 && tagEndIndex.indexOf(selectEnd) === tagEndIndex.length - 1) { // Currently selecting the last set of <TI>, back to first set
+                        $(this)[0].setSelectionRange(tagStartIndex[0], tagEndIndex[0]);
+                        selectStart = tagStartIndex[0];
+                        selectEnd = tagEndIndex[0];
+                    } else {
+                        if (tagStartIndex.indexOf(selectStart) === -1 && tagEndIndex.indexOf(selectEnd) === -1) { // Highlighted <TI> tag is modified by user. Now we need search for the next <TI>.
+                            if (cursorStart < selectStart) cursorStart = selectStart;
+                            startPos = selectNextSelectionRange($(this)[0], cursorStart, tagStartIndex, tagEndIndex);
+                            selectStart = startPos.start; // Set Start Index
+                            selectEnd = startPos.end; // Set End Index
+                        } else {
+                            $(this)[0].setSelectionRange(tagStartIndex[tagStartIndex.indexOf(selectStart) + 1], tagEndIndex[tagEndIndex.indexOf(selectEnd) + 1]); // Find next set of <TI>
+                            selectStart = tagStartIndex[tagStartIndex.indexOf(selectStart) + 1];
+                            selectEnd = tagEndIndex[tagEndIndex.indexOf(selectEnd) + 1];
+                        }
+                    }
+                }
+                cursorStart = cursorFinish = selectStart; // Set the cursor position to the select start point. This will ensure we find the next <TI> tag when using keyboard shortcut
+            }
+        }
+    });
 });
+
+function selectNextSelectionRange (selector, cursorStart, tagStartIndex, tagEndIndex) {
+    var startPos = FindNextTI(cursorStart, tagStartIndex, tagEndIndex); // Find the starting <TI> tag
+    selector.setSelectionRange(startPos.start, startPos.end);
+    return startPos;
+}
+
+// Helper method. Return the keyCode of either ctrl or cmd based on OS
+function getKeyCodeOfCtrlOrCmd () {
+    var ctrlKey = 17,
+        cmdKey = 91;
+    if (navigator.appVersion.indexOf('Win') !== -1) return ctrlKey;
+    if (navigator.appVersion.indexOf('X11') !== -1) return ctrlKey;
+    if (navigator.appVersion.indexOf('Linux') !== -1) return ctrlKey;
+    if (navigator.appVersion.indexOf('Mac') !== -1) return cmdKey;
+}
+
+// Helper method. Find next <TI> based on cursor position
+function FindNextTI (CursorPos, tagStart, tagEnd) {
+    for (var i = 0; i < tagStart.length; i++) {
+        if (tagStart[i] >= CursorPos) {
+            return { start: tagStart[i], end: tagEnd[i] };
+        }
+    }
+    return { start: tagStart[0], end: tagEnd[0] };
+}
+
+// Helper method. Find index(start and end) of all occurrences of a given substring in a string
+function getAllIndexes (str) {
+    var startIndexes = [],
+        endIndexes = [],
+        re = /<TI>/g, // Start
+        match = re.exec(str);
+    while (match) {
+        startIndexes.push(match.index);
+        match = re.exec(str);
+    }
+
+    re = /<\/TI>/g; // End
+    match = re.exec(str);
+    while (match) {
+        endIndexes.push(match.index + 5);
+        match = re.exec(str);
+    }
+    return { start: startIndexes, end: endIndexes };
+}
 
 /*
     When user submits a ticket track the ticket type.
@@ -166,4 +256,6 @@ function observeDocumentBody (mutation) {
 var observer = new MutationObserver(function (mutations) {
     mutations.forEach(observeDocumentBody);
 });
-observer.observe(document.body, {subtree: true, attributes: true, attributeFilter: ['resolved']});
+
+observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['resolved'] });
+
