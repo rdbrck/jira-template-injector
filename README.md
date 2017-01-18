@@ -37,7 +37,7 @@ The JSON format is:
 ### Current Features:
 
 * Automatically select text between ```<TI>``` and ```</TI>``` tags for quick template completion.
-  * Quickly jump to the next set of ```<TI>``` elements using the ```Command + back-tick``` key combo.
+  * Quickly jump to the next set of ```<TI>``` elements using the ```Control + back-tick``` key combo.
 * Template Priorities.
   * Set a default template (DEFAULT TEMPLATE) for all Issue Types.
   * Individual Issue Types will override the default.
