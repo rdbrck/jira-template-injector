@@ -34,12 +34,4 @@ run:
     echo $VERSION > ../tmp-version/version
     sed -i "s/<appID>/${DM_APP_ID}/g" src/jti_background.js
     npm run build
-    cp jti.zip ../public-build-outputs/jti-$VERSION.zip
-
-    VERSION=$($(npm bin)/json -f src/manifest.json version)
-    VERSION+=$(sed -r -e 's/([0-9]+(\.[0-9]+)*)//' ../jti-version/number)
-    echo $VERSION > ../tmp-version/version
-    sed -i "s/<appID>/${DM_APP_ID}/g" src/jti_background.js
-    npm run build
-    cp jti.zip ../build-outputs/$ZIP_FILE.zip
-    npm run clean
+    cp jti.zip ../build-outputs/jti-$VERSION.zip
