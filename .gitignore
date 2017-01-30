@@ -4,5 +4,5 @@ npm-debug.log
 jti.zip
 jti.crx
 key.pem
-credentials.yml
-credentials.yaml
+ci/credentials.yml
+ci/credentials.yaml

@@ -1,0 +1,312 @@
+resource_types:
+  - name: http-api
+    type: docker-image
+    source:
+      repository: aequitas/http-api-resource
+  - name: pull-request
+    type: docker-image
+    source:
+      repository: jtarchie/pr
+
+groups:
+  - name: all
+    jobs:
+      - jira-template-injector-pull-request-build
+      - pull-request-build-artifact-notify
+      - jira-template-injector-build
+      - build-artifact-notify
+      - jira-template-injector-release
+      - release-artifact-notify
+      - jira-template-injector-publish
+  - name: build
+    jobs:
+      - jira-template-injector-build
+      - build-artifact-notify
+  - name: pull-request-build
+    jobs:
+      - jira-template-injector-pull-request-build
+      - pull-request-build-artifact-notify
+  - name: release
+    jobs:
+      - jira-template-injector-release
+      - release-artifact-notify
+  - name: publish
+    jobs:
+      - jira-template-injector-publish
+
+resources:
+  - name: jti-pull-request
+    type: pull-request
+    source:
+      access_token: {{github-access-token}}
+      private_key: {{git-private-key}}
+      repo: rdbrck/jira-template-injector
+      uri: git@github.com:rdbrck/jira-template-injector
+  - name: jti-master
+    type: git
+    source:
+      uri: git@github.com:rdbrck/jira-template-injector
+      private_key: {{git-private-key}}
+      branch: master
+  - name: pipeline-tools
+    type: git
+    source:
+      uri: git@github.com:redbrickmedia/pipeline-tools
+      private_key: {{git-private-key}}
+      branch: master
+  - name: jti-artifacts-pr
+    type: s3
+    source:
+      bucket: chrome-extensions-artifacts
+      regexp: jti/pr/jti-(?P<optional>[^-]*)-(?P<version>.*)\.zip
+      access_key_id: {{s3-access-key-id}}
+      secret_access_key: {{s3-secret-access-key}}
+      region_name: {{s3-region}}
+  - name: jti-artifacts-rc
+    type: s3
+    source:
+      bucket: chrome-extensions-artifacts
+      regexp: jti/rc/jti-(.*)\.zip
+      access_key_id: {{s3-access-key-id}}
+      secret_access_key: {{s3-secret-access-key}}
+      region_name: {{s3-region}}
+  - name: jti-artifacts-release
+    type: s3
+    source:
+      bucket: chrome-extensions-artifacts
+      regexp: jti/release/jti-(.*)\.zip
+      access_key_id: {{s3-access-key-id}}
+      secret_access_key: {{s3-secret-access-key}}
+      region_name: {{s3-region}}
+  - name: jti-version
+    type: semver
+    source:
+      bucket: chrome-extensions-artifacts
+      key: jti/current-version
+      initial_version: 0.0.1
+      access_key_id: {{s3-access-key-id}}
+      secret_access_key: {{s3-secret-access-key}}
+      region_name: {{s3-region}}
+  - name: alert
+    type: http-api
+    source:
+      uri: https://hooks.slack.com/services/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
+      method: POST
+      headers:
+        Content-type: application/json
+      json:
+        text: "{message} <{ATC_EXTERNAL_URL}/pipelines/{BUILD_PIPELINE_NAME}/jobs/{BUILD_JOB_NAME}/builds/{BUILD_NAME}|{BUILD_JOB_NAME}:{BUILD_NAME}>"
+  # this resource exists because one cannot use {{}} injection properly when passing the "message" parameter to the "alert" resource above
+  - name: alert-chrome-store-published
+    type: http-api
+    source:
+      uri: https://hooks.slack.com/services/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
+      method: POST
+      headers:
+        Content-type: application/json
+      json:
+        text: |
+          Publishing release to Chrome Store succeeded! <{ATC_EXTERNAL_URL}/pipelines/{BUILD_PIPELINE_NAME}/jobs/{BUILD_JOB_NAME}/builds/{BUILD_NAME}|{BUILD_JOB_NAME}:{BUILD_NAME}>
+          :busts_in_silhouette: <https://chrome.google.com/webstore/detail/{google-extension-id}|Public Extension Page>
+
+jobs:
+  - name: jira-template-injector-pull-request-build
+    serial: true
+    plan:
+    - do:
+      - aggregate:
+        - put: alert
+          params: {message: "Building Pull Request..."}
+        - get: jti-pull-request
+          version: every
+          trigger: true
+        - get: jti-version
+          params: {pre: rc}
+      - put: jti-pull-request
+        params:
+          path: jti-pull-request
+          status: pending
+      - do:
+        - task: build-pr-extension
+          file: jti-pull-request/ci/concourse-build.yml
+          input_mapping:
+            extension-source: jti-pull-request
+            extension-version: jti-version
+          params:
+            DM_APP_ID: {{dm-app-id}}
+        - put: jti-artifacts-pr
+          params:
+            file: build-outputs/*.zip
+      on_failure:
+        aggregate:
+          - put: alert
+            params: {message: ":finnadie: Pull Request Build failed <!channel>"}
+            attempts: 5
+          - put: jti-pull-request
+            params:
+              path: jti-pull-request
+              status: failure
+            attempts: 5
+      on_success:
+        aggregate:
+          - put: alert
+            params: {message: ":godmode:  Pull Request Build succeeded"}
+            attempts: 5
+          - put: jti-pull-request
+            params:
+              path: jti-pull-request
+              status: success
+            attempts: 5
+  - name: jira-template-injector-build
+    serial: true
+    plan:
+    - do:
+      - aggregate:
+        - put: alert
+          params: {message: "Building..."}
+        - get: jti-master
+          trigger: true
+        - get: jti-version
+          params: {pre: rc}
+      - do:
+        - task: build-extension
+          file: jti-master/ci/concourse-build.yml
+          input_mapping:
+            extension-source: jti-master
+            extension-version: jti-version
+          params:
+            DM_APP_ID: {{dm-app-id}}
+      - aggregate:
+        - put: jti-artifacts-rc
+          params:
+            file: build-outputs/*.zip
+        - put: jti-version
+          params: {file: tmp-version/version}
+    on_failure:
+      put: alert
+      params: {message: ":finnadie: Build failed <!channel>"}
+      attempts: 5
+    on_success:
+      put: alert
+      params: {message: ":godmode: Build succeeded"}
+      attempts: 5
+  - name: jira-template-injector-release
+    serial: true
+    plan:
+    - do:
+      - put: alert
+        params: {message: "Releasing..."}
+      - aggregate:
+        - get: jti-version
+          passed: [jira-template-injector-build]
+          params: {bump: final}
+          trigger: false
+        - get: jti-artifacts-rc
+          passed: [jira-template-injector-build]
+          trigger: false
+        - get: pipeline-tools
+      - aggregate:
+        - task: release-jti-artifacts
+          file: pipeline-tools/tasks/rename-version.yml
+          input_mapping:
+            source: jti-artifacts-rc
+            version: jti-version
+          output_mapping: {destination: build-outputs}
+          params:
+            BASE_NAME: jti
+            EXTENSION: zip
+      - aggregate:
+        - put: jti-artifacts-release
+          params: {file: build-outputs/jti-*.zip}
+        - put: jti-version
+          params: {file: jti-version/version}
+      on_failure:
+        put: alert
+        params: {message: ":finnadie: Release failed <!channel>"}
+      on_success:
+        put: alert
+        params: {message: "Release succeeded"}
+
+  - name: pull-request-build-artifact-notify
+    plan:
+      - aggregate:
+        - get: jti-artifacts-pr
+          passed: [jira-template-injector-pull-request-build]
+          trigger: true
+        - get: pipeline-tools
+      - aggregate:
+        - task: jti-pr-artifact-ready
+          file: pipeline-tools/tasks/signed-url-notify.yml
+          input_mapping: {artifact: jti-artifacts-pr}
+          params:
+            AWS_ACCESS_KEY_ID: {{s3-access-key-id}}
+            AWS_SECRET_ACCESS_KEY: {{s3-secret-access-key}}
+            BUCKET_NAME: chrome-extensions-artifacts
+            WEBHOOK_URL: https://hooks.slack.com/services/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
+            MESSAGE: "_Pull Request_ of *JIRA Template Injector* extension package is ready"
+  - name: build-artifact-notify
+    plan:
+      - aggregate:
+        - get: jti-artifacts-rc
+          passed: [jira-template-injector-build]
+          trigger: true
+        - get: pipeline-tools
+      - aggregate:
+        - task: jti-artifact-ready
+          file: pipeline-tools/tasks/signed-url-notify.yml
+          input_mapping: {artifact: jti-artifacts-rc}
+          params:
+            AWS_ACCESS_KEY_ID: {{s3-access-key-id}}
+            AWS_SECRET_ACCESS_KEY: {{s3-secret-access-key}}
+            BUCKET_NAME: chrome-extensions-artifacts
+            WEBHOOK_URL: https://hooks.slack.com/services/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
+            MESSAGE: "_Release Candidate_ of *JIRA Template Injector* extension package is ready"
+  - name: release-artifact-notify
+    plan:
+      - aggregate:
+        - get: jti-artifacts-release
+          passed: [jira-template-injector-release]
+          trigger: true
+        - get: pipeline-tools
+      - aggregate:
+        - task: jti-release-artifact-ready
+          file: pipeline-tools/tasks/signed-url-notify.yml
+          input_mapping: {artifact: jti-artifacts-release}
+          params:
+            AWS_ACCESS_KEY_ID: {{s3-access-key-id}}
+            AWS_SECRET_ACCESS_KEY: {{s3-secret-access-key}}
+            BUCKET_NAME: chrome-extensions-artifacts
+            WEBHOOK_URL: https://hooks.slack.com/services/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
+            MESSAGE: ":shipit: _Release_ of *JIRA Template Injector* extension package is ready"
+
+  - name: jira-template-injector-publish
+    serial: true
+    plan:
+    - do:
+      - put: alert
+        params: {message: "Publishing release to Chrome Store..."}
+      - aggregate:
+        - get: jti-version
+        - get: jti-artifacts-release
+          passed: [jira-template-injector-release]
+          trigger: false
+        - get: pipeline-tools
+      - aggregate:
+        - task: publish-jti
+          file: pipeline-tools/tasks/chrome-store-publish.yml
+          input_mapping:
+            release-artifacts: jti-artifacts-release
+            version: jti-version
+          params:
+            BASE_NAME: jti
+            CLIENT_ID: {{google-client-id}}
+            CLIENT_SECRET: {{google-client-secret}}
+            EXTENSION_ID: {{google-extension-id}}
+            REFRESH_TOKEN: {{google-client-refresh-token}}
+      on_failure:
+        put: alert
+        params: {message: ":finnadie: Publish release to Chrome Store failed <!channel>"}
+      on_success:
+        put: alert-chrome-store-published
+        params:
+          google-extension-id: {{google-extension-id}}
