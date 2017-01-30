@@ -116,7 +116,7 @@ jobs:
     - do:
       - aggregate:
         - put: alert
-          params: {message: "Building..."}
+          params: {message: "Building Pull Request..."}
         - get: jti-pull-request
           version: every
           trigger: true
