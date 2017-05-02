@@ -214,12 +214,46 @@ function responseMessage (status, message = null, data = null) {
     return response;
 }
 
+function replaceAllString (originalString, replace, replaceWith) {
+    return originalString.split(replace).join(replaceWith);
+};
+
+function matchRegexToJsRegex (match) {
+    return new RegExp(replaceAllString(match, "*", "\\S*"));
+}
+
 // This file will load the default templates into storage on install or update if no previous versions are already loaded.
 chrome.storage.sync.get(StorageID, function (templates) {
     // Check if we have any loaded templates in storage.
     if (Object.keys(templates).length === 0 && JSON.stringify(templates) === JSON.stringify({})) {
         // No data in storage yet - Load default templates.
         setDefaultTemplates(function (status, result) {});
+    }
+});
+
+// Listen for when extension is installed or updated
+chrome.runtime.onInstalled.addListener(function(details) {
+    if (details.reason == "install" || details.reason == "update") {
+        var contentScripts = chrome.runtime.getManifest().content_scripts;
+        var urlRegexs = [];
+
+        $.each(contentScripts, function(index, contentScript) {
+            $.each(contentScript.matches, function(matchIndex, match) {
+                urlRegexs.push(matchRegexToJsRegex(match));
+            })
+        })
+
+        // reload tabs with urls that match content script matches
+        chrome.tabs.query({windowId: chrome.windows.WINDOW_ID_CURRENT}, function(tabs) {
+            $.each(tabs, function(tabIndex, tab) {
+                $.each(urlRegexs, function(regexIndex, regex) {
+                    if (regex.test(tab.url)) {
+                        chrome.tabs.reload(tab.id);
+                        return false;
+                    }
+                })
+            })
+        });
     }
 });
 
