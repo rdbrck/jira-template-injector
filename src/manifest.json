@@ -43,6 +43,7 @@
     ],
     "permissions": [
         "storage",
+        "tabs",
         "*://*/*.json",
         "https://*.pingstatsnet.com/"
     ]
