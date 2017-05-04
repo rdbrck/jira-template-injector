@@ -21,6 +21,7 @@ if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf
 if (browserType !== 'Firefox') {
     // Initialise and start the DeskMetrics (DM) SDK with the appropriate app ID.
     $dm.start({ 'appId': '<appID>' }, function () {
+        $dm.setProperty('tracking_id', chrome.runtime.getManifest().version);
         /*
             Set the extension uninstall URL. When the extension is uninstalled DM
             will fire an uninstall event and redirect the user to the supplied URL.
