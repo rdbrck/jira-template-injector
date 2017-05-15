@@ -72,6 +72,11 @@ h5 {
 	overflow: visible;
 }
 
+.invisible-divider {
+	height: 1px;
+	margin-bottom: 10px;
+}
+
 /*noinspection CssUnusedSymbol*/
 .toastNotification {
 	opacity: .8 !important;
@@ -254,6 +259,15 @@ textarea.materialize-textarea:focus:not([readonly]) {
 
 .collapsible-header {
 	font-size: 13px;
+}
+
+.collapsible-header > div {
+	display: table-cell;
+}
+
+.collapsible-header > div > div {
+	font-size: 11px;
+	margin-top: -2em;
 }
 
 .input-field .prefix {

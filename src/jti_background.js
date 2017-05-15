@@ -171,10 +171,11 @@ function updateTemplate (templateName, templateText, callback) {
     });
 }
 
-function addTemplate (templateName, issueTypeField, text, callback) {
+function addTemplate (templateName, issueTypeField, projectsField, text, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         var templateJSON = {};
         var save = true;
+        var formattedProjectsField = formatProjectsField(projectsField);
 
         if (templates[StorageID]) {
             templateJSON = templates[StorageID];
@@ -182,13 +183,25 @@ function addTemplate (templateName, issueTypeField, text, callback) {
 
         $.each(templateJSON.templates, function (name, template) {
             if (issueTypeField === template['issuetype-field']) {
-                save = false;
-                callback(false, 'Template with same issuetype-field already exists', 'open');
+                // Can't have two templates with the same issue type that both apply to ALL projects
+                if (!projectsField && !template['projects-field']) {
+                    save = false;
+                    callback(false, 'Template already exists for issue type ' + issueTypeField, 'open');
+                    return false;
+                // Can't have two templates with the same issue type that both have the same project in their list of projects
+                } else if (projectsField && template['projects-field']) {
+                    let commonProject = commonItemInArrays(parseProjects(formattedProjectsField), parseProjects(template['projects-field']));
+                    if (commonProject) {
+                        save = false;
+                        callback(false, 'Template already exists for project ' + commonProject, 'open');
+                        return false;
+                    }
+                }
             }
         });
 
         if (save) {
-            templateJSON.templates[templateName] = {'issuetype-field': issueTypeField, 'text': text};
+            templateJSON.templates[templateName] = {'issuetype-field': issueTypeField, 'projects-field': formattedProjectsField, 'text': text};
             saveTemplates(templateJSON, callback);
         }
     });
@@ -221,6 +234,34 @@ function replaceAllString (originalString, replace, replaceWith) {
 
 function matchRegexToJsRegex (match) {
     return new RegExp(replaceAllString(match, '*', '\\S*'));
+}
+
+function commonItemInArrays (array1, array2) {
+    $.each(array1, function (val) {
+        if ($.inArray(val, array2) !== -1) {
+            return val;
+        }
+    });
+    return null;
+}
+
+// Parse projects field and save it as a comma separated list, ensuring common format
+function formatProjectsField (projectsField) {
+    // Replace all commas with spaces
+    projectsField = projectsField.replace(/,/g, ' ');
+
+    // Remove leading and trailing spaces
+    projectsField = $.trim(projectsField);
+
+    // Replace groups of spaces with a comma and a space
+    projectsField = projectsField.replace(/\s+/g, ', ');
+
+    return projectsField;
+}
+
+// Turn formatted projects field into an array of projects
+function parseProjects (projects) {
+    return projects.split(', ');
 }
 
 // This file will load the default templates into storage on install or update if no previous versions are already loaded.
@@ -307,7 +348,7 @@ chrome.runtime.onMessage.addListener(
             });
             break;
         case 'add':
-            addTemplate(request.templateName, request.issueTypeField, request.text, function (status, message = null, data = null) {
+            addTemplate(request.templateName, request.issueTypeField, request.projectsField, request.text, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });

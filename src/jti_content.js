@@ -193,29 +193,52 @@ function isDefaultDescription (value, callback) {
     });
 }
 
+// Given the project name as formatted in JIRA's dropdown "PROJECT (KEY)", parse out the key
+function parseProjectKey (projectElement) {
+    var project = projectElement.val();
+    return project.substring(project.lastIndexOf('(') + 1, project.length - 1);
+}
+
+// Turn formatted projects field into an array of projects
+function parseProjects (projects) {
+    return projects.split(', ');
+}
+
 function injectDescriptionTemplate (descriptionElement) {
-    // Each issue type can have its own template.
+    // Each issue type for each project can have its own template.
     chrome.storage.sync.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;
 
         // Load default template if set. Individual Templates will over ride it.
         var templateText = '',
+            projectElement = $('#project-field'),
             issueTypeElement = $('#issuetype-field');
 
         if (templates['DEFAULT TEMPLATE']) {
             templateText = templates['DEFAULT TEMPLATE'].text;
         }
 
-        if (issueTypeElement !== null) {
+        if (issueTypeElement !== null && projectElement !== null) {
             $.each(templates, function (key, template) {
                 if (issueTypeElement.val() === template['issuetype-field']) {
-                    templateText = template.text;
-                    return false;
+                    // If project is specified, it will override the 'ALL projects with this issue type' template
+                    if (template['projects-field']) {
+                        if ($.inArray(parseProjectKey(projectElement), parseProjects(template['projects-field'])) !== -1) {
+                            templateText = template.text;
+                            return false;
+                        }
+                    } else {
+                        templateText = template.text;
+                    }
                 }
             });
             descriptionElement.value = templateText;
         } else {
-            console.error('*** Error: Element Id "issuetype-field" not found.');
+            if (issueTypeElement === null) {
+                console.error('*** Error: Element Id "issuetype-field" not found.');
+            } else if (projectElement === null) {
+                console.error('*** Error: Element Id "project-field" not found.');
+            }
         }
     });
 }

@@ -64,6 +64,7 @@ function loadTemplateEditor (callback = false) {
         // Clear the custom template fields.
         $('#customTemplateName').val('');
         $('#customTemplateIssueTypeField').val('');
+        $('#customTemplateProjectsField').val('');
         // Clear the add default template dropdown.
         $('#addDefaultDropdown').empty();
 
@@ -77,13 +78,22 @@ function loadTemplateEditor (callback = false) {
 
             // Build the Collapsible Template Editor.
             $.each(templates, function (key, template) {
-                var templateTitle = '';
+                var templateProjects = '';
+                var boldStyle = '';
+                if (template['projects-field']) {
+                    templateProjects = '<div>Projects: ' + template['projects-field'] + '</div>';
+                }
                 if (key === 'DEFAULT TEMPLATE') {
-                    templateTitle = '<div class="collapsible-header grey lighten-5" data-issueFieldType="' + template['issuetype-field'] + '" style="font-weight: bold;"><i class="material-icons">expand_less</i>' + key + '</div>';
-                } else {
-                    templateTitle = '<div class="collapsible-header grey lighten-5" data-issueFieldType="' + template['issuetype-field'] + '"><i class="material-icons">expand_less</i>' + key + '</div>';
+                    boldStyle = 'style="font-weight: bold;"';
                 }
 
+                var templateTitle =
+                    '<div class="collapsible-header grey lighten-5" data-issueFieldType="' + template['issuetype-field'] + '"' + boldStyle + '>' +
+                    '<i class="material-icons">expand_less</i>' +
+                    '<div>' +
+                    key + templateProjects +
+                    '</div>' +
+                    '</div>';
                 var templateData =
                     '<div class="collapsible-body">' +
                     '<div class="input-field">' +
@@ -468,11 +478,13 @@ $(document).ready(function () {
             dmUIClick('add-custom');
             var templateName = $('#customTemplateName').val();
             var issueTypeField = $('#customTemplateIssueTypeField').val();
+            var projectsField = $('#customTemplateProjectsField').val();
 
             chrome.runtime.sendMessage({
                 JDTIfunction: 'add',
                 templateName: templateName,
                 issueTypeField: issueTypeField,
+                projectsField: projectsField,
                 text: ''
             }, function (response) {
                 $('#addTemplateModal').closeModal();
