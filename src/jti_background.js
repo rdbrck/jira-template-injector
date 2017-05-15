@@ -159,11 +159,13 @@ function removeTemplate (templateName, callback) {
     });
 }
 
-function updateTemplate (templateName, templateText, callback) {
+function updateTemplate (templateName, templateProjects, templateText, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         if (templates[StorageID]) {
             var templateJSON = templates[StorageID];
-            templateJSON.templates[templateName].text = templateText;
+            var template = templateJSON.templates[templateName];
+            template.text = templateText;
+            template['projects-field'] = formatProjectsField(templateProjects);
             saveTemplates(templateJSON, callback);
         } else {
             callback(false, 'No data available to update. Please recreate the template');
@@ -342,7 +344,7 @@ chrome.runtime.onMessage.addListener(
             });
             break;
         case 'save':
-            updateTemplate(request.templateName, request.templateText, function (status, message = null, data = null) {
+            updateTemplate(request.templateName, request.templateProjects, request.templateText, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });

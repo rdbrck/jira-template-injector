@@ -98,6 +98,10 @@ function loadTemplateEditor (callback = false) {
                     '<div class="collapsible-body">' +
                     '<div class="input-field">' +
                     '<i class="material-icons prefix">mode_edit</i>' +
+                    '<input type="text" name="' + key + '" placeholder="AIR, JIR (leave blank for all projects)" value="' + (template['projects-field'] || '') + '"></input>' +
+                    '</div>' +
+                    '<div class="input-field">' +
+                    '<i class="material-icons prefix">mode_edit</i>' +
                     '<textarea data-issueFieldType="' + template['issuetype-field'] + '" class="materialize-textarea" name="' + key + '">' + template.text + '</textarea>' +
                     '</div>' +
                     '<div class="row">' +
@@ -592,6 +596,7 @@ $(document).ready(function () {
             chrome.runtime.sendMessage({
                 JDTIfunction: 'save',
                 templateName: $(this).attr('id'),
+                templateProjects: $('input[name="' + $(this).attr('id') + '"]').val(),
                 templateText: $('textarea[name="' + $(this).attr('id') + '"]').val()
             }, function (response) {
                 if (response.status === 'success') {

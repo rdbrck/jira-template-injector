@@ -101,7 +101,8 @@ h5 {
 	color: #3174F1;
 }
 
-.input-field .prefix ~ textarea {
+.input-field .prefix ~ textarea,
+.input-field .prefix ~ input {
 	width: calc(100% - 4rem) !important;
 }
 
