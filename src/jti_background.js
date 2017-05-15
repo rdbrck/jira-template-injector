@@ -239,16 +239,22 @@ function matchRegexToJsRegex (match) {
 }
 
 function commonItemInArrays (array1, array2) {
-    $.each(array1, function (val) {
-        if ($.inArray(val, array2) !== -1) {
-            return val;
+    var commonItem = null;
+    $.each(array1, function (index, value) {
+        if ($.inArray(value, array2) !== -1) {
+            commonItem = value;
+            return false;
         }
     });
-    return null;
+    return commonItem;
 }
 
 // Parse projects field and save it as a comma separated list, ensuring common format
 function formatProjectsField (projectsField) {
+    if (!projectsField) {
+        return '';
+    }
+
     // Replace all commas with spaces
     projectsField = projectsField.replace(/,/g, ' ');
 
