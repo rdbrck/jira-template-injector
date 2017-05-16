@@ -78,46 +78,75 @@ function loadTemplateEditor (callback = false) {
 
             // Build the Collapsible Template Editor.
             $.each(templates, function (key, template) {
-                var templateProjects = '';
                 var boldStyle = '';
-                if (template['projects-field']) {
-                    templateProjects = '<div>Projects: ' + template['projects-field'] + '</div>';
-                }
                 if (key === 'DEFAULT TEMPLATE') {
                     boldStyle = 'style="font-weight: bold;"';
                 }
 
                 var templateTitle =
                     '<div class="collapsible-header grey lighten-5" data-issueFieldType="' + template['issuetype-field'] + '"' + boldStyle + '>' +
-                    '<i class="material-icons">expand_less</i>' +
-                    '<div>' +
-                    key + templateProjects +
-                    '</div>' +
+                        '<i class="material-icons">expand_less</i>' +
+                        '<div>' +
+                            key +
+                        '</div>' +
                     '</div>';
                 var templateData =
                     '<div class="collapsible-body">' +
-                    '<div class="input-field">' +
-                    '<i class="material-icons prefix">mode_edit</i>' +
-                    '<input type="text" name="' + key + '" placeholder="AIR, JIR (leave blank for all projects)" value="' + (template['projects-field'] || '') + '"></input>' +
-                    '</div>' +
-                    '<div class="input-field">' +
-                    '<i class="material-icons prefix">mode_edit</i>' +
-                    '<textarea data-issueFieldType="' + template['issuetype-field'] + '" class="materialize-textarea" name="' + key + '">' + template.text + '</textarea>' +
-                    '</div>' +
-                    '<div class="row">' +
-                    '<div class="col s4 offset-s4">' +
-                    '<div class="center-align">' +
-                    '<a class="btn-floating btn-Tiny waves-effect waves-light btn-jti removeSingleTemplate" id="' + key + '"><i class="material-icons">delete</i></a>' +
-                    '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp' +
-                    '<a class="btn-floating btn-Tiny waves-effect waves-light btn-jti updateSingleTemplate" id="' + key + '"><i class="material-icons">save</i></a>' +
-                    '</div>' +
-                    '</div>' +
-                    '</div>' +
+                        '<form class="container" template="' + key + '" >' +
+                            '<div class="invisible-divider"></div>' +
+                            '<div class="row">' +
+                                '<div class="col s2 valign-wrapper zpr">' +
+                                    '<h6>Name:</h6>' +
+                                '</div>' +
+                                '<div class="col s5 zpl">' +
+                                    '<input type="text" name="nameField" placeholder="BUG TEMPLATE" value="' + key + '" >' +
+                                '</div>' +
+                                '<div class="col s2 valign-wrapper zpr zpl text-center">' +
+                                    '<h6>Issue Type Field:</h6>' +
+                                '</div>' +
+                                '<div class="col s3">' +
+                                    '<input type="text" name="issueTypeField" placeholder="Bug" value="' + (template['issuetype-field'] || '') + '" >' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="invisible-divider"></div>' +
+                            '<div class="row">' +
+                                '<div class="col s2 valign-wrapper zpr">' +
+                                    '<h6>Projects:</h6>' +
+                                '</div>' +
+                                '<div class="col s10">' +
+                                    '<input type="text" name="projectsField" placeholder="AIR, JIR (leave blank for all projects)" value="' + (template['projects-field'] || '') + '" >' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="invisible-divider"></div>' +
+                            '<div class="row auto-height">' +
+                                '<div class="col s2 valign-wrapper zpr">' +
+                                    '<h6>Text:</h6>' +
+                                '</div>' +
+                                '<div class="col s10 zpl">' +
+                                    '<textarea class="materialize-textarea" name="textField">' + template.text + '</textarea>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="row">' +
+                                '<div class="col s4 offset-s4">' +
+                                    '<div class="center-align">' +
+                                        '<a class="btn-floating btn-Tiny waves-effect waves-light btn-jti removeSingleTemplate" template="' + key + '">' +
+                                            '<i class="material-icons">delete</i>' +
+                                        '</a>' +
+                                        '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp' +
+                                        '<a class="btn-floating btn-Tiny waves-effect waves-light btn-jti updateSingleTemplate" template="' + key + '">' +
+                                            '<i class="material-icons">save</i>' +
+                                        '</a>' +
+                                    '</div>' +
+                                '</div>' +
+                            '</div>' +
+                        '</form>' +
                     '</div>';
                 $('#templateEditor').append('<li>' + templateTitle + templateData + '</li>');
 
                 // Add templateName to dropdown exclude list.
-                dropdownExcludeList.push(template['issuetype-field']);
+                if (!template['projects-field']) {
+                    dropdownExcludeList.push(template['issuetype-field']);
+                }
             });
 
             $('textarea').each(function (index) {
@@ -569,7 +598,7 @@ $(document).ready(function () {
             dmUIClick('remove-single');
             chrome.runtime.sendMessage({
                 JDTIfunction: 'delete',
-                templateName: $(this).attr('id')
+                templateName: $(this).attr('template')
             }, function (response) {
                 if (response.status === 'success') {
                     loadTemplateEditor();
@@ -593,11 +622,14 @@ $(document).ready(function () {
     $(document).on('click', 'a.updateSingleTemplate', function () {
         if (!$(this).hasClass('disabled')) {
             dmUIClick('update-single');
+            var template = $(this).attr('template');
+            var form = $('form[template="' + template + '"]');
             chrome.runtime.sendMessage({
                 JDTIfunction: 'save',
-                templateName: $(this).attr('id'),
-                templateProjects: $('input[name="' + $(this).attr('id') + '"]').val(),
-                templateText: $('textarea[name="' + $(this).attr('id') + '"]').val()
+                templateName: form.find('[name="nameField"]').val(),
+                templateIssueType: form.find('[name="issueTypeField"]').val(),
+                templateProjects: form.find('[name="projectsField"]').val(),
+                templateText: $('[name="textField"]').val()
             }, function (response) {
                 if (response.status === 'success') {
                     Materialize.toast('Template successfully updated', 2000, 'toastNotification');
@@ -655,8 +687,10 @@ $(document).ready(function () {
 
     // Resize textarea on click of collapsible header because doing it earlier doesn't resize it 100$ correctly.
     $(document).on('click', '.collapsible-header', function () {
+        var collapsibleBody = $(this).siblings('.collapsible-body');
+        collapsibleBody.find('textarea').trigger('autoresize');
         $('html, body').animate({
-            scrollTop: $(this).siblings('.collapsible-body').find('textarea').focus().trigger('autoresize').offset().top - 100
+            scrollTop: collapsibleBody.find('[name="nameField"]').focus().offset().top - 100
         }, 500);
     });
 

@@ -159,14 +159,24 @@ function removeTemplate (templateName, callback) {
     });
 }
 
-function updateTemplate (templateName, templateProjects, templateText, callback) {
+function updateTemplate (templateName, templateIssueType, templateProjects, templateText, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         if (templates[StorageID]) {
             var templateJSON = templates[StorageID];
-            var template = templateJSON.templates[templateName];
-            template.text = templateText;
-            template['projects-field'] = formatProjectsField(templateProjects);
-            saveTemplates(templateJSON, callback);
+            var modifiedTemplate = {
+                'issuetype-field': templateIssueType,
+                'projects-field': formatProjectsField(templateProjects),
+                'text': templateText
+            };
+
+            // temporarily remove the template for validation
+            // if validation fails, the deletion will not be saved
+            delete templateJSON.templates[templateName];
+
+            if (validateTemplate(modifiedTemplate, templateJSON.templates, callback)) {
+                templateJSON.templates[templateName] = modifiedTemplate;
+                saveTemplates(templateJSON, callback);
+            }
         } else {
             callback(false, 'No data available to update. Please recreate the template');
         }
@@ -176,37 +186,44 @@ function updateTemplate (templateName, templateProjects, templateText, callback)
 function addTemplate (templateName, issueTypeField, projectsField, text, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         var templateJSON = {};
-        var save = true;
-        var formattedProjectsField = formatProjectsField(projectsField);
+        var newTemplate = {
+            'issuetype-field': issueTypeField,
+            'projects-field': formatProjectsField(projectsField),
+            'text': text
+        };
 
         if (templates[StorageID]) {
             templateJSON = templates[StorageID];
         }
 
-        $.each(templateJSON.templates, function (name, template) {
-            if (issueTypeField === template['issuetype-field']) {
-                // Can't have two templates with the same issue type that both apply to ALL projects
-                if (!projectsField && !template['projects-field']) {
-                    save = false;
-                    callback(false, 'Template already exists for issue type ' + issueTypeField, 'open');
-                    return false;
-                // Can't have two templates with the same issue type that both have the same project in their list of projects
-                } else if (projectsField && template['projects-field']) {
-                    let commonProject = commonItemInArrays(parseProjects(formattedProjectsField), parseProjects(template['projects-field']));
-                    if (commonProject) {
-                        save = false;
-                        callback(false, 'Template already exists for project ' + commonProject, 'open');
-                        return false;
-                    }
-                }
-            }
-        });
-
-        if (save) {
-            templateJSON.templates[templateName] = {'issuetype-field': issueTypeField, 'projects-field': formattedProjectsField, 'text': text};
+        if (validateTemplate(newTemplate, templateJSON.templates, callback)) {
+            templateJSON.templates[templateName] = newTemplate;
             saveTemplates(templateJSON, callback);
         }
     });
+}
+
+function validateTemplate (newTemplate, templates, callback) {
+    var valid = true;
+    $.each(templates, function (name, template) {
+        if (newTemplate['issuetype-field'] === template['issuetype-field']) {
+            // Can't have two templates with the same issue type that both apply to ALL projects
+            if (!newTemplate['projects-field'] && !template['projects-field']) {
+                callback(false, 'Template already exists for issue type ' + newTemplate['issuetype-field'], 'open');
+                valid = false;
+                return false;
+            // Can't have two templates with the same issue type that both have the same project in their list of projects
+            } else if (newTemplate['projects-field'] && template['projects-field']) {
+                let commonProject = commonItemInArrays(parseProjects(newTemplate['projects-field']), parseProjects(template['projects-field']));
+                if (commonProject) {
+                    callback(false, 'Template already exists for project ' + commonProject, 'open');
+                    valid = false;
+                    return false;
+                }
+            }
+        }
+    });
+    return valid;
 }
 
 function loadLocalFile (fileContents, callback) {
@@ -350,7 +367,7 @@ chrome.runtime.onMessage.addListener(
             });
             break;
         case 'save':
-            updateTemplate(request.templateName, request.templateProjects, request.templateText, function (status, message = null, data = null) {
+            updateTemplate(request.templateName, request.templateIssueType, request.templateProjects, request.templateText, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });

@@ -58,8 +58,11 @@ h5 {
 	padding-bottom: 0;
 }
 
-.row {
+.row:not(.auto-height) {
 	height: 37px;
+}
+
+.row {
 	margin-bottom: 10px;
 }
 
@@ -99,11 +102,6 @@ h5 {
 /*noinspection CssUnusedSymbol,CssUnusedSymbol*/
 .input-field .prefix.active {
 	color: #3174F1;
-}
-
-.input-field .prefix ~ textarea,
-.input-field .prefix ~ input {
-	width: calc(100% - 4rem) !important;
 }
 
 /*noinspection CssUnusedSymbol*/
@@ -260,15 +258,6 @@ textarea.materialize-textarea:focus:not([readonly]) {
 
 .collapsible-header {
 	font-size: 13px;
-}
-
-.collapsible-header > div {
-	display: table-cell;
-}
-
-.collapsible-header > div > div {
-	font-size: 11px;
-	margin-top: -2em;
 }
 
 .input-field .prefix {
