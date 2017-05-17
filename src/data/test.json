@@ -9,8 +9,13 @@
         },
         "BUG TEMPLATE": {
             "issuetype-field": "Bug",
+            "projects-field": "",
+            "text": "BUG"
+        },
+        "BUG TEMPLATE": {
+            "issuetype-field": "Bug",
             "projects-field": "AIR",
-            "text": ""
+            "text": "BUG - AIR"
         },
         "STORY TEMPLATE": {
             "issuetype-field": "Story",
