@@ -1,0 +1,33 @@
+﻿{
+    "options": {
+        "limit": []
+    },
+    "templates": {
+        "DEFAULT TEMPLATE": {
+            "issuetype-field": "",
+            "text": ""
+        },
+        "BUG TEMPLATE": {
+            "issuetype-field": "Bug",
+            "projects-field": "AIR",
+            "text": ""
+        },
+        "STORY TEMPLATE": {
+            "issuetype-field": "Story",
+            "text": "*Story*\nAs a <TI>type of user/persona</TI>, I want <TI>to perform some task</TI>, so that I can <TI>achieve some goal/benefit/value</TI>.\n\n*Details*\n<TI>Enter any details, clarifications, answers to questions, or points about implementation here.</TI>\n\n*Additional Information*\n<TI>Enter any background or references such as Stack Overflow, MSDN, blogs, etc. that may help with developing the feature.</TI>\n\n*Acceptance Criteria*\n<TI>Enter the conditions of satisfaction here. That is, the conditions that will satisfy the user/persona that the goal/benefit/value has been achieved.</TI>"
+        },
+        "TASK TEMPLATE": {
+            "issuetype-field": "Task",
+            "text": ""
+        },
+        "STORY TEMPLATE - MAC": {
+            "issuetype-field": "Story",
+            "projects-field": "MAC",
+            "text": "Once upon a time"
+        },
+        "IMPROVEMENT TEMPLATE": {
+            "issuetype-field": "Improvement",
+            "text": "*Summary*\n<TI>Enter a summary of the Improvement here.</TI>\n\n*Details*\n<TI>Enter any details, clarifications, answers to questions, or points about implementation here.</TI>\n\n*Additional Information*\n<TI>Enter any background or references such as Stack Overflow, MSDN, blogs, etc. that may help with developing the feature.</TI>"
+        }
+    }
+}

@@ -5,7 +5,7 @@ If you find it useful please leave a [review](https://chrome.google.com/webstore
 
 ### About:
 
-This extension automatically inserts a template of your choosing into the JIRA Create Issue Description field. The template injected is relative to the selected “Issue Type” within the Create Issue modal on JIRA.
+This extension automatically inserts a template of your choosing into the JIRA Create Issue Description field. The template injected is relative to the selected "Project" and “Issue Type” within the Create Issue modal on JIRA.
 
 On initial install a default list of templates are pre populated for you. These can easily be removed/restored at any time.
 
@@ -18,6 +18,7 @@ The JSON format is:
 	"templates": {
     	"NAME_OF_TEMPLATE": {
         	"issuetype-field":"issue_type_field",
+            "projects-field":"comma_separated_project_keys",
             "text”:”text_to_be_injected"
         },
     	...
@@ -39,8 +40,9 @@ The JSON format is:
 * Automatically select text between ```<TI>``` and ```</TI>``` tags for quick template completion.
   * Quickly jump to the next set of ```<TI>``` elements using the ```Control + back-tick``` key combo.
 * Template Priorities.
-  * Set a default template (DEFAULT TEMPLATE) for all Issue Types.
-  * Individual Issue Types will override the default.
+  * Set a default template (DEFAULT TEMPLATE) for all Issue Types and Projects.
+  * Templates with Issue Type will override the default.
+  * Templates with Issue Type and Projects will override templates with just Issue Type.
 * Templates are synced across devices.
   * Configure once, use on all chrome devices that support extensions!
 * Reload default templates with one click.

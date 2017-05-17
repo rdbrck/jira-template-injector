@@ -21,28 +21,44 @@ if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf
     }
 }
 
-function sortObject (o) {
-    var sorted = {}, key, a = [];
-    for (key in o) {
-        if (o.hasOwnProperty(key)) {
-            a.push(key);
+// Sorts an array of objects in place using a property of the objects
+function sortArrayByProperty (array, property) {
+    return array.sort(function (a, b) {
+        var propertyA = a[property];
+        var propertyB = b[property];
+
+        if (propertyA < propertyB) {
+            return -1;
+        } else if (propertyA > propertyB) {
+            return 1;
+        } else {
+            return 0;
         }
-    }
-    a.sort();
+    });
+}
+
+function sortTemplates (templates) {
+    var templateArray = $.map(templates, function (template, key) {
+        return template;
+    });
+
+    var sorted = sortArrayByProperty(templateArray, 'name');
+
     // Move "DEFAULT TEMPLATE" to top of list.
-    if (a.indexOf('DEFAULT TEMPLATE') > -1) {
-        a.splice(a.indexOf('DEFAULT TEMPLATE'), 1);
-        a.unshift('DEFAULT TEMPLATE');
-    }
-    for (key = 0; key < a.length; key++) {
-        sorted[a[key]] = o[a[key]];
-    }
+    $.each(sorted, function (index, template) {
+        if (!template['issuetype-field'] && !template['projects-field']) {
+            let defaultTemplate = sorted.splice(index, 1)[0];
+            sorted.unshift(defaultTemplate);
+            return false;
+        }
+    });
+
     return sorted;
 }
 
-function openCollapsible (issueFieldType) {
+function openCollapsible (templateID) {
     // Click header to open.
-    $('.collapsible-header[data-issuefieldtype="' + issueFieldType + '"]').click();
+    $('.collapsible-header[data-templateid="' + templateID + '"]').click();
 }
 
 function onInitialFocus (event) {
@@ -57,8 +73,6 @@ function onInitialFocus (event) {
 function loadTemplateEditor (callback = false) {
     // Dynamically build the template editor from stored json.
     chrome.storage.sync.get(StorageID, function (templates) {
-        var dropdownExcludeList = [];
-
         // Clear previous templates in the Collapsible Template Editor.
         $('#templateEditor').empty();
         // Clear the custom template fields.
@@ -74,32 +88,32 @@ function loadTemplateEditor (callback = false) {
             $('#templateEditorTitle').text('Templates:');
 
             // Sort Alphabetically except with DEFAULT TEMPLATE at the top.
-            templates = sortObject(templates);
+            var templatesArray = sortTemplates(templates);
 
             // Build the Collapsible Template Editor.
-            $.each(templates, function (key, template) {
+            $.each(templatesArray, function (index, template) {
                 var boldStyle = '';
-                if (key === 'DEFAULT TEMPLATE') {
+                if (!template['issuetype-field'] && !template['projects-field']) {
                     boldStyle = 'style="font-weight: bold;"';
                 }
 
                 var templateTitle =
-                    '<div class="collapsible-header grey lighten-5" data-issueFieldType="' + template['issuetype-field'] + '"' + boldStyle + '>' +
+                    '<div class="collapsible-header grey lighten-5" data-templateID="' + template.id + '"' + boldStyle + '>' +
                         '<i class="material-icons">expand_less</i>' +
                         '<div>' +
-                            key +
+                            template.name +
                         '</div>' +
                     '</div>';
                 var templateData =
                     '<div class="collapsible-body">' +
-                        '<form class="container" template="' + key + '" >' +
+                        '<form class="container" template="' + template.id + '" >' +
                             '<div class="invisible-divider"></div>' +
                             '<div class="row">' +
                                 '<div class="col s2 valign-wrapper zpr">' +
                                     '<h6>Name:</h6>' +
                                 '</div>' +
                                 '<div class="col s5 zpl">' +
-                                    '<input type="text" name="nameField" placeholder="BUG TEMPLATE" value="' + key + '" >' +
+                                    '<input type="text" name="nameField" placeholder="BUG TEMPLATE" value="' + template.name + '" >' +
                                 '</div>' +
                                 '<div class="col s2 valign-wrapper zpr zpl text-center">' +
                                     '<h6>Issue Type Field:</h6>' +
@@ -123,17 +137,17 @@ function loadTemplateEditor (callback = false) {
                                     '<h6>Text:</h6>' +
                                 '</div>' +
                                 '<div class="col s10 zpl">' +
-                                    '<textarea class="materialize-textarea" name="textField">' + template.text + '</textarea>' +
+                                    '<textarea class="materialize-textarea" name="textField" placeholder="*Summary*\n<TI>Enter summary of the problem here.</TI>">' + template.text + '</textarea>' +
                                 '</div>' +
                             '</div>' +
                             '<div class="row">' +
                                 '<div class="col s4 offset-s4">' +
                                     '<div class="center-align">' +
-                                        '<a class="btn-floating btn-Tiny waves-effect waves-light btn-jti removeSingleTemplate" template="' + key + '">' +
+                                        '<a class="btn-floating btn-Tiny waves-effect waves-light btn-jti removeSingleTemplate" template="' + template.id + '">' +
                                             '<i class="material-icons">delete</i>' +
                                         '</a>' +
                                         '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp' +
-                                        '<a class="btn-floating btn-Tiny waves-effect waves-light btn-jti updateSingleTemplate" template="' + key + '">' +
+                                        '<a class="btn-floating btn-Tiny waves-effect waves-light btn-jti updateSingleTemplate" template="' + template.id + '">' +
                                             '<i class="material-icons">save</i>' +
                                         '</a>' +
                                     '</div>' +
@@ -142,15 +156,12 @@ function loadTemplateEditor (callback = false) {
                         '</form>' +
                     '</div>';
                 $('#templateEditor').append('<li>' + templateTitle + templateData + '</li>');
-
-                // Add templateName to dropdown exclude list.
-                if (!template['projects-field']) {
-                    dropdownExcludeList.push(template['issuetype-field']);
-                }
             });
 
             $('textarea').each(function (index) {
-                $(this).trigger('autoresize');
+                if ($(this).val()) {
+                    $(this).trigger('autoresize');
+                }
             });
         } else {
             $('#templateEditorTitle').text('No templates are currently loaded');
@@ -159,13 +170,17 @@ function loadTemplateEditor (callback = false) {
         // Populate the add default template dropdown - excluding any templates already loaded.
         chrome.runtime.sendMessage({JDTIfunction: 'fetchDefault'}, function (response) {
             if (response.status === 'success') {
+                var bgPage = chrome.extension.getBackgroundPage();
                 var defaultTemplates = response.data.templates;
 
-                // Remove default templates from dropdown list if already added.
-                $.each(dropdownExcludeList, function (index, issueTypeField) {
+                // Remove default templates from dropdown list if a template for that (issue type, projects) combination already exists.
+                $.each(templates, function (index, excludeTemplate) {
                     $.each(defaultTemplates, function (name, template) {
-                        if (issueTypeField === template['issuetype-field']) {
-                            delete defaultTemplates[name];
+                        if (excludeTemplate['issuetype-field'] === template['issuetype-field']) {
+                            if (!excludeTemplate['projects-field'] && !template['projects-field'] ||
+                                bgPage.commonItemInArrays(excludeTemplate['projects-field'], template['projects-field'])) {
+                                delete defaultTemplates[name];
+                            }
                         }
                     });
                 });
@@ -225,6 +240,7 @@ function limitAccess (callback = false) {
                     $('#addCustomTemplate').addClass('disabled');
                     $('#customTemplateName').prop('disabled', true);
                     $('#customTemplateIssueTypeField').prop('disabled', true);
+                    $('#customTemplateProjectsField').prop('disabled', true);
                     $('#addDefaultDropdownButton').addClass('disabled');
                     break;
                 case 'url':
@@ -252,6 +268,7 @@ function limitAccess (callback = false) {
                     $('#addCustomTemplate').addClass('disabled');
                     $('#customTemplateName').prop('disabled', true);
                     $('#customTemplateIssueTypeField').prop('disabled', true);
+                    $('#customTemplateProjectsField').prop('disabled', true);
                     break;
                 case 'add-default':
                     $('#addDefaultDropdownButton').addClass('disabled');
@@ -523,7 +540,7 @@ $(document).ready(function () {
                 $('#addTemplateModal').closeModal();
                 if (response.status === 'success') {
                     loadTemplateEditor(function () {
-                        openCollapsible(issueTypeField);
+                        openCollapsible(response.data);
                     });
                     Materialize.toast('Template successfully added', 2000, 'toastNotification');
                     dmTemplateUpdate('add-custom');
@@ -532,8 +549,8 @@ $(document).ready(function () {
                         if (response.message) {
                             dmError('add-custom', response.message);
                             Materialize.toast(response.message, 2000, 'toastNotification');
-                            if (response.data === 'open') {
-                                openCollapsible(issueTypeField);
+                            if (response.data) {
+                                openCollapsible(response.data);
                             }
                         } else {
                             dmError('add-custom', 'generic');
@@ -622,16 +639,20 @@ $(document).ready(function () {
     $(document).on('click', 'a.updateSingleTemplate', function () {
         if (!$(this).hasClass('disabled')) {
             dmUIClick('update-single');
-            var template = $(this).attr('template');
-            var form = $('form[template="' + template + '"]');
+            var templateID = $(this).attr('template');
+            var form = $('form[template="' + templateID + '"]');
             chrome.runtime.sendMessage({
                 JDTIfunction: 'save',
+                templateID: templateID,
                 templateName: form.find('[name="nameField"]').val(),
                 templateIssueType: form.find('[name="issueTypeField"]').val(),
                 templateProjects: form.find('[name="projectsField"]').val(),
-                templateText: $('[name="textField"]').val()
+                templateText: form.find('[name="textField"]').val()
             }, function (response) {
                 if (response.status === 'success') {
+                    loadTemplateEditor(function () {
+                        openCollapsible(templateID);
+                    });
                     Materialize.toast('Template successfully updated', 2000, 'toastNotification');
                     dmTemplateUpdate('update-single');
                 } else {
@@ -668,7 +689,7 @@ $(document).ready(function () {
             $('#addTemplateModal').closeModal();
             if (response.status === 'success') {
                 loadTemplateEditor(function () {
-                    openCollapsible(issueTypeField);
+                    openCollapsible(response.data);
                 });
                 Materialize.toast('Template successfully added', 2000, 'toastNotification');
                 dmTemplateUpdate('add-default');
@@ -688,7 +709,10 @@ $(document).ready(function () {
     // Resize textarea on click of collapsible header because doing it earlier doesn't resize it 100$ correctly.
     $(document).on('click', '.collapsible-header', function () {
         var collapsibleBody = $(this).siblings('.collapsible-body');
-        collapsibleBody.find('textarea').trigger('autoresize');
+        var textArea = collapsibleBody.find('textarea');
+        if (textArea.val()) {
+            textArea.trigger('autoresize');
+        }
         $('html, body').animate({
             scrollTop: collapsibleBody.find('[name="nameField"]').focus().offset().top - 100
         }, 500);

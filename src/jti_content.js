@@ -214,9 +214,12 @@ function injectDescriptionTemplate (descriptionElement) {
             projectElement = $('#project-field'),
             issueTypeElement = $('#issuetype-field');
 
-        if (templates['DEFAULT TEMPLATE']) {
-            templateText = templates['DEFAULT TEMPLATE'].text;
-        }
+        // Set default template text
+        $.each(templates, function (key, template) {
+            if (!template['issuetype-field'] && !template['projects-field']) {
+                templateText = template.text;
+            }
+        });
 
         if (issueTypeElement !== null && projectElement !== null) {
             $.each(templates, function (key, template) {
