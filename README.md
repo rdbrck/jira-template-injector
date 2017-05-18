@@ -15,14 +15,15 @@ The JSON format is:
 
 ```javascript
 {
-	"templates": {
-    	"NAME_OF_TEMPLATE": {
+	"templates": [
+    	{
+            "name":"NAME_OF_TEMPLATE",
         	"issuetype-field":"issue_type_field",
             "projects-field":"comma_separated_project_keys",
-            "text”:”text_to_be_injected"
+            "text":"text_to_be_injected"
         },
     	...
-    },
+    ],
     "options": {
         "limit": ["clear","delete","save"]
     }
