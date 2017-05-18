@@ -174,8 +174,8 @@ function loadTemplateEditor (callback = false) {
                 var defaultTemplates = response.data.templates;
 
                 // Remove default templates from dropdown list if a template for that (issue type, projects) combination already exists.
-                $.each(templates, function (index, excludeTemplate) {
-                    $.each(defaultTemplates, function (name, template) {
+                $.each(templatesArray, function (index, excludeTemplate) {
+                    $.each(defaultTemplates, function (defaultIndex, template) {
                         if (excludeTemplate['issuetype-field'] === template['issuetype-field']) {
                             if (!excludeTemplate['projects-field'] && !template['projects-field'] ||
                                 bgPage.commonItemInArrays(excludeTemplate['projects-field'], template['projects-field'])) {
@@ -537,26 +537,21 @@ $(document).ready(function () {
                 projectsField: projectsField,
                 text: ''
             }, function (response) {
-                $('#addTemplateModal').closeModal();
                 if (response.status === 'success') {
+                    $('#addTemplateModal').closeModal();
                     loadTemplateEditor(function () {
                         openCollapsible(response.data);
                     });
                     Materialize.toast('Template successfully added', 2000, 'toastNotification');
                     dmTemplateUpdate('add-custom');
                 } else {
-                    loadTemplateEditor(function () {
-                        if (response.message) {
-                            dmError('add-custom', response.message);
-                            Materialize.toast(response.message, 2000, 'toastNotification');
-                            if (response.data) {
-                                openCollapsible(response.data);
-                            }
-                        } else {
-                            dmError('add-custom', 'generic');
-                            Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
-                        }
-                    });
+                    if (response.message) {
+                        dmError('add-custom', response.message);
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                    } else {
+                        dmError('add-custom', 'generic');
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    }
                 }
             });
         } else {

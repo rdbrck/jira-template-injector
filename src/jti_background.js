@@ -213,7 +213,7 @@ function addTemplate (templateName, issueTypeField, projectsField, text, callbac
     });
 }
 
-// Make sure that the (issue type, project) combination is unique
+// Make sure that the name and (issue type, project) combination is unique
 function validateTemplate (newTemplate, templates, callback) {
     var valid = true;
     $.each(templates, function (name, template) {
@@ -227,7 +227,7 @@ function validateTemplate (newTemplate, templates, callback) {
             } else if (newTemplate['projects-field'] && template['projects-field']) {
                 let commonProject = commonItemInArrays(parseProjects(newTemplate['projects-field']), parseProjects(template['projects-field']));
                 if (commonProject) {
-                    callback(false, 'Template already exists for project ' + commonProject, template.id);
+                    callback(false, 'Template already exists for issue type ' + newTemplate['issuetype-field'] + ' and project ' + commonProject, template.id);
                     valid = false;
                     return false;
                 }
@@ -319,37 +319,50 @@ function migrateTemplateKeys (callback = null) {
         }
 
         var templateJSON = templates[StorageID];
-        templateJSON.templates = JSONtoTemplateData(templateJSON.templates);
 
-        saveTemplates(templateJSON, callback);
+        // If data is in old format, migrate it
+        $.each(templateJSON.templates, function (key, template) {
+            if (!template.name) {
+                templateJSON.templates = JSONtoTemplateData(templateJSON.templates);
+                saveTemplates(templateJSON, callback);
+            }
+            return false;
+        });
     });
 }
 
 function JSONtoTemplateData (templates) {
     var nextID = getNextID(templates);
     var formattedTemplates = {};
-    $.each(templates, function (key, template) {
-        if (!template.name) {
+
+    if (templates.constructor === Array) {
+        $.each(templates, function (index, template) {
+            template.id = nextID;
+            formattedTemplates[nextID++] = template;
+        });
+    } else {    // support old template format
+        $.each(templates, function (key, template) {
             template.name = key;
-        }
-        template.id = nextID;
-        formattedTemplates[nextID++] = template;
-    });
+            template.id = nextID;
+            formattedTemplates[nextID++] = template;
+        });
+    }
+
     return formattedTemplates;
 }
 
 function templateDataToJSON (templates) {
-    var formattedTemplates = {};
+    var formattedTemplates = [];
+
     $.each(templates, function (key, template) {
-        formattedTemplates[template.name] = template;
         delete template.id;
-        delete template.name;
+        formattedTemplates.push(template);
     });
     return formattedTemplates;
 }
 
 function getNextID (templates) {
-    var highestID = 1;
+    var highestID = 0;
     $.each(templates, function (key, template) {
         var templateID = parseInt(template.id);
         if (templateID && templateID > highestID) {
