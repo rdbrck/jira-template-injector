@@ -312,3 +312,7 @@ textarea.materialize-textarea:focus:not([readonly]) {
 .btn-floating i {
 	font-size: 1.3rem;
 }
+
+.font-bold {
+	font-weight: bold;
+}

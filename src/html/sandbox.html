@@ -7,7 +7,7 @@
         <script id="edit_template" type="text/x-handlebars-template">
             {{#each templates}}
                 <li>
-                    <div class="collapsible-header grey lighten-5" data-templateID="{{ this.id }}" {{{ boldIfDefault this }}} >
+                    <div class="collapsible-header grey lighten-5 {{{ boldIfDefault this }}}" data-templateID="{{ this.id }}" >
                         <i class="material-icons">expand_less</i>
                         <div>{{ this.name }}</div>
                     </div>
@@ -70,7 +70,7 @@
 
             Handlebars.registerHelper('boldIfDefault', function (template) {
                 if (!template['issuetype-field'] && !template['projects-field']) {
-                    return 'style="font-weight: bold;"';
+                    return 'font-bold';
                 } else {
                     return '';
                 }
