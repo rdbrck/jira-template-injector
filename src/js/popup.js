@@ -105,7 +105,6 @@ function loadTemplateEditor (openTemplate = null) {
         // Populate the add default template dropdown - excluding any templates already loaded.
         chrome.runtime.sendMessage({JDTIfunction: 'fetchDefault'}, function (response) {
             if (response.status === 'success') {
-                var bgPage = chrome.extension.getBackgroundPage();
                 var defaultTemplates = response.data.templates;
                 var validDefaultTemplates = [];
 
@@ -116,7 +115,7 @@ function loadTemplateEditor (openTemplate = null) {
                         // if the issue types are the same and (the templates have no projects specified or they have a project in common), then this template is invalid
                         if (excludeTemplate['issuetype-field'] === template['issuetype-field']) {
                             if (!excludeTemplate['projects-field'] && !template['projects-field'] ||
-                                bgPage.commonItemInArrays(excludeTemplate['projects-field'], template['projects-field'])) {
+                                commonItemInArrays(excludeTemplate['projects-field'], template['projects-field'])) {
                                 valid = false;
                                 return false;
                             }

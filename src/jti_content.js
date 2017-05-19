@@ -199,11 +199,6 @@ function parseProjectKey (projectElement) {
     return project.substring(project.lastIndexOf('(') + 1, project.length - 1);
 }
 
-// Turn formatted projects field into an array of projects
-function parseProjects (projects) {
-    return projects.split(', ');
-}
-
 function injectDescriptionTemplate (descriptionElement) {
     // Each issue type for each project can have its own template.
     chrome.storage.sync.get(StorageID, function (templates) {
