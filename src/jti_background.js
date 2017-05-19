@@ -426,7 +426,7 @@ chrome.runtime.onMessage.addListener(
             });
             break;
         case 'delete':
-            removeTemplate(request.templateName, function (status, message = null, data = null) {
+            removeTemplate(request.templateID, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });

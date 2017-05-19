@@ -565,7 +565,7 @@ $(document).ready(function () {
             dmUIClick('remove-single');
             chrome.runtime.sendMessage({
                 JDTIfunction: 'delete',
-                templateName: $(this).attr('template')
+                templateID: $(this).attr('template')
             }, function (response) {
                 if (response.status === 'success') {
                     loadTemplateEditor();
