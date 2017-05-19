@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="../lib/handlebars/handlebars-1.0.0.beta.6.js"></script>
+    </head>
+    <body>
+        <script id="edit_template" type="text/x-handlebars-template">
+            {{#each templates}}
+                <li>
+                    <div class="collapsible-header grey lighten-5" data-templateID="{{ this.id }}" {{{ boldIfDefault this }}} >
+                        <i class="material-icons">expand_less</i>
+                        <div>{{ this.name }}</div>
+                    </div>
+                    <div class="collapsible-body">
+                        <form class="container" template="{{ this.id }}" >
+                            <div class="invisible-divider"></div>
+                            <div class="row">
+                                <div class="col s2 valign-wrapper zpr">
+                                    <h6>Name:</h6>
+                                </div>
+                                <div class="col s5 zpl">
+                                    <input type="text" name="nameField" placeholder="BUG TEMPLATE" value="{{ this.name }}" >
+                                </div>
+                                <div class="col s2 valign-wrapper zpr zpl text-center">
+                                    <h6>Issue Type Field:</h6>
+                                </div>
+                                <div class="col s3">
+                                    <input type="text" name="issueTypeField" placeholder="Bug" value="{{ this.[issuetype-field] }}" >
+                                </div>
+                            </div>
+                            <div class="invisible-divider"></div>
+                            <div class="row">
+                                <div class="col s2 valign-wrapper zpr">
+                                    <h6>Projects:</h6>
+                                </div>
+                                <div class="col s10">
+                                    <input type="text" name="projectsField" placeholder="AIR, JIR (leave blank for all projects)" value="{{ this.[projects-field] }}" >
+                                </div>
+                            </div>
+                            <div class="invisible-divider"></div>
+                            <div class="row auto-height">
+                                <div class="col s2 valign-wrapper zpr">
+                                    <h6>Text:</h6>
+                                </div>
+                                <div class="col s10 zpl">
+                                    <textarea class="materialize-textarea" name="textField" placeholder="*Summary*\n<TI>Enter summary of the problem here.</TI>">{{ this.text }}</textarea>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col s4 offset-s4">
+                                    <div class="center-align">
+                                        <a class="btn-floating btn-Tiny waves-effect waves-light btn-jti removeSingleTemplate" template="{{ this.id }}">
+                                            <i class="material-icons">delete</i>
+                                        </a>
+                                        &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+                                        <a class="btn-floating btn-Tiny waves-effect waves-light btn-jti updateSingleTemplate" template="{{ this.id }}">
+                                            <i class="material-icons">save</i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </li>
+            {{/each}}
+        </script>
+        <script>
+            var source = document.getElementById('edit_template').innerHTML;
+            var htmlTemplate = Handlebars.compile(source);
+
+            Handlebars.registerHelper('boldIfDefault', function (template) {
+                if (!template['issuetype-field'] && !template['projects-field']) {
+                    return 'style="font-weight: bold;"';
+                } else {
+                    return '';
+                }
+            })
+
+            window.addEventListener('message', function (event) {
+                var command = event.data.command;
+                if (command === "render") {
+                    event.source.postMessage({
+                        html: htmlTemplate(event.data.context),
+                        callback: event.data.callback,
+                        openTemplate: event.data.openTemplate
+                    }, event.origin);
+                }
+            });
+        </script>
+    </body>
+</html>

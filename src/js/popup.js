@@ -70,7 +70,7 @@ function onInitialFocus (event) {
     document.removeEventListener('focusin', onInitialFocus);
 }
 
-function loadTemplateEditor (callback = false) {
+function loadTemplateEditor (openTemplate = null) {
     // Dynamically build the template editor from stored json.
     chrome.storage.sync.get(StorageID, function (templates) {
         // Clear previous templates in the Collapsible Template Editor.
@@ -90,79 +90,14 @@ function loadTemplateEditor (callback = false) {
             // Sort Alphabetically except with DEFAULT TEMPLATE at the top.
             var templatesArray = sortTemplates(templates);
 
-            // Build the Collapsible Template Editor.
-            $.each(templatesArray, function (index, template) {
-                var boldStyle = '';
-                if (!template['issuetype-field'] && !template['projects-field']) {
-                    boldStyle = 'style="font-weight: bold;"';
-                }
-
-                var templateTitle =
-                    '<div class="collapsible-header grey lighten-5" data-templateID="' + template.id + '"' + boldStyle + '>' +
-                        '<i class="material-icons">expand_less</i>' +
-                        '<div>' +
-                            template.name +
-                        '</div>' +
-                    '</div>';
-                var templateData =
-                    '<div class="collapsible-body">' +
-                        '<form class="container" template="' + template.id + '" >' +
-                            '<div class="invisible-divider"></div>' +
-                            '<div class="row">' +
-                                '<div class="col s2 valign-wrapper zpr">' +
-                                    '<h6>Name:</h6>' +
-                                '</div>' +
-                                '<div class="col s5 zpl">' +
-                                    '<input type="text" name="nameField" placeholder="BUG TEMPLATE" value="' + template.name + '" >' +
-                                '</div>' +
-                                '<div class="col s2 valign-wrapper zpr zpl text-center">' +
-                                    '<h6>Issue Type Field:</h6>' +
-                                '</div>' +
-                                '<div class="col s3">' +
-                                    '<input type="text" name="issueTypeField" placeholder="Bug" value="' + (template['issuetype-field'] || '') + '" >' +
-                                '</div>' +
-                            '</div>' +
-                            '<div class="invisible-divider"></div>' +
-                            '<div class="row">' +
-                                '<div class="col s2 valign-wrapper zpr">' +
-                                    '<h6>Projects:</h6>' +
-                                '</div>' +
-                                '<div class="col s10">' +
-                                    '<input type="text" name="projectsField" placeholder="AIR, JIR (leave blank for all projects)" value="' + (template['projects-field'] || '') + '" >' +
-                                '</div>' +
-                            '</div>' +
-                            '<div class="invisible-divider"></div>' +
-                            '<div class="row auto-height">' +
-                                '<div class="col s2 valign-wrapper zpr">' +
-                                    '<h6>Text:</h6>' +
-                                '</div>' +
-                                '<div class="col s10 zpl">' +
-                                    '<textarea class="materialize-textarea" name="textField" placeholder="*Summary*\n<TI>Enter summary of the problem here.</TI>">' + template.text + '</textarea>' +
-                                '</div>' +
-                            '</div>' +
-                            '<div class="row">' +
-                                '<div class="col s4 offset-s4">' +
-                                    '<div class="center-align">' +
-                                        '<a class="btn-floating btn-Tiny waves-effect waves-light btn-jti removeSingleTemplate" template="' + template.id + '">' +
-                                            '<i class="material-icons">delete</i>' +
-                                        '</a>' +
-                                        '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp' +
-                                        '<a class="btn-floating btn-Tiny waves-effect waves-light btn-jti updateSingleTemplate" template="' + template.id + '">' +
-                                            '<i class="material-icons">save</i>' +
-                                        '</a>' +
-                                    '</div>' +
-                                '</div>' +
-                            '</div>' +
-                        '</form>' +
-                    '</div>';
-                $('#templateEditor').append('<li>' + templateTitle + templateData + '</li>');
-            });
-
-            $('textarea').each(function (index) {
-                if ($(this).val()) {
-                    $(this).trigger('autoresize');
-                }
-            });
+            // Send a message to sandbox.html to build the collapsible template editor
+            // Once the template is compiled, a 'message' event will be sent to this window with the html
+            var sandboxIFrame = document.getElementById('sandbox_window');
+            sandboxIFrame.contentWindow.postMessage({
+                command: 'render',
+                context: { templates: templatesArray },
+                openTemplate: openTemplate
+            }, '*');
         } else {
             $('#templateEditorTitle').text('No templates are currently loaded');
         }
@@ -172,24 +107,31 @@ function loadTemplateEditor (callback = false) {
             if (response.status === 'success') {
                 var bgPage = chrome.extension.getBackgroundPage();
                 var defaultTemplates = response.data.templates;
+                var validDefaultTemplates = [];
 
-                // Remove default templates from dropdown list if a template for that (issue type, projects) combination already exists.
-                $.each(templatesArray, function (index, excludeTemplate) {
-                    $.each(defaultTemplates, function (defaultIndex, template) {
+                // Only show default templates if a template for that (issue type, projects) combination doesn't already exist.
+                $.each(defaultTemplates, function (defaultIndex, template) {
+                    var valid = true;
+                    $.each(templatesArray, function (index, excludeTemplate) {
+                        // if the issue types are the same and (the templates have no projects specified or they have a project in common), then this template is invalid
                         if (excludeTemplate['issuetype-field'] === template['issuetype-field']) {
                             if (!excludeTemplate['projects-field'] && !template['projects-field'] ||
                                 bgPage.commonItemInArrays(excludeTemplate['projects-field'], template['projects-field'])) {
-                                delete defaultTemplates[name];
+                                valid = false;
+                                return false;
                             }
                         }
                     });
+                    if (valid) {
+                        validDefaultTemplates.push(template);
+                    }
                 });
 
-                if (!$.isEmptyObject(defaultTemplates)) {
+                if (!$.isEmptyObject(validDefaultTemplates)) {
                     $('#addDefaultDropdownButton').removeClass('emptyDropdown').addClass('waves-effect waves-light');
 
-                    $.each(defaultTemplates, function (key, template) {
-                        var dropdownData = '<li><a class="dropdownOption" href="#!" data-issueFieldType="' + template['issuetype-field'] + '" data-text="' + template.text + '">' + key + '</a></li>';
+                    $.each(validDefaultTemplates, function (key, template) {
+                        var dropdownData = '<li><a class="dropdownOption" href="#!" data-issueFieldType="' + template['issuetype-field'] + '" data-text="' + template.name + '">' + template.name + '</a></li>';
                         $('#addDefaultDropdown').append(dropdownData);
                     });
                 } else {
@@ -206,10 +148,6 @@ function loadTemplateEditor (callback = false) {
         });
 
         limitAccess();
-
-        if (callback) {
-            callback();
-        }
     });
 
     // Check the "rate" flag. If the flag is not set, display "rate it now" button
@@ -375,7 +313,9 @@ $(document).ready(function () {
     });
 
     document.addEventListener('focusin', onInitialFocus);
-    loadTemplateEditor();
+    $('#sandbox_window').load(function () {
+        loadTemplateEditor();
+    });
 
     // Click Handlers
     $('#reset').click(function () {
@@ -539,9 +479,7 @@ $(document).ready(function () {
             }, function (response) {
                 if (response.status === 'success') {
                     $('#addTemplateModal').closeModal();
-                    loadTemplateEditor(function () {
-                        openCollapsible(response.data);
-                    });
+                    loadTemplateEditor(response.data);
                     Materialize.toast('Template successfully added', 2000, 'toastNotification');
                     dmTemplateUpdate('add-custom');
                 } else {
@@ -604,6 +542,24 @@ $(document).ready(function () {
         }
     });
 
+    // When the edit template has been compiled
+    $(window).on('message', function (event) {
+        event = event.originalEvent;
+        if (event.data.html) {
+            $('#templateEditor').append(event.data.html);
+
+            $('textarea').each(function (index) {
+                if ($(this).val()) {
+                    $(this).trigger('autoresize');
+                }
+            });
+
+            if (event.data.openTemplate) {
+                openCollapsible(event.data.openTemplate);
+            }
+        }
+    });
+
     // Because the template editing section is dynamically build, need to monitor document rather then the classes directly
     $(document).on('click', 'a.removeSingleTemplate', function () {
         if (!$(this).hasClass('disabled')) {
@@ -645,9 +601,7 @@ $(document).ready(function () {
                 templateText: form.find('[name="textField"]').val()
             }, function (response) {
                 if (response.status === 'success') {
-                    loadTemplateEditor(function () {
-                        openCollapsible(templateID);
-                    });
+                    loadTemplateEditor(templateID);
                     Materialize.toast('Template successfully updated', 2000, 'toastNotification');
                     dmTemplateUpdate('update-single');
                 } else {
@@ -683,9 +637,7 @@ $(document).ready(function () {
         }, function (response) {
             $('#addTemplateModal').closeModal();
             if (response.status === 'success') {
-                loadTemplateEditor(function () {
-                    openCollapsible(response.data);
-                });
+                loadTemplateEditor(response.data);
                 Materialize.toast('Template successfully added', 2000, 'toastNotification');
                 dmTemplateUpdate('add-default');
             } else {
