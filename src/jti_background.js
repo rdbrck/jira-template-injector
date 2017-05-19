@@ -213,7 +213,7 @@ function addTemplate (templateName, issueTypeField, projectsField, text, callbac
     });
 }
 
-// Make sure that the name and (issue type, project) combination is unique
+// Make sure that the (issue type, project) combination is unique
 function validateTemplate (newTemplate, templates, callback) {
     var valid = true;
     $.each(templates, function (name, template) {
