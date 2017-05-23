@@ -115,7 +115,7 @@ function loadTemplateEditor (openTemplate = null) {
                         // if the issue types are the same and (the templates have no projects specified or they have a project in common), then this template is invalid
                         if (excludeTemplate['issuetype-field'] === template['issuetype-field']) {
                             if (!excludeTemplate['projects-field'] && !template['projects-field'] ||
-                                commonItemInArrays(excludeTemplate['projects-field'], template['projects-field'])) {
+                                utils.commonItemInArrays(excludeTemplate['projects-field'], template['projects-field'])) {
                                 valid = false;
                                 return false;
                             }

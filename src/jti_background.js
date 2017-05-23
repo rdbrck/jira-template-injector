@@ -225,7 +225,7 @@ function validateTemplate (newTemplate, templates, callback) {
                 return false;
             // Can't have two templates with the same issue type that both have the same project in their list of projects
             } else if (newTemplate['projects-field'] && template['projects-field']) {
-                let commonProject = commonItemInArrays(parseProjects(newTemplate['projects-field']), parseProjects(template['projects-field']));
+                let commonProject = utils.commonItemInArrays(utils.parseProjects(newTemplate['projects-field']), utils.parseProjects(template['projects-field']));
                 if (commonProject) {
                     callback(false, 'Template ' + template.name + ' already exists for issue type ' + newTemplate['issuetype-field'] + ' and project ' + commonProject, template.id);
                     valid = false;

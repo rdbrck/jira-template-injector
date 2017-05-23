@@ -221,7 +221,7 @@ function injectDescriptionTemplate (descriptionElement) {
                 if (issueTypeElement.val() === template['issuetype-field']) {
                     // If project is specified, it will override the 'ALL projects with this issue type' template
                     if (template['projects-field']) {
-                        if ($.inArray(parseProjectKey(projectElement), parseProjects(template['projects-field'])) !== -1) {
+                        if ($.inArray(parseProjectKey(projectElement), utils.parseProjects(template['projects-field'])) !== -1) {
                             templateText = template.text;
                             return false;
                         }
