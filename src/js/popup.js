@@ -21,28 +21,44 @@ if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf
     }
 }
 
-function sortObject (o) {
-    var sorted = {}, key, a = [];
-    for (key in o) {
-        if (o.hasOwnProperty(key)) {
-            a.push(key);
+// Sorts an array of objects in place using a property of the objects
+function sortArrayByProperty (array, property) {
+    return array.sort(function (a, b) {
+        var propertyA = a[property];
+        var propertyB = b[property];
+
+        if (propertyA < propertyB) {
+            return -1;
+        } else if (propertyA > propertyB) {
+            return 1;
+        } else {
+            return 0;
         }
-    }
-    a.sort();
+    });
+}
+
+function sortTemplates (templates) {
+    var templateArray = $.map(templates, function (template, key) {
+        return template;
+    });
+
+    var sorted = sortArrayByProperty(templateArray, 'name');
+
     // Move "DEFAULT TEMPLATE" to top of list.
-    if (a.indexOf('DEFAULT TEMPLATE') > -1) {
-        a.splice(a.indexOf('DEFAULT TEMPLATE'), 1);
-        a.unshift('DEFAULT TEMPLATE');
-    }
-    for (key = 0; key < a.length; key++) {
-        sorted[a[key]] = o[a[key]];
-    }
+    $.each(sorted, function (index, template) {
+        if (!template['issuetype-field'] && !template['projects-field']) {
+            let defaultTemplate = sorted.splice(index, 1)[0];
+            sorted.unshift(defaultTemplate);
+            return false;
+        }
+    });
+
     return sorted;
 }
 
-function openCollapsible (issueFieldType) {
+function openCollapsible (templateID) {
     // Click header to open.
-    $('.collapsible-header[data-issuefieldtype="' + issueFieldType + '"]').click();
+    $('.collapsible-header[data-templateid="' + templateID + '"]').click();
 }
 
 function onInitialFocus (event) {
@@ -54,16 +70,15 @@ function onInitialFocus (event) {
     document.removeEventListener('focusin', onInitialFocus);
 }
 
-function loadTemplateEditor (callback = false) {
+function loadTemplateEditor (openTemplate = null) {
     // Dynamically build the template editor from stored json.
     chrome.storage.sync.get(StorageID, function (templates) {
-        var dropdownExcludeList = [];
-
         // Clear previous templates in the Collapsible Template Editor.
         $('#templateEditor').empty();
         // Clear the custom template fields.
         $('#customTemplateName').val('');
         $('#customTemplateIssueTypeField').val('');
+        $('#customTemplateProjectsField').val('');
         // Clear the add default template dropdown.
         $('#addDefaultDropdown').empty();
 
@@ -73,42 +88,16 @@ function loadTemplateEditor (callback = false) {
             $('#templateEditorTitle').text('Templates:');
 
             // Sort Alphabetically except with DEFAULT TEMPLATE at the top.
-            templates = sortObject(templates);
+            var templatesArray = sortTemplates(templates);
 
-            // Build the Collapsible Template Editor.
-            $.each(templates, function (key, template) {
-                var templateTitle = '';
-                if (key === 'DEFAULT TEMPLATE') {
-                    templateTitle = '<div class="collapsible-header grey lighten-5" data-issueFieldType="' + template['issuetype-field'] + '" style="font-weight: bold;"><i class="material-icons">expand_less</i>' + key + '</div>';
-                } else {
-                    templateTitle = '<div class="collapsible-header grey lighten-5" data-issueFieldType="' + template['issuetype-field'] + '"><i class="material-icons">expand_less</i>' + key + '</div>';
-                }
-
-                var templateData =
-                    '<div class="collapsible-body">' +
-                    '<div class="input-field">' +
-                    '<i class="material-icons prefix">mode_edit</i>' +
-                    '<textarea data-issueFieldType="' + template['issuetype-field'] + '" class="materialize-textarea" name="' + key + '">' + template.text + '</textarea>' +
-                    '</div>' +
-                    '<div class="row">' +
-                    '<div class="col s4 offset-s4">' +
-                    '<div class="center-align">' +
-                    '<a class="btn-floating btn-Tiny waves-effect waves-light btn-jti removeSingleTemplate" id="' + key + '"><i class="material-icons">delete</i></a>' +
-                    '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp' +
-                    '<a class="btn-floating btn-Tiny waves-effect waves-light btn-jti updateSingleTemplate" id="' + key + '"><i class="material-icons">save</i></a>' +
-                    '</div>' +
-                    '</div>' +
-                    '</div>' +
-                    '</div>';
-                $('#templateEditor').append('<li>' + templateTitle + templateData + '</li>');
-
-                // Add templateName to dropdown exclude list.
-                dropdownExcludeList.push(template['issuetype-field']);
-            });
-
-            $('textarea').each(function (index) {
-                $(this).trigger('autoresize');
-            });
+            // Send a message to sandbox.html to build the collapsible template editor
+            // Once the template is compiled, a 'message' event will be sent to this window with the html
+            var sandboxIFrame = document.getElementById('sandbox_window');
+            sandboxIFrame.contentWindow.postMessage({
+                command: 'render',
+                context: { templates: templatesArray },
+                openTemplate: openTemplate
+            }, '*');
         } else {
             $('#templateEditorTitle').text('No templates are currently loaded');
         }
@@ -117,21 +106,31 @@ function loadTemplateEditor (callback = false) {
         chrome.runtime.sendMessage({JDTIfunction: 'fetchDefault'}, function (response) {
             if (response.status === 'success') {
                 var defaultTemplates = response.data.templates;
+                var validDefaultTemplates = [];
 
-                // Remove default templates from dropdown list if already added.
-                $.each(dropdownExcludeList, function (index, issueTypeField) {
-                    $.each(defaultTemplates, function (name, template) {
-                        if (issueTypeField === template['issuetype-field']) {
-                            delete defaultTemplates[name];
+                // Only show default templates if a template for that (issue type, projects) combination doesn't already exist.
+                $.each(defaultTemplates, function (defaultIndex, template) {
+                    var valid = true;
+                    $.each(templatesArray, function (index, excludeTemplate) {
+                        // if the issue types are the same and (the templates have no projects specified or they have a project in common), then this template is invalid
+                        if (excludeTemplate['issuetype-field'] === template['issuetype-field']) {
+                            if (!excludeTemplate['projects-field'] && !template['projects-field'] ||
+                                utils.commonItemInArrays(excludeTemplate['projects-field'], template['projects-field'])) {
+                                valid = false;
+                                return false;
+                            }
                         }
                     });
+                    if (valid) {
+                        validDefaultTemplates.push(template);
+                    }
                 });
 
-                if (!$.isEmptyObject(defaultTemplates)) {
+                if (!$.isEmptyObject(validDefaultTemplates)) {
                     $('#addDefaultDropdownButton').removeClass('emptyDropdown').addClass('waves-effect waves-light');
 
-                    $.each(defaultTemplates, function (key, template) {
-                        var dropdownData = '<li><a class="dropdownOption" href="#!" data-issueFieldType="' + template['issuetype-field'] + '" data-text="' + template.text + '">' + key + '</a></li>';
+                    $.each(validDefaultTemplates, function (key, template) {
+                        var dropdownData = '<li><a class="dropdownOption" href="#!" data-issueFieldType="' + template['issuetype-field'] + '" data-text="' + template.name + '">' + template.name + '</a></li>';
                         $('#addDefaultDropdown').append(dropdownData);
                     });
                 } else {
@@ -148,10 +147,6 @@ function loadTemplateEditor (callback = false) {
         });
 
         limitAccess();
-
-        if (callback) {
-            callback();
-        }
     });
 
     // Check the "rate" flag. If the flag is not set, display "rate it now" button
@@ -182,6 +177,7 @@ function limitAccess (callback = false) {
                     $('#addCustomTemplate').addClass('disabled');
                     $('#customTemplateName').prop('disabled', true);
                     $('#customTemplateIssueTypeField').prop('disabled', true);
+                    $('#customTemplateProjectsField').prop('disabled', true);
                     $('#addDefaultDropdownButton').addClass('disabled');
                     break;
                 case 'url':
@@ -209,6 +205,7 @@ function limitAccess (callback = false) {
                     $('#addCustomTemplate').addClass('disabled');
                     $('#customTemplateName').prop('disabled', true);
                     $('#customTemplateIssueTypeField').prop('disabled', true);
+                    $('#customTemplateProjectsField').prop('disabled', true);
                     break;
                 case 'add-default':
                     $('#addDefaultDropdownButton').addClass('disabled');
@@ -315,7 +312,9 @@ $(document).ready(function () {
     });
 
     document.addEventListener('focusin', onInitialFocus);
-    loadTemplateEditor();
+    $('#sandbox_window').load(function () {
+        loadTemplateEditor();
+    });
 
     // Click Handlers
     $('#reset').click(function () {
@@ -468,33 +467,28 @@ $(document).ready(function () {
             dmUIClick('add-custom');
             var templateName = $('#customTemplateName').val();
             var issueTypeField = $('#customTemplateIssueTypeField').val();
+            var projectsField = $('#customTemplateProjectsField').val();
 
             chrome.runtime.sendMessage({
                 JDTIfunction: 'add',
                 templateName: templateName,
                 issueTypeField: issueTypeField,
+                projectsField: projectsField,
                 text: ''
             }, function (response) {
-                $('#addTemplateModal').closeModal();
                 if (response.status === 'success') {
-                    loadTemplateEditor(function () {
-                        openCollapsible(issueTypeField);
-                    });
+                    $('#addTemplateModal').closeModal();
+                    loadTemplateEditor(response.data);
                     Materialize.toast('Template successfully added', 2000, 'toastNotification');
                     dmTemplateUpdate('add-custom');
                 } else {
-                    loadTemplateEditor(function () {
-                        if (response.message) {
-                            dmError('add-custom', response.message);
-                            Materialize.toast(response.message, 2000, 'toastNotification');
-                            if (response.data === 'open') {
-                                openCollapsible(issueTypeField);
-                            }
-                        } else {
-                            dmError('add-custom', 'generic');
-                            Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
-                        }
-                    });
+                    if (response.message) {
+                        dmError('add-custom', response.message);
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                    } else {
+                        dmError('add-custom', 'generic');
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    }
                 }
             });
         } else {
@@ -547,13 +541,31 @@ $(document).ready(function () {
         }
     });
 
+    // When the edit template has been compiled
+    $(window).on('message', function (event) {
+        event = event.originalEvent;
+        if (event.data.html) {
+            $('#templateEditor').append(event.data.html);
+
+            $('textarea').each(function (index) {
+                if ($(this).val()) {
+                    $(this).trigger('autoresize');
+                }
+            });
+
+            if (event.data.openTemplate) {
+                openCollapsible(event.data.openTemplate);
+            }
+        }
+    });
+
     // Because the template editing section is dynamically build, need to monitor document rather then the classes directly
     $(document).on('click', 'a.removeSingleTemplate', function () {
         if (!$(this).hasClass('disabled')) {
             dmUIClick('remove-single');
             chrome.runtime.sendMessage({
                 JDTIfunction: 'delete',
-                templateName: $(this).attr('id')
+                templateID: $(this).attr('template')
             }, function (response) {
                 if (response.status === 'success') {
                     loadTemplateEditor();
@@ -577,12 +589,18 @@ $(document).ready(function () {
     $(document).on('click', 'a.updateSingleTemplate', function () {
         if (!$(this).hasClass('disabled')) {
             dmUIClick('update-single');
+            var templateID = $(this).attr('template');
+            var form = $('form[template="' + templateID + '"]');
             chrome.runtime.sendMessage({
                 JDTIfunction: 'save',
-                templateName: $(this).attr('id'),
-                templateText: $('textarea[name="' + $(this).attr('id') + '"]').val()
+                templateID: templateID,
+                templateName: form.find('[name="nameField"]').val(),
+                templateIssueType: form.find('[name="issueTypeField"]').val(),
+                templateProjects: form.find('[name="projectsField"]').val(),
+                templateText: form.find('[name="textField"]').val()
             }, function (response) {
                 if (response.status === 'success') {
+                    loadTemplateEditor(templateID);
                     Materialize.toast('Template successfully updated', 2000, 'toastNotification');
                     dmTemplateUpdate('update-single');
                 } else {
@@ -618,9 +636,7 @@ $(document).ready(function () {
         }, function (response) {
             $('#addTemplateModal').closeModal();
             if (response.status === 'success') {
-                loadTemplateEditor(function () {
-                    openCollapsible(issueTypeField);
-                });
+                loadTemplateEditor(response.data);
                 Materialize.toast('Template successfully added', 2000, 'toastNotification');
                 dmTemplateUpdate('add-default');
             } else {
@@ -638,8 +654,13 @@ $(document).ready(function () {
 
     // Resize textarea on click of collapsible header because doing it earlier doesn't resize it 100$ correctly.
     $(document).on('click', '.collapsible-header', function () {
+        var collapsibleBody = $(this).siblings('.collapsible-body');
+        var textArea = collapsibleBody.find('textarea');
+        if (textArea.val()) {
+            textArea.trigger('autoresize');
+        }
         $('html, body').animate({
-            scrollTop: $(this).siblings('.collapsible-body').find('textarea').focus().trigger('autoresize').offset().top - 100
+            scrollTop: collapsibleBody.find('[name="nameField"]').focus().offset().top - 100
         }, 500);
     });
 

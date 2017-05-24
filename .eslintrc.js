@@ -19,5 +19,8 @@ module.exports = {
         "indent": ["error", 4],
         "semi": ["error", "always", { "omitLastInOneLineBlock": true}],
         "one-var": "off"
+    },
+    "globals": {
+        "utils": false
     }
 };

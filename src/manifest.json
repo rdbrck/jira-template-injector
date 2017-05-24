@@ -24,6 +24,7 @@
         "scripts": [
             "lib/deskmetrics/deskmetrics-2.2.0.js",
             "lib/jquery/jquery-2.2.3.js",
+            "js/utils.js",
             "jti_background.js"
         ],
         "persistent": false
@@ -36,11 +37,15 @@
             ],
             "js": [
                 "lib/jquery/jquery-2.2.3.js",
+                "js/utils.js",
                 "jti_content.js"
             ],
             "run_at": "document_end"
         }
     ],
+    "sandbox": {
+        "pages": ["html/sandbox.html"]
+    },
     "permissions": [
         "storage",
         "tabs",

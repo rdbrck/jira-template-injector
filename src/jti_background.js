@@ -49,14 +49,14 @@ var StorageToggleID = 'JTI-Toggle';
 var emptyData = {'options': {'limit': []}, 'templates': {}};
 var toggles = {'rateClicked': false};
 
-function saveTemplates (templateJSON, callback) {
+function saveTemplates (templateJSON, callback, responseData = null) {
     var data = {};
     data[StorageID] = templateJSON;
     chrome.storage.sync.set(data, function () {
         if (chrome.runtime.lastError) {
             callback(false, 'Error saving data. Please try again');
         } else {
-            callback(true);
+            callback(true, null, responseData);
         }
     });
 }
@@ -73,7 +73,9 @@ function fetchJSON (url, callback) {
 function getData (callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         if (templates[StorageID]) {
-            callback(true, '', templates[StorageID]);
+            var templateJSON = templates[StorageID];
+            templateJSON.templates = templateDataToJSON(templateJSON.templates);
+            callback(true, '', templateJSON);
         } else {
             callback(false, 'No data is currently loaded');
         }
@@ -130,6 +132,7 @@ function fetchDefaultTemplates (callback) {
 function setDefaultTemplates (callback) {
     fetchDefaultTemplates(function (status, message, data) {
         if (status) {
+            data.templates = JSONtoTemplateData(data.templates);
             saveTemplates(data, callback);
         } else {
             callback(false, message);
@@ -140,6 +143,7 @@ function setDefaultTemplates (callback) {
 function downloadJSONData (url, callback) {
     fetchJSON(url, function (status, message, data) {
         if (status) {
+            data.templates = JSONtoTemplateData(data.templates);
             saveTemplates(data, callback);
         } else {
             callback(false, message);
@@ -147,11 +151,11 @@ function downloadJSONData (url, callback) {
     });
 }
 
-function removeTemplate (templateName, callback) {
+function removeTemplate (templateID, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         if (templates[StorageID]) {
             var templateJSON = templates[StorageID];
-            delete templateJSON.templates[templateName];
+            delete templateJSON.templates[templateID];
             saveTemplates(templateJSON, callback);
         } else {
             callback(false, 'No data available to remove');
@@ -159,44 +163,98 @@ function removeTemplate (templateName, callback) {
     });
 }
 
-function updateTemplate (templateName, templateText, callback) {
+function updateTemplate (templateID, templateName, templateIssueType, templateProjects, templateText, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         if (templates[StorageID]) {
             var templateJSON = templates[StorageID];
-            templateJSON.templates[templateName].text = templateText;
-            saveTemplates(templateJSON, callback);
+            var modifiedTemplate = {
+                'id': templateID,
+                'name': templateName,
+                'issuetype-field': templateIssueType,
+                'projects-field': formatProjectsField(templateProjects),
+                'text': templateText
+            };
+
+            // temporarily remove the template for validation (don't want to compare the template against itself)
+            // if validation fails, the deletion will not be saved
+            delete templateJSON.templates[templateID];
+
+            if (validateTemplate(modifiedTemplate, templateJSON.templates, callback)) {
+                templateJSON.templates[templateID] = modifiedTemplate;
+                saveTemplates(templateJSON, callback);
+            }
         } else {
             callback(false, 'No data available to update. Please recreate the template');
         }
     });
 }
 
-function addTemplate (templateName, issueTypeField, text, callback) {
+function addTemplate (templateName, issueTypeField, projectsField, text, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         var templateJSON = {};
-        var save = true;
 
         if (templates[StorageID]) {
             templateJSON = templates[StorageID];
         }
 
-        $.each(templateJSON.templates, function (name, template) {
-            if (issueTypeField === template['issuetype-field']) {
-                save = false;
-                callback(false, 'Template with same issuetype-field already exists', 'open');
-            }
-        });
+        var templateID = getNextID(templateJSON.templates);
+        var newTemplate = {
+            'id': templateID,
+            'name': templateName,
+            'issuetype-field': issueTypeField,
+            'projects-field': formatProjectsField(projectsField),
+            'text': text
+        };
 
-        if (save) {
-            templateJSON.templates[templateName] = {'issuetype-field': issueTypeField, 'text': text};
-            saveTemplates(templateJSON, callback);
+        if (validateTemplate(newTemplate, templateJSON.templates, callback)) {
+            templateJSON.templates[templateID] = newTemplate;
+            saveTemplates(templateJSON, callback, templateID);
         }
     });
+}
+
+// Make sure that the (issue type, project) combination is unique
+function validateTemplate (newTemplate, templates, callback) {
+    var valid = true;
+    var newTemplateProjects = utils.parseProjects(newTemplate['projects-field']);
+    $.each(templates, function (name, template) {
+        if (newTemplate['issuetype-field'] === template['issuetype-field']) {
+            // Can't have two default templates (no issue type, no projects)
+            if (!newTemplate['issuetype-field'] && !newTemplate['projects-field'] && !template['projects-field']) {
+                callback(false, 'Default template ' + template.name + ' already exists', template.id);
+                valid = false;
+                return false;
+            // Can't have two templates with no issue type that both have the same project in their list of projects
+            } else if (!newTemplate['issuetype-field']) {
+                let commonProject = utils.commonItemInArrays(newTemplateProjects, utils.parseProjects(template['projects-field']));
+                if (commonProject) {
+                    callback(false, 'Template ' + template.name + ' already exists for project ' + commonProject, template.id);
+                    valid = false;
+                    return false;
+                }
+            // Can't have two templates with the same issue type and no projects
+            } else if (!newTemplate['projects-field'] && !template['projects-field']) {
+                callback(false, 'Template ' + template.name + ' already exists for issue type ' + newTemplate['issuetype-field'], template.id);
+                valid = false;
+                return false;
+            // Can't have two templates with the same issue type that both have the same project in their list of projects
+            } else if (newTemplate['projects-field'] && template['projects-field']) {
+                let commonProject = utils.commonItemInArrays(newTemplateProjects, utils.parseProjects(template['projects-field']));
+                if (commonProject) {
+                    callback(false, 'Template ' + template.name + ' already exists for issue type ' + newTemplate['issuetype-field'] + ' and project ' + commonProject, template.id);
+                    valid = false;
+                    return false;
+                }
+            }
+        }
+    });
+    return valid;
 }
 
 function loadLocalFile (fileContents, callback) {
     try {
         var templateJSON = $.parseJSON(JSON.stringify(fileContents));
+        templateJSON.templates = JSONtoTemplateData(templateJSON.templates);
         saveTemplates(templateJSON, callback);
     } catch (e) {
         callback(false, 'Error parsing JSON. Please verify file contents');
@@ -223,6 +281,89 @@ function matchRegexToJsRegex (match) {
     return new RegExp(replaceAllString(match, '*', '\\S*'));
 }
 
+// Parse projects field and save it as a comma separated list, ensuring common format
+function formatProjectsField (projectsField) {
+    if (!projectsField) {
+        return '';
+    }
+
+    // Replace all commas with spaces
+    projectsField = projectsField.replace(/,/g, ' ');
+
+    // Remove leading and trailing spaces
+    projectsField = $.trim(projectsField);
+
+    // Replace groups of spaces with a comma and a space
+    projectsField = projectsField.replace(/\s+/g, ', ');
+
+    return projectsField;
+}
+
+function migrateTemplateKeys (callback = null) {
+    if (!callback) {
+        callback = function (status, message) {};
+    }
+
+    chrome.storage.sync.get(StorageID, function (templates) {
+        if (!templates[StorageID]) {
+            return;
+        }
+
+        var templateJSON = templates[StorageID];
+
+        // If data is in old format, migrate it
+        $.each(templateJSON.templates, function (key, template) {
+            if (!template.name) {
+                templateJSON.templates = JSONtoTemplateData(templateJSON.templates);
+                saveTemplates(templateJSON, callback);
+            }
+            return false;
+        });
+    });
+}
+
+function JSONtoTemplateData (templates) {
+    var nextID = getNextID(templates);
+    var formattedTemplates = {};
+
+    if (templates.constructor === Array) {
+        $.each(templates, function (index, template) {
+            template.id = nextID;
+            formattedTemplates[nextID++] = template;
+        });
+    } else {    // support old template format
+        $.each(templates, function (key, template) {
+            template.name = key;
+            template.id = nextID;
+            formattedTemplates[nextID++] = template;
+        });
+    }
+
+    return formattedTemplates;
+}
+
+function templateDataToJSON (templates) {
+    var formattedTemplates = [];
+
+    $.each(templates, function (key, template) {
+        delete template.id;
+        formattedTemplates.push(template);
+    });
+    return formattedTemplates;
+}
+
+function getNextID (templates) {
+    var highestID = 0;
+    $.each(templates, function (key, template) {
+        var templateID = parseInt(template.id);
+        if (templateID && templateID > highestID) {
+            highestID = templateID;
+        }
+    });
+
+    return highestID + 1;
+}
+
 // This file will load the default templates into storage on install or update if no previous versions are already loaded.
 chrome.storage.sync.get(StorageID, function (templates) {
     // Check if we have any loaded templates in storage.
@@ -235,6 +376,10 @@ chrome.storage.sync.get(StorageID, function (templates) {
 // Listen for when extension is installed or updated
 chrome.runtime.onInstalled.addListener(
     function (details) {
+        if (details.reason === 'update') {
+            migrateTemplateKeys();
+        }
+
         if (details.reason === 'install' || details.reason === 'update') {
             var contentScripts = chrome.runtime.getManifest().content_scripts;
             var urlRegexs = [];
@@ -295,19 +440,19 @@ chrome.runtime.onMessage.addListener(
             });
             break;
         case 'delete':
-            removeTemplate(request.templateName, function (status, message = null, data = null) {
+            removeTemplate(request.templateID, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });
             break;
         case 'save':
-            updateTemplate(request.templateName, request.templateText, function (status, message = null, data = null) {
+            updateTemplate(request.templateID, request.templateName, request.templateIssueType, request.templateProjects, request.templateText, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });
             break;
         case 'add':
-            addTemplate(request.templateName, request.issueTypeField, request.text, function (status, message = null, data = null) {
+            addTemplate(request.templateName, request.issueTypeField, request.projectsField, request.text, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });

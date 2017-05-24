@@ -58,8 +58,11 @@ h5 {
 	padding-bottom: 0;
 }
 
-.row {
+.row:not(.auto-height) {
 	height: 37px;
+}
+
+.row {
 	margin-bottom: 10px;
 }
 
@@ -70,6 +73,11 @@ h5 {
 .divider {
 	margin-bottom: 10px;
 	overflow: visible;
+}
+
+.invisible-divider {
+	height: 1px;
+	margin-bottom: 10px;
 }
 
 /*noinspection CssUnusedSymbol*/
@@ -94,10 +102,6 @@ h5 {
 /*noinspection CssUnusedSymbol,CssUnusedSymbol*/
 .input-field .prefix.active {
 	color: #3174F1;
-}
-
-.input-field .prefix ~ textarea {
-	width: calc(100% - 4rem) !important;
 }
 
 /*noinspection CssUnusedSymbol*/
@@ -307,4 +311,8 @@ textarea.materialize-textarea:focus:not([readonly]) {
 
 .btn-floating i {
 	font-size: 1.3rem;
+}
+
+.font-bold {
+	font-weight: bold;
 }
