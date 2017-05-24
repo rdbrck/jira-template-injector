@@ -208,35 +208,34 @@ function injectDescriptionTemplate (descriptionElement) {
             projectElement = $('#project-field'),
             issueTypeElement = $('#issuetype-field');
 
-        // Default template (no issue type, no project)
-        $.each(templates, function (key, template) {
-            if (!template['issuetype-field'] && !template['projects-field']) {
-                templateText = template.text;
-            }
-        });
-
         if (issueTypeElement !== null && projectElement !== null) {
             var projectKey = parseProjectKey(projectElement);
+            var override = 0;
 
-             // Override if project, no issue type
             $.each(templates, function (key, template) {
-                if (!template['issuetype-field'] && $.inArray(projectKey, utils.parseProjects(template['projects-field'])) !== -1) {
-                    templateText = template.text;
-                }
-            });
-
-            // Override if issue type, no project
-            $.each(templates, function (key, template) {
-                if (!template['projects-field'] && template['issuetype-field'] === issueTypeElement.val()) {
-                    templateText = template.text;
-                }
-            });
-
-            // Override if issue type and project
-            $.each(templates, function (key, template) {
-                if (template['issuetype-field'] === issueTypeElement.val() &&
+                // Default template (no issue type, no project)
+                if (!template['issuetype-field'] && !template['projects-field']) {
+                    if (override < 1) {
+                        override = 1;
+                        templateText = template.text;
+                    }
+                // Override if project, no issue type
+                } else if (!template['issuetype-field'] && $.inArray(projectKey, utils.parseProjects(template['projects-field'])) !== -1) {
+                    if (override < 2) {
+                        override = 2;
+                        templateText = template.text;
+                    }
+                // Override if issue type, no project
+                } else if (!template['projects-field'] && template['issuetype-field'] === issueTypeElement.val()) {
+                    if (override < 3) {
+                        override = 3;
+                        templateText = template.text;
+                    }
+                // Override if issue type and project
+                } else if (template['issuetype-field'] === issueTypeElement.val() &&
                         $.inArray(projectKey, utils.parseProjects(template['projects-field'])) !== -1) {
                     templateText = template.text;
+                    return false;
                 }
             });
 
