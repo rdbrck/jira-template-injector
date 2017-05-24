@@ -204,12 +204,11 @@ function injectDescriptionTemplate (descriptionElement) {
     chrome.storage.sync.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;
 
-        // Load default template if set. Individual Templates will over ride it.
         var templateText = '',
             projectElement = $('#project-field'),
             issueTypeElement = $('#issuetype-field');
 
-        // Set default template text
+        // Default template (no issue type, no project)
         $.each(templates, function (key, template) {
             if (!template['issuetype-field'] && !template['projects-field']) {
                 templateText = template.text;
@@ -217,19 +216,30 @@ function injectDescriptionTemplate (descriptionElement) {
         });
 
         if (issueTypeElement !== null && projectElement !== null) {
+            var projectKey = parseProjectKey(projectElement);
+
+             // Override if project, no issue type
             $.each(templates, function (key, template) {
-                if (issueTypeElement.val() === template['issuetype-field']) {
-                    // If project is specified, it will override the 'ALL projects with this issue type' template
-                    if (template['projects-field']) {
-                        if ($.inArray(parseProjectKey(projectElement), utils.parseProjects(template['projects-field'])) !== -1) {
-                            templateText = template.text;
-                            return false;
-                        }
-                    } else {
-                        templateText = template.text;
-                    }
+                if (!template['issuetype-field'] && $.inArray(projectKey, utils.parseProjects(template['projects-field'])) !== -1) {
+                    templateText = template.text;
                 }
             });
+
+            // Override if issue type, no project
+            $.each(templates, function (key, template) {
+                if (!template['projects-field'] && template['issuetype-field'] === issueTypeElement.val()) {
+                    templateText = template.text;
+                }
+            });
+
+            // Override if issue type and project
+            $.each(templates, function (key, template) {
+                if (template['issuetype-field'] === issueTypeElement.val() &&
+                        $.inArray(projectKey, utils.parseProjects(template['projects-field'])) !== -1) {
+                    templateText = template.text;
+                }
+            });
+
             descriptionElement.value = templateText;
         } else {
             if (issueTypeElement === null) {

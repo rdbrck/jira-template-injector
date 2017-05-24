@@ -41,9 +41,10 @@ The JSON format is:
 * Automatically select text between ```<TI>``` and ```</TI>``` tags for quick template completion.
   * Quickly jump to the next set of ```<TI>``` elements using the ```Control + back-tick``` key combo.
 * Template Priorities.
-  * Set a default template (DEFAULT TEMPLATE) for all Issue Types and Projects.
-  * Templates with Issue Type will override the default.
-  * Templates with Issue Type and Projects will override templates with just Issue Type.
+  * The default template (no Issue Type and no Projects specified) will be used for all Issue Types and Projects.
+  * Templates with Projects and no Issue Type will override the default template.
+  * Templates with Issue Type and no Projects will override templates with Projects and no Issue Type.
+  * Templates with Issue Type and Projects will override all other templates.
 * Templates are synced across devices.
   * Configure once, use on all chrome devices that support extensions!
 * Reload default templates with one click.
