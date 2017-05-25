@@ -70,5 +70,5 @@ The JSON format is:
   * Example: ```</TI_date>``` would pre populate with 2016-04-11.
 
 ### Images
-![Default Templates Loaded](https://cloud.githubusercontent.com/assets/6020196/17062770/2cb0d46e-4fe9-11e6-9f04-4daabe32537f.png "Default Templates") ![Template Editor](https://cloud.githubusercontent.com/assets/6020196/17062772/30f43c0a-4fe9-11e6-9b61-15c936985a8f.png "Template Editor") ![Add Template](https://cloud.githubusercontent.com/assets/6020196/17062776/33ea3d56-4fe9-11e6-84aa-0021887ef118.png "Add Template") ![Create Issue Window with auto Select](https://cloud.githubusercontent.com/assets/6020196/17062735/05e6618c-4fe9-11e6-8c9e-3a43c305c761.png "JIRA Create Issue")
+![Default Templates Loaded](https://cloud.githubusercontent.com/assets/6020196/17062770/2cb0d46e-4fe9-11e6-9f04-4daabe32537f.png "Default Templates") ![Template Editor](https://cloud.githubusercontent.com/assets/6020196/26463889/ab94d242-413a-11e7-8a01-661b5a370ac9.png "Template Editor") ![Add Template](https://cloud.githubusercontent.com/assets/6020196/26463883/a9e1dfb2-413a-11e7-9785-322872fe11eb.png "Add Template") ![Create Issue Window with auto Select](https://cloud.githubusercontent.com/assets/6020196/17062735/05e6618c-4fe9-11e6-8c9e-3a43c305c761.png "JIRA Create Issue")
 
