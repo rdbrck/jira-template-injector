@@ -72,7 +72,7 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                 <div class="section">
                     <div class="row">
                         <div class="col s5 valign-wrapper">
-                            <h6 class="valign"> Load JSON from URL:</h6>
+                            <h6 class="valign-wrapper"> Load JSON from URL:</h6>
                         </div>
                         <div class="col s5">
                             <input id="jsonURLInput" type="text" name="url" placeholder="URL to JSON file">
@@ -90,7 +90,7 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                 <div class="section">
                     <div class="row">
                         <div class="col s3 valign-wrapper">
-                            <h6 class="valign"> Select file:</h6>
+                            <h6 class="valign-wrapper"> Select file:</h6>
                         </div>
                         <div class="col s7">
                             <form action="#">
@@ -129,6 +129,21 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                         </div>
                     </div>
                 </div>
+                <div class="divider"></div>
+                <div class="section">
+                    <div class="row">
+                        <div class="col s8 valign-wrapper">
+                            <h6 class="left-align"> Manage Custom Domains:</h6>
+                        </div>
+                        <div class="col s4">
+                            <div class="right-align">
+                                <a id="customdomains" class="btn-floating btn-Medium btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Manage Domains">
+                                    <i class="material-icons">format_list_bulleted</i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>       
                 <div class="divider"></div>
                 <div class="row">
                     <div class="col s8 valign-wrapper">
@@ -219,6 +234,60 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                 <!-- Dynamically built -->
             </ul>
         </main>
+
+        <!-- Manage custom domains section -->
+        <div class="container">
+            <div id = "customDomainList">
+                <!-- Back and clear buttons -->
+                <br>
+                <div class="col s4 offset-s4">
+                    <div class="row valign-wrapper">
+                            <div class="col s2">
+                                <a id="backInternal" class="btn-floating btn-Medium btn-jti tooltipped center-align" data-position="right" data-delay="50" data-tooltip="Back">
+                                    <i class="material-icons">arrow_back</i>
+                                </a>
+                            </div>
+
+                            <div class="col s8 pull-s1">
+                                <div id= "custom-domain-label" color="black" class="center-align">Manage Custom Domains</div>
+                            </div>
+
+                            <div class="col s2">
+                                <div class="right-align">
+                                    <a id="clearInternal" class="btn-floating btn-Medium btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Clear All Domains">
+                                            <i class="material-icons">delete</i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <!-- Add Custom Domain section -->
+                    <div class="divider"></div>
+                    <div class="section">
+                        <div class="row">
+                            <div class="col s5 valign-wrapper">
+                                <h6 class="valign-wrapper"> Add Custom Domain:</h6>
+                            </div>
+                            <div class="col s5">
+                                <input id="CustomDomainInput" type="text" name="url" placeholder="Custom Domain URL">
+                            </div>
+                            <div class="col s2">
+                                <div class="right-align">
+                                    <a id="CustomDomainInputButton" class="btn-floating btn-small btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Add Domain">
+                                        <i class="material-icons">add</i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <br>
+                <div class="divider"></div>
+                <br>
+                <!-- List of custom domains -->
+                <ul class="collection" align="left" id="customDomainsList">
+                </ul>
+            </div>
+        </div>
 
         <!-- Need this to be able to grab the sandbox window to compile the edit templates -->
         <iframe id="sandbox_window" src="sandbox.html" hidden></iframe>

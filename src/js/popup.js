@@ -21,28 +21,12 @@ if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf
     }
 }
 
-// Sorts an array of objects in place using a property of the objects
-function sortArrayByProperty (array, property) {
-    return array.sort(function (a, b) {
-        var propertyA = a[property];
-        var propertyB = b[property];
-
-        if (propertyA < propertyB) {
-            return -1;
-        } else if (propertyA > propertyB) {
-            return 1;
-        } else {
-            return 0;
-        }
-    });
-}
-
 function sortTemplates (templates) {
     var templateArray = $.map(templates, function (template, key) {
         return template;
     });
 
-    var sorted = sortArrayByProperty(templateArray, 'name');
+    var sorted = utils.sortArrayByProperty(templateArray, 'name');
 
     // Move "DEFAULT TEMPLATE" to top of list.
     $.each(sorted, function (index, template) {
@@ -155,6 +139,20 @@ function loadTemplateEditor (openTemplate = null) {
             $('#rateSection').fadeIn(); // Show button
         }
     });
+
+    //Load in the custom domains.
+
+    //start by removing all domains, so that the whole list can be re-added in proper order.
+    $('.collection-item').remove();
+
+    //Then add in remaining domains
+    chrome.runtime.sendMessage({JDTIfunction: "getDomains"}, function (response){
+        if (response.data) {
+            $.each(response.data, function (index, domain) {
+                appendDomainListEntry (domain);
+            });
+        }
+    });
 }
 
 function limitAccess (callback = false) {
@@ -179,6 +177,7 @@ function limitAccess (callback = false) {
                     $('#customTemplateIssueTypeField').prop('disabled', true);
                     $('#customTemplateProjectsField').prop('disabled', true);
                     $('#addDefaultDropdownButton').addClass('disabled');
+                    $('#customdomains').addClass('disabled');
                     break;
                 case 'url':
                     $('#jsonURLInput').prop('disabled', true);
@@ -209,6 +208,9 @@ function limitAccess (callback = false) {
                     break;
                 case 'add-default':
                     $('#addDefaultDropdownButton').addClass('disabled');
+                    break;
+                case 'add-domain':
+                    $('#customdomains').addClass('disabled');
                     break;
                 }
             });
@@ -303,6 +305,7 @@ function dmError (action, message) {
 }
 
 $(document).ready(function () {
+    $("#customDomainList").hide();
     chrome.runtime.sendMessage({
         type: 'analytics', name: 'launch', body: {
             'ip_address': '${dm.meta:request_ip}',
@@ -338,6 +341,98 @@ $(document).ready(function () {
             }
         });
     });
+
+    $('#customdomains').click(function () {
+        dmUIClick('customdomains');
+        if (!$(this).hasClass('disabled')) {
+            $("#customDomainList").toggle();
+            $("main").toggle();
+        } else{
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
+    });
+
+    $('#backInternal').click(function () {
+        dmUIClick('backInternal');
+         $("#customDomainList").toggle();
+         $("main").toggle();
+    });
+
+    $('#clearInternal').click(function () {
+        dmUIClick('clearInternal');
+        //remove all added domains:
+        chrome.runtime.sendMessage({
+            JDTIfunction: 'removeDomain',
+            domainName: '',
+            removeAll: true
+        }, function (response) {
+            if (response.status === 'success') {
+                loadTemplateEditor();
+                Materialize.toast('Domains successfully removed', 2000, 'toastNotification');
+            } else {
+                if (response.message) {                          
+                    dmError('clearInternal', response.message);
+                    Materialize.toast(response.message, 2000, 'toastNotification');
+                } else {
+                    dmError('clearInternal', 'generic');
+                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                }
+            }
+        });
+    });
+
+    $("#CustomDomainInput").keyup(function(event){
+        if(event.keyCode == 13){
+            $("#CustomDomainInputButton").click();
+        }
+    });
+
+    $('#CustomDomainInputButton').click(function () {
+        dmUIClick('CustomDomainInputButton');
+        var domainName = $('#CustomDomainInput').val();
+        $('#CustomDomainInput').val("");
+        chrome.runtime.sendMessage({
+            JDTIfunction: 'addDomain',
+            domainName: domainName
+        }, function (response) {
+            if (response.status === 'success') {
+                loadTemplateEditor();
+                Materialize.toast('Domain successfully added', 2000, 'toastNotification');
+            } else {
+                if (response.message) {                          
+                    dmError('CustomDomainInputButton', response.message);
+                    Materialize.toast(response.message, 2000, 'toastNotification');
+                } else {
+                    dmError('CustomDomainInputButton', 'generic');
+                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                }
+            }
+        });
+    });
+
+    $(document).on("click", "#CustomDomainRemoveButton", function(){
+        dmUIClick('CustomDomainRemoveButton');
+        domainName = $(event.target).closest("li").children('.row').children('#custom-domain-label').text();
+        chrome.runtime.sendMessage({
+            JDTIfunction: 'removeDomain',
+            domainName: domainName,
+            removeAll: false
+        }, function (response) {
+            if (response.status === 'success') {
+                loadTemplateEditor();
+                Materialize.toast('Domain successfully removed', 2000, 'toastNotification');
+            } else {
+                if (response.message) {                          
+                    dmError('CustomDomainRemoveButton', response.message);
+                    Materialize.toast(response.message, 2000, 'toastNotification');
+                } else {
+                    dmError('CustomDomainRemoveButton', 'generic');
+                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                }
+            }
+        });
+    });
+
 
     $('#rate').click(function () {
         dmUIClick('rate');
@@ -675,7 +770,9 @@ $(document).ready(function () {
     $('#fileSelector').change(function () {
         var file = $(this)[0].files[0];
         if (browserType !== 'Edge') {
-            if (file.type !== 'application/json') {
+        //Handle case where browser file.type is empty
+			if (0 == file.type.localeCompare("")){
+			} else if (file.type !== 'application/json') {
                 Materialize.toast('File must be of type JSON. Please select a valid file', 4000, 'toastNotification');
                 $(this).val('');
             }
@@ -687,3 +784,39 @@ $(document).ready(function () {
         }
     });
 });
+
+
+function appendDomainListEntry (domain) {
+    var $domainListItem;
+    if (domain.default){
+        $domainListItem = $ (
+            `<li class='collection-item container'>
+                <div class="row valign-wrapper remove-margin">
+                    <div id= "custom-domain-label" class="col s10 left-align">
+                        `+domain.name+` 
+                    </div>
+                    <div class="col s2">
+                    </div>
+                </div>
+            </li>
+            `
+        );  
+    } else {
+        $domainListItem = $ (
+            `<li class='collection-item container'>
+                <div class="row valign-wrapper remove-margin" style: >
+                    <div id= "custom-domain-label" class="col s10 left-align">
+                        `+domain.name+` 
+                    </div>
+                    <div class="col s2">
+                        <a id = "CustomDomainRemoveButton" class='btn-floating btn-small btn-jti tooltipped' data-position='left' data-delay='50' data-tooltip='Remove Domain'> 
+                            <i class='material-icons'>delete</i> 
+                        </a>
+                    </div>
+                </div>
+            </li>
+            `
+        );  
+    }
+    $('.collection').append($domainListItem);
+}

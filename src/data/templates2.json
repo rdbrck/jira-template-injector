@@ -1,0 +1,13 @@
+{
+   "templates":[
+      {"name": "DEFAULT TEMPLATE", "issuetype-field":"", "projects-field": "", "text":""},
+      {"name": "BUG TEMPLATE", "issuetype-field":"Bug", "projects-field": "", "text":"*Summary*\n<TI>Enter summary of the problem here.</TI>\n\n*Steps to Reproduce*\n<TI>Enter detailed steps to reproduce here. More detail is better.</TI>\n\n*Expected Behaviour*\n<TI>Enter what should happen here.</TI>\n\n*Additional Details*\n<TI>Enter any other details such as examples, links to requirements, etc. Any criteria that might help with fixing the problem. Attach screenshots if possible. More detail is better.</TI>\n\n*Workaround*\n<TI>If there is a way to work around the problem, place that information here.</TI>"}
+   ],
+   "options":{
+     "limit": [],
+     "domains":[
+      {"name" : "no domain"},
+      {"name": "no domain 2"}
+      ]
+   }
+}

@@ -45,8 +45,11 @@ if (browserType !== 'Firefox') {
 // -------------------------------------------------------------------------- //
 
 var StorageID = 'Jira-Template-Injector';
+var DefaultDomainList = [
+    {"name": "atlassian.net"}
+   ];
 var StorageToggleID = 'JTI-Toggle';
-var emptyData = {'options': {'limit': []}, 'templates': {}};
+var emptyData = {'options': {'limit': [], 'domains': []}, 'templates': {}};
 var toggles = {'rateClicked': false};
 
 function saveTemplates (templateJSON, callback, responseData = null) {
@@ -57,6 +60,40 @@ function saveTemplates (templateJSON, callback, responseData = null) {
             callback(false, 'Error saving data. Please try again');
         } else {
             callback(true, null, responseData);
+        }
+    });
+}
+
+function getDomains (callback) {
+    var domainArray = {};
+    
+    //Get the default domains
+    domainArray2 = $.map(DefaultDomainList, function (domain, index) {
+        domain.default = true;
+        return domain;
+    });
+    
+    //sort the default domains
+    domainArray2 = utils.sortArrayByProperty(domainArray2, 'name');
+    //Get the custom domains
+    chrome.storage.sync.get(StorageID, function (data) {
+        if (data[StorageID]){
+            domains= data[StorageID].options.domains;
+            domainArray = $.map(domains, function (domain, index) {
+                domain.default = false;
+                return domain;
+            });
+            
+            //Sort them
+            domainArray = utils.sortArrayByProperty(domainArray, 'name');
+            
+            //combine so that the default entries are always at top
+            domainArray = domainArray2.concat(domainArray);
+        
+            callback(true, null, domainArray);
+        } else {
+            //return just the defaults
+            callback(true, null, domainArray2);
         }
     });
 }
@@ -112,13 +149,19 @@ function setToggleStatus (toggleType, toggleInput, callback) {
 }
 
 function clearStorage (callback) {
-    chrome.storage.sync.clear(function () {
-        if (chrome.runtime.lastError) {
-            callback(false, 'Error clearing data. Please try again');
-        } else {
-            saveTemplates(emptyData, callback);
-            callback(true);
-        }
+    //Need to save the domains, then re-add them here.
+    chrome.storage.sync.get(StorageID, function (data) {
+        var clearedData = emptyData;
+        clearedData.options.domains = data[StorageID].options.domains;
+        
+        chrome.storage.sync.clear(function () {
+            if (chrome.runtime.lastError) {
+                callback(false, 'Error clearing data. Please try again');
+            } else {
+                saveTemplates(clearedData, callback);
+                callback(true);
+            }
+        });
     });
 }
 
@@ -130,13 +173,16 @@ function fetchDefaultTemplates (callback) {
 }
 
 function setDefaultTemplates (callback) {
-    fetchDefaultTemplates(function (status, message, data) {
-        if (status) {
-            data.templates = JSONtoTemplateData(data.templates);
-            saveTemplates(data, callback);
-        } else {
-            callback(false, message);
-        }
+    chrome.storage.sync.get(StorageID, function (data) {
+        fetchDefaultTemplates(function (status, message, data) {
+            if (status) {
+                data.templates = JSONtoTemplateData(data.templates);
+                data.options.domains = JSONtoDomainData(data.options.domains);
+                saveTemplates(data, callback);
+            } else {
+                callback(false, message);
+            }
+        });
     });
 }
 
@@ -144,6 +190,7 @@ function downloadJSONData (url, callback) {
     fetchJSON(url, function (status, message, data) {
         if (status) {
             data.templates = JSONtoTemplateData(data.templates);
+            data.options.domains = JSONtoDomainData(data.options.domains);
             saveTemplates(data, callback);
         } else {
             callback(false, message);
@@ -210,6 +257,80 @@ function addTemplate (templateName, issueTypeField, projectsField, text, callbac
             templateJSON.templates[templateID] = newTemplate;
             saveTemplates(templateJSON, callback, templateID);
         }
+    });
+}
+
+function addDomain (domainName, callback) {
+    chrome.storage.sync.get(StorageID, function (data) {
+        var domainJSON = {};
+
+        if (data[StorageID]) {
+            domainJSON = data[StorageID];
+        }
+
+        var domainID = getNextID(domainJSON.options.domains);
+        var newDomain = {
+            'id': domainID,
+            'name': domainName,
+        };
+
+        validateDomain(domainName, function(message) {
+            if (message) {
+                callback(false, message);
+            } else {
+                domainJSON.options.domains[domainID] = newDomain;
+                
+                //Refresh existing pages with this URL.
+                matchRegexToJsRegex(domainName);
+                chrome.tabs.query({windowId: chrome.windows.WINDOW_ID_CURRENT}, function (tabs) {
+                    $.each(tabs, function (tabIndex, tab) {
+                        var chromeRegex = new RegExp("chrome://extensions");
+                        if (matchRegexToJsRegex(domainName).test(tab.url)&& (!chromeRegex.test(tab.url))) {
+                            chrome.tabs.reload(tab.id);
+                        }
+                    });
+                    saveTemplates(domainJSON, callback, domainID);
+                });
+            }
+        });
+    });
+}
+
+function removeDomain (domainName, removeAll, callback) {
+    domainName = domainName.trim();
+    chrome.storage.sync.get(StorageID, function (data) {
+        if (data[StorageID]) {
+            var domainJSON = data[StorageID];
+            var domains = data[StorageID].options.domains;
+            $.each(domains, function (index, domain) {
+                //Find the domainID of the domain to be removed
+                if (0 == domain.name.localeCompare(domainName) || (removeAll == true)) {
+                    domainID = index;
+                    delete domainJSON.options.domains[domainID];
+                    saveTemplates(domainJSON, callback);
+                }
+            })
+        } else {
+            callback(false, 'No data available to remove');
+        }
+    });
+}
+
+function validateDomain (domainName, callback) {
+    getDomains(function (status, msg, response){
+        //Verify that there are no empty domains
+        let message = null;
+        if (!domainName) {
+            message = 'Domain Name is blank'
+        }
+        //Verify that there are no duplicate domains
+        $.each(response, function(index, domain){
+            if (0 == domain.name.localeCompare(domainName)) {
+                message = `Domain Name: "${domainName}" already exists`;
+                return false;
+            }
+        })
+        callback(message);
     });
 }
 
@@ -342,6 +463,19 @@ function JSONtoTemplateData (templates) {
     return formattedTemplates;
 }
 
+function JSONtoDomainData (domains) {
+    var nextID = getNextID(domains);
+    var formattedDomains = {};
+
+    if (domains.constructor === Array) {
+        $.each(domains, function (index, domain) {
+            domain.id = nextID;
+            formattedDomains[nextID++] = domain;
+        });
+    }
+    return formattedDomains;
+}
+
 function templateDataToJSON (templates) {
     var formattedTemplates = [];
 
@@ -381,23 +515,23 @@ chrome.runtime.onInstalled.addListener(
         }
 
         if (details.reason === 'install' || details.reason === 'update') {
-            var contentScripts = chrome.runtime.getManifest().content_scripts;
             var urlRegexs = [];
 
-            $.each(contentScripts, function (index, contentScript) {
-                $.each(contentScript.matches, function (matchIndex, match) {
-                    urlRegexs.push(matchRegexToJsRegex(match));
-                });
-            });
+            //Access all of the values in the 'domains', then reload the matching tabs
+            var domains = getDomains(function (status, msg, response){
+                $.each(response, function (index, domain) {
+                    urlRegexs.push(matchRegexToJsRegex(domain.name));
 
-            // reload tabs with urls that match content script matches
-            chrome.tabs.query({windowId: chrome.windows.WINDOW_ID_CURRENT}, function (tabs) {
-                $.each(tabs, function (tabIndex, tab) {
-                    $.each(urlRegexs, function (regexIndex, regex) {
-                        if (regex.test(tab.url)) {
-                            chrome.tabs.reload(tab.id);
-                            return false;
-                        }
+                });
+                chrome.tabs.query({windowId: chrome.windows.WINDOW_ID_CURRENT}, function (tabs) {
+                    $.each(tabs, function (tabIndex, tab) {
+                        $.each(urlRegexs, function (regexIndex, regex) {
+                            var chromeRegex = new RegExp("chrome://extensions");
+                            if (regex.test(tab.url) && (!chromeRegex.test(tab.url))) {
+                                chrome.tabs.reload(tab.id);
+                                return false;
+                            }
+                        });
                     });
                 });
             });
@@ -474,6 +608,24 @@ chrome.runtime.onMessage.addListener(
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });
+            break;
+        case 'addDomain':
+            addDomain(request.domainName, function (status, message = null, data = null) {
+            var response = responseMessage(status, message, data);
+            sendResponse(response);
+            }); 
+            break;
+        case 'removeDomain':
+            removeDomain(request.domainName, request.removeAll, function (status, message = null, data = null) {
+            var response = responseMessage(status, message, data);
+            sendResponse(response);
+            }); 
+            break;
+        case 'getDomains':
+            getDomains(function (status, message = null, data = null) {
+            var response = responseMessage(status, message, data);
+            sendResponse(response);
+            }); 
             break;
         default:
             sendResponse({status: 'error', message: 'Invalid Action'});
