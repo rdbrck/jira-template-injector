@@ -46,8 +46,8 @@ if (browserType !== 'Firefox') {
 
 var StorageID = 'Jira-Template-Injector';
 var DefaultDomainList = [
-    {"name": "atlassian.net"}
-   ];
+    {'name': 'atlassian.net'}
+];
 var StorageToggleID = 'JTI-Toggle';
 var emptyData = {'options': {'limit': [], 'domains': []}, 'templates': {}};
 var toggles = {'rateClicked': false};
@@ -66,33 +66,28 @@ function saveTemplates (templateJSON, callback, responseData = null) {
 
 function getDomains (callback) {
     var domainArray = {};
-    
-    //Get the default domains
-    domainArray2 = $.map(DefaultDomainList, function (domain, index) {
+    // Get the default domains
+    var domainArray2 = $.map(DefaultDomainList, function (domain, index) {
         domain.default = true;
         return domain;
     });
-    
-    //sort the default domains
+    // sort the default domains
     domainArray2 = utils.sortArrayByProperty(domainArray2, 'name');
-    //Get the custom domains
+    // Get the custom domains
     chrome.storage.sync.get(StorageID, function (data) {
-        if (data[StorageID]){
-            domains= data[StorageID].options.domains;
+        if (data[StorageID]) {
+            var domains = data[StorageID].options.domains;
             domainArray = $.map(domains, function (domain, index) {
                 domain.default = false;
                 return domain;
             });
-            
-            //Sort them
+            // Sort them
             domainArray = utils.sortArrayByProperty(domainArray, 'name');
-            
-            //combine so that the default entries are always at top
+            // combine so that the default entries are always at top
             domainArray = domainArray2.concat(domainArray);
-        
             callback(true, null, domainArray);
         } else {
-            //return just the defaults
+            // return just the defaults
             callback(true, null, domainArray2);
         }
     });
@@ -149,11 +144,10 @@ function setToggleStatus (toggleType, toggleInput, callback) {
 }
 
 function clearStorage (callback) {
-    //Need to save the domains, then re-add them here.
+    // Need to save the domains, then re-add them here.
     chrome.storage.sync.get(StorageID, function (data) {
         var clearedData = emptyData;
         clearedData.options.domains = data[StorageID].options.domains;
-        
         chrome.storage.sync.clear(function () {
             if (chrome.runtime.lastError) {
                 callback(false, 'Error clearing data. Please try again');
@@ -271,21 +265,20 @@ function addDomain (domainName, callback) {
         var domainID = getNextID(domainJSON.options.domains);
         var newDomain = {
             'id': domainID,
-            'name': domainName,
+            'name': domainName
         };
 
-        validateDomain(domainName, function(message) {
+        validateDomain(domainName, function (message) {
             if (message) {
                 callback(false, message);
             } else {
                 domainJSON.options.domains[domainID] = newDomain;
-                
-                //Refresh existing pages with this URL.
+                // Refresh existing pages with this URL.
                 matchRegexToJsRegex(domainName);
                 chrome.tabs.query({windowId: chrome.windows.WINDOW_ID_CURRENT}, function (tabs) {
                     $.each(tabs, function (tabIndex, tab) {
-                        var chromeRegex = new RegExp("chrome://extensions");
-                        if (matchRegexToJsRegex(domainName).test(tab.url)&& (!chromeRegex.test(tab.url))) {
+                        var chromeRegex = new RegExp('chrome://extensions');
+                        if (matchRegexToJsRegex(domainName).test(tab.url) && (!chromeRegex.test(tab.url))) {
                             chrome.tabs.reload(tab.id);
                         }
                     });
@@ -297,19 +290,20 @@ function addDomain (domainName, callback) {
 }
 
 function removeDomain (domainName, removeAll, callback) {
+    var domainID;
     domainName = domainName.trim();
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID]) {
             var domainJSON = data[StorageID];
             var domains = data[StorageID].options.domains;
             $.each(domains, function (index, domain) {
-                //Find the domainID of the domain to be removed
-                if (0 == domain.name.localeCompare(domainName) || (removeAll == true)) {
+                // Find the domainID of the domain to be removed
+                if ((domain.name.localeCompare(domainName) === 0) || (removeAll === true)) {
                     domainID = index;
                     delete domainJSON.options.domains[domainID];
                     saveTemplates(domainJSON, callback);
                 }
-            })
+            });
         } else {
             callback(false, 'No data available to remove');
         }
@@ -317,19 +311,19 @@ function removeDomain (domainName, removeAll, callback) {
 }
 
 function validateDomain (domainName, callback) {
-    getDomains(function (status, msg, response){
-        //Verify that there are no empty domains
+    getDomains(function (status, msg, response) {
+        // Verify that there are no empty domains
         let message = null;
         if (!domainName) {
-            message = 'Domain Name is blank'
+            message = 'Domain Name is blank';
         }
-        //Verify that there are no duplicate domains
-        $.each(response, function(index, domain){
-            if (0 == domain.name.localeCompare(domainName)) {
+        // Verify that there are no duplicate domains
+        $.each(response, function (index, domain) {
+            if (domain.name.localeCompare(domainName) === 0) {
                 message = `Domain Name: "${domainName}" already exists`;
                 return false;
             }
-        })
+        });
         callback(message);
     });
 }
@@ -517,16 +511,15 @@ chrome.runtime.onInstalled.addListener(
         if (details.reason === 'install' || details.reason === 'update') {
             var urlRegexs = [];
 
-            //Access all of the values in the 'domains', then reload the matching tabs
-            var domains = getDomains(function (status, msg, response){
+            // Access all of the values in the 'domains', then reload the matching tabs
+            getDomains(function (status, msg, response) {
                 $.each(response, function (index, domain) {
                     urlRegexs.push(matchRegexToJsRegex(domain.name));
-
                 });
                 chrome.tabs.query({windowId: chrome.windows.WINDOW_ID_CURRENT}, function (tabs) {
                     $.each(tabs, function (tabIndex, tab) {
                         $.each(urlRegexs, function (regexIndex, regex) {
-                            var chromeRegex = new RegExp("chrome://extensions");
+                            var chromeRegex = new RegExp('chrome://extensions');
                             if (regex.test(tab.url) && (!chromeRegex.test(tab.url))) {
                                 chrome.tabs.reload(tab.id);
                                 return false;
@@ -611,21 +604,21 @@ chrome.runtime.onMessage.addListener(
             break;
         case 'addDomain':
             addDomain(request.domainName, function (status, message = null, data = null) {
-            var response = responseMessage(status, message, data);
-            sendResponse(response);
-            }); 
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
             break;
         case 'removeDomain':
             removeDomain(request.domainName, request.removeAll, function (status, message = null, data = null) {
-            var response = responseMessage(status, message, data);
-            sendResponse(response);
-            }); 
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
             break;
         case 'getDomains':
             getDomains(function (status, message = null, data = null) {
-            var response = responseMessage(status, message, data);
-            sendResponse(response);
-            }); 
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
             break;
         default:
             sendResponse({status: 'error', message: 'Invalid Action'});
