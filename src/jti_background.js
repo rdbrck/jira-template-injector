@@ -65,31 +65,26 @@ function saveTemplates (templateJSON, callback, responseData = null) {
 }
 
 function getDomains (callback) {
-    var domainArray = {};
+    var domainList = {};
     // Get the default domains
-    var domainArray2 = $.map(DefaultDomainList, function (domain, index) {
+    var domainListDefault = $.map(DefaultDomainList, function (domain, index) {
         domain.default = true;
         return domain;
     });
-    // sort the default domains
-    domainArray2 = utils.sortArrayByProperty(domainArray2, 'name');
     // Get the custom domains
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID]) {
             var domains = data[StorageID].options.domains;
-            domainArray = $.map(domains, function (domain, index) {
+            domainList = $.map(domains, function (domain, index) {
                 domain.default = false;
                 return domain;
             });
             // Sort them
-            domainArray = utils.sortArrayByProperty(domainArray, 'name');
+            domainList = utils.sortArrayByProperty(domainList, 'name');
             // combine so that the default entries are always at top
-            domainArray = domainArray2.concat(domainArray);
-            callback(true, null, domainArray);
-        } else {
-            // return just the defaults
-            callback(true, null, domainArray2);
+            domainListDefault = domainListDefault.concat(domainList);
         }
+        callback(true, null, domainListDefault);
     });
 }
 
@@ -143,7 +138,7 @@ function setToggleStatus (toggleType, toggleInput, callback) {
     });
 }
 
-function clearStorage (callback) {
+function clearTemplates (callback) {
     // Need to save the domains, then re-add them here.
     chrome.storage.sync.get(StorageID, function (data) {
         var clearedData = emptyData;
@@ -262,9 +257,8 @@ function addDomain (domainName, callback) {
             domainJSON = data[StorageID];
         }
 
-        var domainID = getNextID(domainJSON.options.domains);
         var newDomain = {
-            'id': domainID,
+            'id': getNextID(domainJSON.options.domains),
             'name': domainName
         };
 
@@ -272,7 +266,7 @@ function addDomain (domainName, callback) {
             if (message) {
                 callback(false, message);
             } else {
-                domainJSON.options.domains[domainID] = newDomain;
+                domainJSON.options.domains[newDomain.id] = newDomain;
                 // Refresh existing pages with this URL.
                 matchRegexToJsRegex(domainName);
                 chrome.tabs.query({windowId: chrome.windows.WINDOW_ID_CURRENT}, function (tabs) {
@@ -282,7 +276,7 @@ function addDomain (domainName, callback) {
                             chrome.tabs.reload(tab.id);
                         }
                     });
-                    saveTemplates(domainJSON, callback, domainID);
+                    saveTemplates(domainJSON, callback, newDomain.id);
                 });
             }
         });
@@ -561,7 +555,7 @@ chrome.runtime.onMessage.addListener(
             });
             break;
         case 'clear':
-            clearStorage(function (status, message = null, data = null) {
+            clearTemplates(function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });

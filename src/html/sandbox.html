@@ -78,11 +78,56 @@
 
             window.addEventListener('message', function (event) {
                 var command = event.data.command;
-                if (command === "render") {
+                if (command === "renderTemplates") {
                     event.source.postMessage({
+                        content: 'template-editor',
                         html: htmlTemplate(event.data.context),
                         callback: event.data.callback,
                         openTemplate: event.data.openTemplate
+                    }, event.origin);
+                }
+            });
+        </script>
+
+        <script id="add_Domains" type="text/x-handlebars-template">
+            {{#each domains}}
+                {{#if this.default}}
+                    <li class='collection-item container custom-domain-collection'>
+                        <div class='row valign-wrapper remove-margin'>
+                            <div class='col s10 left-align custom-domain-label'>
+                                {{ this.name }} 
+                            </div>
+                            <div class='col s2'>
+                            </div>
+                        </div>
+                    </li>
+                {{else}}
+                    <li class='collection-item custom-domain-collection container'>
+                        <div class='row valign-wrapper remove-margin' style: >
+                            <div class="col s10 left-align custom-domain-label">
+                                {{ this.name }} 
+                            </div>
+                            <div class='col s2'>
+                                <a id='customDomainRemoveButton' class='btn-floating btn-jti tooltipped' data-position='left' data-delay='50' data-tooltip='Remove Domain'> 
+                                    <i class='material-icons'>delete</i> 
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+                {{/if}}
+            {{/each}}
+        </script>
+
+        <script>
+            var domainSource = document.getElementById('add_Domains').innerHTML;
+            var htmlDomainTemplate = Handlebars.compile(domainSource);
+            window.addEventListener('message', function (event) {
+                var command = event.data.command;
+                if (command.localeCompare('renderDomain') === 0) {
+                    event.source.postMessage({
+                        content: 'domain-list',
+                        html: htmlDomainTemplate(event.data.context),
+                        callback: event.data.callback
                     }, event.origin);
                 }
             });

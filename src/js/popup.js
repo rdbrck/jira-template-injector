@@ -65,6 +65,8 @@ function loadTemplateEditor (openTemplate = null) {
         $('#customTemplateProjectsField').val('');
         // Clear the add default template dropdown.
         $('#addDefaultDropdown').empty();
+        // remove all domains, so that the whole list can be re-added in proper order.
+        $('.custom-domain-collection').remove();
 
         if (templates[StorageID].templates) {
             templates = templates[StorageID].templates;
@@ -78,7 +80,7 @@ function loadTemplateEditor (openTemplate = null) {
             // Once the template is compiled, a 'message' event will be sent to this window with the html
             var sandboxIFrame = document.getElementById('sandbox_window');
             sandboxIFrame.contentWindow.postMessage({
-                command: 'render',
+                command: 'renderTemplates',
                 context: { templates: templatesArray },
                 openTemplate: openTemplate
             }, '*');
@@ -141,16 +143,15 @@ function loadTemplateEditor (openTemplate = null) {
     });
 
     // Load in the custom domains.
-
-    // start by removing all domains, so that the whole list can be re-added in proper order.
-    $('.collection-item').remove();
-
-    // Then add in remaining domains
     chrome.runtime.sendMessage({JDTIfunction: 'getDomains'}, function (response) {
         if (response.data) {
-            $.each(response.data, function (index, domain) {
-                appendDomainListEntry(domain);
-            });
+            // Send a message to sandbox.html to build the domains list
+            // Once the template is compiled, a 'message' event will be sent to this window with the html
+            var sandboxIFrame2 = document.getElementById('sandbox_window2');
+            sandboxIFrame2.contentWindow.postMessage({
+                command: 'renderDomain',
+                context: { domains: response.data }
+            }, '*');
         }
     });
 }
@@ -177,7 +178,7 @@ function limitAccess (callback = false) {
                     $('#customTemplateIssueTypeField').prop('disabled', true);
                     $('#customTemplateProjectsField').prop('disabled', true);
                     $('#addDefaultDropdownButton').addClass('disabled');
-                    $('#customdomains').addClass('disabled');
+                    $('#customDomains').addClass('disabled');
                     break;
                 case 'url':
                     $('#jsonURLInput').prop('disabled', true);
@@ -210,7 +211,7 @@ function limitAccess (callback = false) {
                     $('#addDefaultDropdownButton').addClass('disabled');
                     break;
                 case 'add-domain':
-                    $('#customdomains').addClass('disabled');
+                    $('#customDomains').addClass('disabled');
                     break;
                 }
             });
@@ -305,7 +306,6 @@ function dmError (action, message) {
 }
 
 $(document).ready(function () {
-    $('#customDomainList').hide();
     chrome.runtime.sendMessage({
         type: 'analytics', name: 'launch', body: {
             'ip_address': '${dm.meta:request_ip}',
@@ -342,24 +342,24 @@ $(document).ready(function () {
         });
     });
 
-    $('#customdomains').click(function () {
-        dmUIClick('customdomains');
+    $('#customDomains').click(function () {
+        dmUIClick('customDomains');
         if (!$(this).hasClass('disabled')) {
-            $('#customDomainList').toggle();
+            $('.customDomainList').toggle();
             $('main').toggle();
         } else {
             Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
         }
     });
 
-    $('#backInternal').click(function () {
-        dmUIClick('backInternal');
-        $('#customDomainList').toggle();
+    $('#customDomainsBackButton').click(function () {
+        dmUIClick('customDomainsBackButton');
+        $('.customDomainList').toggle();
         $('main').toggle();
     });
 
-    $('#clearInternal').click(function () {
-        dmUIClick('clearInternal');
+    $('#clearCustomDomains').click(function () {
+        dmUIClick('clearCustomDomains');
         // remove all added domains:
         chrome.runtime.sendMessage({
             JDTIfunction: 'removeDomain',
@@ -371,48 +371,49 @@ $(document).ready(function () {
                 Materialize.toast('Domains successfully removed', 2000, 'toastNotification');
             } else {
                 if (response.message) {
-                    dmError('clearInternal', response.message);
+                    dmError('clearCustomDomains', response.message);
                     Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
-                    dmError('clearInternal', 'generic');
+                    dmError('clearCustomDomains', 'generic');
                     Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
         });
     });
 
-    $('#CustomDomainInput').keyup(function (event) {
+    $('#customDomainInput').keyup(function (event) {
         if (event.keyCode === 13) {
-            $('#CustomDomainInputButton').click();
+            $('#customDomainInputButton').click();
         }
     });
 
-    $('#CustomDomainInputButton').click(function () {
-        dmUIClick('CustomDomainInputButton');
-        var domainName = $('#CustomDomainInput').val();
-        $('#CustomDomainInput').val('');
+    $('#customDomainInputButton').click(function () {
+        dmUIClick('customDomainInputButton');
+        var domainName = $('#customDomainInput').val();
+
         chrome.runtime.sendMessage({
             JDTIfunction: 'addDomain',
             domainName: domainName
         }, function (response) {
             if (response.status === 'success') {
+                $('#customDomainInput').val('');
                 loadTemplateEditor();
                 Materialize.toast('Domain successfully added', 2000, 'toastNotification');
             } else {
                 if (response.message) {
-                    dmError('CustomDomainInputButton', response.message);
+                    dmError('customDomainInputButton', response.message);
                     Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
-                    dmError('CustomDomainInputButton', 'generic');
+                    dmError('customDomainInputButton', 'generic');
                     Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
         });
     });
 
-    $(document).on('click', '#CustomDomainRemoveButton', function () {
-        dmUIClick('CustomDomainRemoveButton');
-        var domainName = $(event.target).closest('li').children('.row').children('#custom-domain-label').text();
+    $(document).on('click', '#customDomainRemoveButton', function () {
+        dmUIClick('customDomainRemoveButton');
+        var domainName = $(event.target).closest('li').children('.row').children('.custom-domain-label').text();
         chrome.runtime.sendMessage({
             JDTIfunction: 'removeDomain',
             domainName: domainName,
@@ -423,10 +424,10 @@ $(document).ready(function () {
                 Materialize.toast('Domain successfully removed', 2000, 'toastNotification');
             } else {
                 if (response.message) {
-                    dmError('CustomDomainRemoveButton', response.message);
+                    dmError('customDomainRemoveButton', response.message);
                     Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
-                    dmError('CustomDomainRemoveButton', 'generic');
+                    dmError('customDomainRemoveButton', 'generic');
                     Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
@@ -635,21 +636,25 @@ $(document).ready(function () {
         }
     });
 
-    // When the edit template has been compiled
+    // When the sandbox compiles a template
     $(window).on('message', function (event) {
         event = event.originalEvent;
-        if (event.data.html) {
-            $('#templateEditor').append(event.data.html);
+        if (event.data.content.localeCompare('template-editor') === 0) {
+            if (event.data.html) {
+                $('#templateEditor').append(event.data.html);
 
-            $('textarea').each(function (index) {
-                if ($(this).val()) {
-                    $(this).trigger('autoresize');
+                $('textarea').each(function (index) {
+                    if ($(this).val()) {
+                        $(this).trigger('autoresize');
+                    }
+                });
+
+                if (event.data.openTemplate) {
+                    openCollapsible(event.data.openTemplate);
                 }
-            });
-
-            if (event.data.openTemplate) {
-                openCollapsible(event.data.openTemplate);
             }
+        } else if (event.data.content.localeCompare('domain-list') === 0) {
+            $('.collection').append(event.data.html);
         }
     });
 
@@ -769,9 +774,7 @@ $(document).ready(function () {
     $('#fileSelector').change(function () {
         var file = $(this)[0].files[0];
         if (browserType !== 'Edge') {
-            // Handle case where browser file.type is empty
-            if (file.type.localeCompare('') === 0) {
-            } else if (file.type !== 'application/json') {
+            if (file.type !== 'application/json' && file.type.localeCompare('') !== 0) {
                 Materialize.toast('File must be of type JSON. Please select a valid file', 4000, 'toastNotification');
                 $(this).val('');
             }
@@ -783,38 +786,3 @@ $(document).ready(function () {
         }
     });
 });
-
-function appendDomainListEntry (domain) {
-    var $domainListItem;
-    if (domain.default) {
-        $domainListItem = $(
-            `<li class='collection-item container'>
-                <div class="row valign-wrapper remove-margin">
-                    <div id= "custom-domain-label" class="col s10 left-align">
-                        ` + domain.name + ` 
-                    </div>
-                    <div class="col s2">
-                    </div>
-                </div>
-            </li>
-            `
-        );
-    } else {
-        $domainListItem = $(
-            `<li class='collection-item container'>
-                <div class="row valign-wrapper remove-margin" style: >
-                    <div id= "custom-domain-label" class="col s10 left-align">
-                        ` + domain.name + ` 
-                    </div>
-                    <div class="col s2">
-                        <a id = "CustomDomainRemoveButton" class='btn-floating btn-small btn-jti tooltipped' data-position='left' data-delay='50' data-tooltip='Remove Domain'> 
-                            <i class='material-icons'>delete</i> 
-                        </a>
-                    </div>
-                </div>
-            </li>
-            `
-        );
-    }
-    $('.collection').append($domainListItem);
-}
