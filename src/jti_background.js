@@ -65,9 +65,9 @@ function saveTemplates (templateJSON, callback, responseData = null) {
 }
 
 function getDomains (callback) {
-    var domainList = {};
+    var domainListCustom = {};
     // Get the default domains
-    var domainListDefault = $.map(DefaultDomainList, function (domain, index) {
+    var domainList = $.map(DefaultDomainList, function (domain, index) {
         domain.default = true;
         return domain;
     });
@@ -75,16 +75,16 @@ function getDomains (callback) {
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID]) {
             var domains = data[StorageID].options.domains;
-            domainList = $.map(domains, function (domain, index) {
+            domainListCustom = $.map(domains, function (domain, index) {
                 domain.default = false;
                 return domain;
             });
             // Sort them
-            domainList = utils.sortArrayByProperty(domainList, 'name');
+            domainListCustom = utils.sortArrayByProperty(domainListCustom, 'name');
             // combine so that the default entries are always at top
-            domainListDefault = domainListDefault.concat(domainList);
+            domainList = domainList.concat(domainListCustom);
         }
-        callback(true, null, domainListDefault);
+        callback(true, null, domainList);
     });
 }
 
@@ -162,16 +162,14 @@ function fetchDefaultTemplates (callback) {
 }
 
 function setDefaultTemplates (callback) {
-    chrome.storage.sync.get(StorageID, function (data) {
-        fetchDefaultTemplates(function (status, message, data) {
-            if (status) {
-                data.templates = JSONtoTemplateData(data.templates);
-                data.options.domains = JSONtoDomainData(data.options.domains);
-                saveTemplates(data, callback);
-            } else {
-                callback(false, message);
-            }
-        });
+    fetchDefaultTemplates(function (status, message, data) {
+        if (status) {
+            data.templates = JSONtoTemplateData(data.templates);
+            data.options.domains = JSONtoDomainData(data.options.domains);
+            saveTemplates(data, callback);
+        } else {
+            callback(false, message);
+        }
     });
 }
 

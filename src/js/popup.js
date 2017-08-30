@@ -411,7 +411,8 @@ $(document).ready(function () {
         });
     });
 
-    $(document).on('click', '#customDomainRemoveButton', function () {
+    $(document).on('click', '.customDomainRemoveButton', function () {
+        console.log('CALLED');
         dmUIClick('customDomainRemoveButton');
         var domainID = event.target.id;
         chrome.runtime.sendMessage({
