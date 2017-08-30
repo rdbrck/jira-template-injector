@@ -147,8 +147,8 @@ function loadTemplateEditor (openTemplate = null) {
         if (response.data) {
             // Send a message to sandbox.html to build the domains list
             // Once the template is compiled, a 'message' event will be sent to this window with the html
-            var sandboxIFrame2 = document.getElementById('sandbox_window2');
-            sandboxIFrame2.contentWindow.postMessage({
+            var sandboxIFrameDomains = document.getElementById('sandbox_window');
+            sandboxIFrameDomains.contentWindow.postMessage({
                 command: 'renderDomain',
                 context: { domains: response.data }
             }, '*');
@@ -345,7 +345,7 @@ $(document).ready(function () {
     $('#customDomains').click(function () {
         dmUIClick('customDomains');
         if (!$(this).hasClass('disabled')) {
-            $('.customDomainList').toggle();
+            $('.custom-domain-list').toggle();
             $('main').toggle();
         } else {
             Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
@@ -354,7 +354,7 @@ $(document).ready(function () {
 
     $('#customDomainsBackButton').click(function () {
         dmUIClick('customDomainsBackButton');
-        $('.customDomainList').toggle();
+        $('.custom-domain-list').toggle();
         $('main').toggle();
     });
 
@@ -413,10 +413,12 @@ $(document).ready(function () {
 
     $(document).on('click', '#customDomainRemoveButton', function () {
         dmUIClick('customDomainRemoveButton');
-        var domainName = $(event.target).closest('li').children('.row').children('.custom-domain-label').text();
+        var domainID = event.target.id;
+        console.log("domain");
+        console.log(event.target.id);
         chrome.runtime.sendMessage({
             JDTIfunction: 'removeDomain',
-            domainName: domainName,
+            domainID: domainID,
             removeAll: false
         }, function (response) {
             if (response.status === 'success') {
@@ -639,7 +641,7 @@ $(document).ready(function () {
     // When the sandbox compiles a template
     $(window).on('message', function (event) {
         event = event.originalEvent;
-        if (event.data.content.localeCompare('template-editor') === 0) {
+        if (event.data.content === 'template-editor') {
             if (event.data.html) {
                 $('#templateEditor').append(event.data.html);
 
@@ -653,7 +655,7 @@ $(document).ready(function () {
                     openCollapsible(event.data.openTemplate);
                 }
             }
-        } else if (event.data.content.localeCompare('domain-list') === 0) {
+        } else if (event.data.content === 'domain-list') {
             $('.collection').append(event.data.html);
         }
     });
@@ -774,7 +776,7 @@ $(document).ready(function () {
     $('#fileSelector').change(function () {
         var file = $(this)[0].files[0];
         if (browserType !== 'Edge') {
-            if (file.type !== 'application/json' && file.type.localeCompare('') !== 0) {
+            if (file.type !== 'application/json' && file.type) {
                 Materialize.toast('File must be of type JSON. Please select a valid file', 4000, 'toastNotification');
                 $(this).val('');
             }

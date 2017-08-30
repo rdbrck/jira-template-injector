@@ -283,21 +283,17 @@ function addDomain (domainName, callback) {
     });
 }
 
-function removeDomain (domainName, removeAll, callback) {
-    var domainID;
-    domainName = domainName.trim();
+function removeDomain (domainID, removeAll, callback) {
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID]) {
             var domainJSON = data[StorageID];
-            var domains = data[StorageID].options.domains;
-            $.each(domains, function (index, domain) {
+            $.each(data[StorageID].options.domains, function (index, domain) {
                 // Find the domainID of the domain to be removed
-                if ((domain.name.localeCompare(domainName) === 0) || (removeAll === true)) {
-                    domainID = index;
-                    delete domainJSON.options.domains[domainID];
-                    saveTemplates(domainJSON, callback);
+                if ((index === domainID) || (removeAll === true)) {
+                    delete domainJSON.options.domains[index];
                 }
             });
+            saveTemplates(domainJSON, callback);
         } else {
             callback(false, 'No data available to remove');
         }
@@ -364,6 +360,7 @@ function loadLocalFile (fileContents, callback) {
     try {
         var templateJSON = $.parseJSON(JSON.stringify(fileContents));
         templateJSON.templates = JSONtoTemplateData(templateJSON.templates);
+        templateJSON.options.domains = JSONtoDomainData(templateJSON.options.domains);
         saveTemplates(templateJSON, callback);
     } catch (e) {
         callback(false, 'Error parsing JSON. Please verify file contents');
@@ -603,7 +600,7 @@ chrome.runtime.onMessage.addListener(
             });
             break;
         case 'removeDomain':
-            removeDomain(request.domainName, request.removeAll, function (status, message = null, data = null) {
+            removeDomain(request.domainID, request.removeAll, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });

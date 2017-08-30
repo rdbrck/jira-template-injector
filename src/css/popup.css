@@ -247,7 +247,7 @@ textarea.materialize-textarea:focus:not([readonly]) {
 	top: 18px;
 }
 
-.customDomainList {
+.custom-domain-list {
 	margin-top: 10px;
 	display: none;
 }
