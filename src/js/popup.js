@@ -413,6 +413,7 @@ $(document).ready(function () {
 
     $(document).on('click', '#customDomainRemoveButton', function () {
         dmUIClick('customDomainRemoveButton');
+        var domainID = event.target.id;
         chrome.runtime.sendMessage({
             JDTIfunction: 'removeDomain',
             domainID: domainID,
