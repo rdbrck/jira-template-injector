@@ -149,7 +149,7 @@ function loadTemplateEditor (openTemplate = null) {
             // Once the template is compiled, a 'message' event will be sent to this window with the html
             var sandboxIFrameDomains = document.getElementById('sandbox_window');
             sandboxIFrameDomains.contentWindow.postMessage({
-                command: 'renderDomain',
+                command: 'renderDomains',
                 context: { domains: response.data }
             }, '*');
         }
@@ -411,9 +411,9 @@ $(document).ready(function () {
         });
     });
 
-    $(document).on('click', '.customDomainRemoveButton', function () {
+    $(document).on('click', '.custom-domain-remove-button', function () {
         console.log('CALLED');
-        dmUIClick('customDomainRemoveButton');
+        dmUIClick('custom-domain-remove-button');
         var domainID = event.target.id;
         chrome.runtime.sendMessage({
             JDTIfunction: 'removeDomain',
@@ -425,10 +425,10 @@ $(document).ready(function () {
                 Materialize.toast('Domain successfully removed', 2000, 'toastNotification');
             } else {
                 if (response.message) {
-                    dmError('customDomainRemoveButton', response.message);
+                    dmError('custom-domain-remove-button', response.message);
                     Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
-                    dmError('customDomainRemoveButton', 'generic');
+                    dmError('custom-domain-remove-button', 'generic');
                     Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
@@ -655,7 +655,9 @@ $(document).ready(function () {
                 }
             }
         } else if (event.data.content === 'domain-list') {
-            $('.collection').append(event.data.html);
+            if (event.data.html) {
+                $('.collection').append(event.data.html);
+            }
         }
     });
 
@@ -775,7 +777,7 @@ $(document).ready(function () {
     $('#fileSelector').change(function () {
         var file = $(this)[0].files[0];
         if (browserType !== 'Edge') {
-            if (file.type !== 'application/json' && file.type) {
+            if (file.type && file.type !== 'application/json') {
                 Materialize.toast('File must be of type JSON. Please select a valid file', 4000, 'toastNotification');
                 $(this).val('');
             }

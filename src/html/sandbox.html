@@ -64,39 +64,6 @@
                 </li>
             {{/each}}
         </script>
-        <script>
-            Handlebars.registerHelper('boldIfDefault', function (template) {
-                if (!template['issuetype-field'] && !template['projects-field']) {
-                    return 'font-bold';
-                } else {
-                    return '';
-                }
-            })
-            window.addEventListener('message', function (event) {
-                var command = event.data.command;
-                switch(command) {
-                    case "renderTemplates":
-                        var source = document.getElementById('edit_template').innerHTML;
-                        var htmlTemplate = Handlebars.compile(source);
-                        event.source.postMessage({
-                            content: 'template-editor',
-                            html: htmlTemplate(event.data.context),
-                            callback: event.data.callback,
-                            openTemplate: event.data.openTemplate
-                        }, event.origin);
-                        break;
-                    case "renderDomain":
-                        var domainSource = document.getElementById('addDomains').innerHTML;
-                        var htmlDomainTemplate = Handlebars.compile(domainSource);
-                            event.source.postMessage({
-                            content: 'domain-list',
-                            html: htmlDomainTemplate(event.data.context),
-                            callback: event.data.callback
-                        }, event.origin);
-                        break;
-                }
-            });
-        </script>
 
         <script id="addDomains" type="text/x-handlebars-template">
             {{#each domains}}
@@ -118,13 +85,47 @@
                             </div>
                             <div class='col s2'>
                                 <a class='btn-floating btn-jti tooltipped' data-position='left' data-delay='50' data-tooltip='Remove Domain'> 
-                                    <i id= {{this.id}} class='customDomainRemoveButton material-icons'>delete</i> 
+                                    <i id={{this.id}} class='custom-domain-remove-button material-icons'>delete</i> 
                                 </a>
                             </div>
                         </div>
                     </li>
                 {{/if}}
             {{/each}}
+        </script>
+
+        <script>
+            Handlebars.registerHelper('boldIfDefault', function (template) {
+                if (!template['issuetype-field'] && !template['projects-field']) {
+                    return 'font-bold';
+                } else {
+                    return '';
+                }
+            })
+            window.addEventListener('message', function (event) {
+                var command = event.data.command;
+                switch(command) {
+                    case "renderTemplates":
+                        var source = document.getElementById('edit_template').innerHTML;
+                        var htmlTemplate = Handlebars.compile(source);
+                        event.source.postMessage({
+                            content: 'template-editor',
+                            html: htmlTemplate(event.data.context),
+                            callback: event.data.callback,
+                            openTemplate: event.data.openTemplate
+                        }, event.origin);
+                        break;
+                    case "renderDomains":
+                        var domainSource = document.getElementById('addDomains').innerHTML;
+                        var htmlDomainTemplate = Handlebars.compile(domainSource);
+                            event.source.postMessage({
+                            content: 'domain-list',
+                            html: htmlDomainTemplate(event.data.context),
+                            callback: event.data.callback
+                        }, event.origin);
+                        break;
+                }
+            });
         </script>
     </body>
 </html>

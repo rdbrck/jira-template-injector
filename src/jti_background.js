@@ -74,8 +74,7 @@ function getDomains (callback) {
     // Get the custom domains
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID]) {
-            var domains = data[StorageID].options.domains;
-            domainListCustom = $.map(domains, function (domain, index) {
+            domainListCustom = $.map(data[StorageID].options.domains, function (domain, index) {
                 domain.default = false;
                 return domain;
             });
@@ -285,12 +284,11 @@ function removeDomain (domainID, removeAll, callback) {
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID]) {
             var domainJSON = data[StorageID];
-            $.each(data[StorageID].options.domains, function (index, domain) {
-                // Find the domainID of the domain to be removed
-                if ((index === domainID) || (removeAll === true)) {
-                    delete domainJSON.options.domains[index];
-                }
-            });
+            if (removeAll === true) {
+                domainJSON.options.domains = {};
+            } else {
+                delete domainJSON.options.domains[domainID];
+            }
             saveTemplates(domainJSON, callback);
         } else {
             callback(false, 'No data available to remove');
