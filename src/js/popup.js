@@ -411,13 +411,12 @@ $(document).ready(function () {
         });
     });
 
+    // Because the template editing section is dynamically built, need to monitor document rather then the buttons directly
     $(document).on('click', '.custom-domain-remove-button', function () {
-        console.log('CALLED');
         dmUIClick('custom-domain-remove-button');
-        var domainID = event.target.id;
         chrome.runtime.sendMessage({
             JDTIfunction: 'removeDomain',
-            domainID: domainID,
+            domainID: event.target.id,
             removeAll: false
         }, function (response) {
             if (response.status === 'success') {
