@@ -268,6 +268,7 @@ function addDomain (domainName, callback) {
                 matchRegexToJsRegex(domainName);
                 chrome.tabs.query({windowId: chrome.windows.WINDOW_ID_CURRENT}, function (tabs) {
                     $.each(tabs, function (tabIndex, tab) {
+                        // So we don't infinitely reload the chrome://extensions page, reloading JTI, reloading...
                         var chromeRegex = new RegExp('chrome://extensions');
                         if (matchRegexToJsRegex(domainName).test(tab.url) && (!chromeRegex.test(tab.url))) {
                             chrome.tabs.reload(tab.id);
@@ -506,6 +507,7 @@ chrome.runtime.onInstalled.addListener(
                 chrome.tabs.query({windowId: chrome.windows.WINDOW_ID_CURRENT}, function (tabs) {
                     $.each(tabs, function (tabIndex, tab) {
                         $.each(urlRegexs, function (regexIndex, regex) {
+                            // So we don't infinitely reload the chrome://extensions page, reloading JTI, reloading...
                             var chromeRegex = new RegExp('chrome://extensions');
                             if (regex.test(tab.url) && (!chromeRegex.test(tab.url))) {
                                 chrome.tabs.reload(tab.id);
