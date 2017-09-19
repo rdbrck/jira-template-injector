@@ -10,6 +10,7 @@
       {"name": "EPIC TEMPLATE", "issuetype-field":"Epic", "projects-field": "", "text":"*Epic*\nAs a <TI>type of user/persona</TI>, I want <TI>to perform some task</TI>, so that I can <TI>achieve some goal/benefit/value</TI>.\n\n*Details*\n<TI>Enter any details, clarifications, answers to questions, and points about implementation here.</TI>"}
    ],
    "options":{
-     "limit": []
+     "limit": [],
+     "domains":[]
    }
 }

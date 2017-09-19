@@ -22,4 +22,20 @@ class utils {
         }
         return projects.split(', ');
     }
+
+    // Sorts an array of objects in place using a property of the objects
+    static sortArrayByProperty (array, property) {
+        return array.sort(function (a, b) {
+            var propertyA = a[property];
+            var propertyB = b[property];
+
+            if (propertyA < propertyB) {
+                return -1;
+            } else if (propertyA > propertyB) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
+    }
 }

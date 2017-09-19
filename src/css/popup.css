@@ -13,6 +13,7 @@ html, body {
 
 body {
 	font-family: 'Source Sans Pro',Arial,sans-serif;
+	overflow: hidden;
 }
 
 nav {
@@ -244,6 +245,40 @@ textarea.materialize-textarea:focus:not([readonly]) {
 	color: #fff;
 	right: 10px;
 	top: 18px;
+}
+
+.custom-domain-list {
+	margin-top: 10px;
+	display: none;
+}
+
+.custom-domain-collection {
+	padding-top: 5px;
+	padding-bottom: 5px;
+	padding-right: 5px;
+	width: 100%;
+}
+
+.remove-margin {
+	padding-top: 0px;
+	padding-bottom: 0px;
+	margin-bottom: 0px;
+}
+
+.spaced {
+	margin-top: 20px;
+	margin-bottom: 15px;
+}
+
+.custom-domain-label {
+	font-size: 1.3rem;
+	width: 290px !important;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	padding-top: 0px;
+	padding-bottom: 0px;
+	margin-bottom: 0px;
 }
 
 .collapsible.popout > li {

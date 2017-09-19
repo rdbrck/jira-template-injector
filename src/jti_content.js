@@ -273,10 +273,16 @@ function observeDocumentBody (mutation) {
     }
 }
 
-// Create observer to monitor for description field
-var observer = new MutationObserver(function (mutations) {
-    mutations.forEach(observeDocumentBody);
+// Create observer to monitor for description field if the domain is a monitored one
+
+chrome.runtime.sendMessage({JDTIfunction: 'getDomains'}, function (response) {
+    $.each(response, function (index, domain) {
+        var pattern = new RegExp(domain.name);
+        if (pattern.test(window.location.href)) {
+            var observer = new MutationObserver(function (mutations) {
+                mutations.forEach(observeDocumentBody);
+            });
+            observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['resolved'] });
+        }
+    });
 });
-
-observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['resolved'] });
-

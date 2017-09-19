@@ -32,8 +32,7 @@
     "content_scripts": [
         {
             "matches": [
-                "http://*.atlassian.net/*",
-                "https://*.atlassian.net/*"
+                "<all_urls>"
             ],
             "js": [
                 "lib/jquery/jquery-2.2.3.js",

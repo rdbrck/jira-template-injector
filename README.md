@@ -51,6 +51,7 @@ The JSON format is:
 * Load templates from url (json file). Host a single json file and have everyone use the same templates.
 * Load templates from local file (json). Easily share templates with other users.
 * Add/Remove/Edit individual templates.
+* Add/Remove custom domains. These are checked against URLs by Regex to determine which pages the JTI will check for fields.
 * Limit interface options (To keep templates consistent across users)
     * Current limit options are:
         * "all"         -> disable all interface actions except reload default
@@ -62,6 +63,7 @@ The JSON format is:
         * "add"         -> disable add new template menu
         * "add-custom"  -> disable adding custom template
         * "add-default" -> disable adding default template
+        * "add-domain"  -> disable adding additional domains
 * Export Templates to JSON file. Easily share template JSON file.
 
 ### Future Features:

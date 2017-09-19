@@ -21,28 +21,12 @@ if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf
     }
 }
 
-// Sorts an array of objects in place using a property of the objects
-function sortArrayByProperty (array, property) {
-    return array.sort(function (a, b) {
-        var propertyA = a[property];
-        var propertyB = b[property];
-
-        if (propertyA < propertyB) {
-            return -1;
-        } else if (propertyA > propertyB) {
-            return 1;
-        } else {
-            return 0;
-        }
-    });
-}
-
 function sortTemplates (templates) {
     var templateArray = $.map(templates, function (template, key) {
         return template;
     });
 
-    var sorted = sortArrayByProperty(templateArray, 'name');
+    var sorted = utils.sortArrayByProperty(templateArray, 'name');
 
     // Move "DEFAULT TEMPLATE" to top of list.
     $.each(sorted, function (index, template) {
@@ -81,6 +65,8 @@ function loadTemplateEditor (openTemplate = null) {
         $('#customTemplateProjectsField').val('');
         // Clear the add default template dropdown.
         $('#addDefaultDropdown').empty();
+        // remove all domains, so that the whole list can be re-added in proper order.
+        $('.custom-domain-collection').remove();
 
         if (templates[StorageID].templates) {
             templates = templates[StorageID].templates;
@@ -94,7 +80,7 @@ function loadTemplateEditor (openTemplate = null) {
             // Once the template is compiled, a 'message' event will be sent to this window with the html
             var sandboxIFrame = document.getElementById('sandbox_window');
             sandboxIFrame.contentWindow.postMessage({
-                command: 'render',
+                command: 'renderTemplates',
                 context: { templates: templatesArray },
                 openTemplate: openTemplate
             }, '*');
@@ -155,6 +141,19 @@ function loadTemplateEditor (openTemplate = null) {
             $('#rateSection').fadeIn(); // Show button
         }
     });
+
+    // Load in the custom domains.
+    chrome.runtime.sendMessage({JDTIfunction: 'getDomains'}, function (response) {
+        if (response.data) {
+            // Send a message to sandbox.html to build the domains list
+            // Once the template is compiled, a 'message' event will be sent to this window with the html
+            var sandboxIFrameDomains = document.getElementById('sandbox_window');
+            sandboxIFrameDomains.contentWindow.postMessage({
+                command: 'renderDomains',
+                context: { domains: response.data }
+            }, '*');
+        }
+    });
 }
 
 function limitAccess (callback = false) {
@@ -179,6 +178,7 @@ function limitAccess (callback = false) {
                     $('#customTemplateIssueTypeField').prop('disabled', true);
                     $('#customTemplateProjectsField').prop('disabled', true);
                     $('#addDefaultDropdownButton').addClass('disabled');
+                    $('#customDomains').addClass('disabled');
                     break;
                 case 'url':
                     $('#jsonURLInput').prop('disabled', true);
@@ -209,6 +209,9 @@ function limitAccess (callback = false) {
                     break;
                 case 'add-default':
                     $('#addDefaultDropdownButton').addClass('disabled');
+                    break;
+                case 'add-domain':
+                    $('#customDomains').addClass('disabled');
                     break;
                 }
             });
@@ -333,6 +336,98 @@ $(document).ready(function () {
                     Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
                     dmError('reset', 'generic');
+                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                }
+            }
+        });
+    });
+
+    $('#customDomains').click(function () {
+        dmUIClick('customDomains');
+        if (!$(this).hasClass('disabled')) {
+            $('.custom-domain-list').toggle();
+            $('main').toggle();
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
+    });
+
+    $('#customDomainsBackButton').click(function () {
+        dmUIClick('customDomainsBackButton');
+        $('.custom-domain-list').toggle();
+        $('main').toggle();
+    });
+
+    $('#clearCustomDomains').click(function () {
+        dmUIClick('clearCustomDomains');
+        // remove all added domains:
+        chrome.runtime.sendMessage({
+            JDTIfunction: 'removeDomain',
+            domainName: '',
+            removeAll: true
+        }, function (response) {
+            if (response.status === 'success') {
+                loadTemplateEditor();
+                Materialize.toast('Domains successfully removed', 2000, 'toastNotification');
+            } else {
+                if (response.message) {
+                    dmError('clearCustomDomains', response.message);
+                    Materialize.toast(response.message, 2000, 'toastNotification');
+                } else {
+                    dmError('clearCustomDomains', 'generic');
+                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                }
+            }
+        });
+    });
+
+    $('#customDomainInput').keyup(function (event) {
+        if (event.keyCode === 13) {
+            $('#customDomainInputButton').click();
+        }
+    });
+
+    $('#customDomainInputButton').click(function () {
+        dmUIClick('customDomainInputButton');
+        var domainName = $('#customDomainInput').val();
+
+        chrome.runtime.sendMessage({
+            JDTIfunction: 'addDomain',
+            domainName: domainName
+        }, function (response) {
+            if (response.status === 'success') {
+                $('#customDomainInput').val('');
+                loadTemplateEditor();
+                Materialize.toast('Domain successfully added', 2000, 'toastNotification');
+            } else {
+                if (response.message) {
+                    dmError('customDomainInputButton', response.message);
+                    Materialize.toast(response.message, 2000, 'toastNotification');
+                } else {
+                    dmError('customDomainInputButton', 'generic');
+                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                }
+            }
+        });
+    });
+
+    // Because the template editing section is dynamically built, need to monitor document rather then the buttons directly
+    $(document).on('click', '.custom-domain-remove-button', function () {
+        dmUIClick('custom-domain-remove-button');
+        chrome.runtime.sendMessage({
+            JDTIfunction: 'removeDomain',
+            domainID: event.target.id,
+            removeAll: false
+        }, function (response) {
+            if (response.status === 'success') {
+                loadTemplateEditor();
+                Materialize.toast('Domain successfully removed', 2000, 'toastNotification');
+            } else {
+                if (response.message) {
+                    dmError('custom-domain-remove-button', response.message);
+                    Materialize.toast(response.message, 2000, 'toastNotification');
+                } else {
+                    dmError('custom-domain-remove-button', 'generic');
                     Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
@@ -541,20 +636,26 @@ $(document).ready(function () {
         }
     });
 
-    // When the edit template has been compiled
+    // When the sandbox compiles a template
     $(window).on('message', function (event) {
         event = event.originalEvent;
-        if (event.data.html) {
-            $('#templateEditor').append(event.data.html);
+        if (event.data.content === 'template-editor') {
+            if (event.data.html) {
+                $('#templateEditor').append(event.data.html);
 
-            $('textarea').each(function (index) {
-                if ($(this).val()) {
-                    $(this).trigger('autoresize');
+                $('textarea').each(function (index) {
+                    if ($(this).val()) {
+                        $(this).trigger('autoresize');
+                    }
+                });
+
+                if (event.data.openTemplate) {
+                    openCollapsible(event.data.openTemplate);
                 }
-            });
-
-            if (event.data.openTemplate) {
-                openCollapsible(event.data.openTemplate);
+            }
+        } else if (event.data.content === 'domain-list') {
+            if (event.data.html) {
+                $('.collection').append(event.data.html);
             }
         }
     });
@@ -675,7 +776,7 @@ $(document).ready(function () {
     $('#fileSelector').change(function () {
         var file = $(this)[0].files[0];
         if (browserType !== 'Edge') {
-            if (file.type !== 'application/json') {
+            if (file.type && file.type !== 'application/json') {
                 Materialize.toast('File must be of type JSON. Please select a valid file', 4000, 'toastNotification');
                 $(this).val('');
             }
