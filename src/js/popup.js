@@ -319,6 +319,13 @@ $(document).ready(function () {
         loadTemplateEditor();
     });
 
+    if ($('.navbar-fixed').width() < $('.custom-domain-list').width() ) { // eslint-disable-line space-in-parens, key-spacing
+        $('.navbar-fixed').css({'width':($('.custom-domain-list').width() + 'px')}); // eslint-disable-line space-in-parens, key-spacing
+    } else {
+        $('.custom-domain-list').css({'width':($('.navbar-fixed').width() + 'px')}); // eslint-disable-line space-in-parens, key-spacing
+    }
+    $('.custom-domain-list').css({'max-width':($('.navbar-fixed').width() + 'px')}); // eslint-disable-line space-in-parens, key-spacing
+
     // Click Handlers
     $('#reset').click(function () {
         dmUIClick('reset');

@@ -272,7 +272,7 @@ textarea.materialize-textarea:focus:not([readonly]) {
 
 .custom-domain-label {
 	font-size: 1.3rem;
-	width: 290px !important;
+	width: 290px;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
