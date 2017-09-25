@@ -5,7 +5,7 @@
 /* https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE */
 
 html, body {
-  min-width: 400px;
+  width: 400px;
   min-height: 400px;
   overflow: auto;
   -ms-overflow-style: none;
@@ -256,7 +256,7 @@ textarea.materialize-textarea:focus:not([readonly]) {
 	padding-top: 5px;
 	padding-bottom: 5px;
 	padding-right: 5px;
-	width: 100%;
+	width: 400px;
 }
 
 .remove-margin {
