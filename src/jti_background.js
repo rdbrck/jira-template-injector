@@ -101,6 +101,7 @@ function getData (callback) {
         if (templates[StorageID]) {
             var templateJSON = templates[StorageID];
             templateJSON.templates = templateDataToJSON(templateJSON.templates);
+            templateJSON.options.domains = domainDataToJSON(templateJSON.options.domains);
             callback(true, '', templateJSON);
         } else {
             callback(false, 'No data is currently loaded');
@@ -466,6 +467,16 @@ function templateDataToJSON (templates) {
         formattedTemplates.push(template);
     });
     return formattedTemplates;
+}
+
+function domainDataToJSON (domains) {
+    var formattedDomains = [];
+
+    $.each(domains, function (key, domain) {
+        delete domain.id;
+        formattedDomains.push(domain);
+    });
+    return formattedDomains;
 }
 
 function getNextID (templates) {
