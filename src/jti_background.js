@@ -447,7 +447,7 @@ function JSONtoTemplateData (templates) {
 }
 
 function JSONtoDomainData (domains, callback) {
-    var nextID = 1;
+    var nextID = getNextID(domains);
     var formattedDomains = {};
 
     if (domains.constructor === Array) {
@@ -485,7 +485,6 @@ function domainDataToJSON (domains) {
     var formattedDomains = [];
 
     $.each(domains, function (key, domain) {
-        delete domain.id;
         formattedDomains.push(domain.name);
     });
     return formattedDomains;
