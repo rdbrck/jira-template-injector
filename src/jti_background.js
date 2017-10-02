@@ -358,7 +358,7 @@ function loadLocalFile (fileContents, callback) {
     try {
         var templateJSON = $.parseJSON(JSON.stringify(fileContents));
         templateJSON.templates = JSONtoTemplateData(templateJSON.templates);
-        templateJSON.options.domains = JSONtoDomainData(templateJSON.options.domains);
+        templateJSON.options.domains = JSONtoDomainData(templateJSON.options.domains, callback);
         saveTemplates(templateJSON, callback);
     } catch (e) {
         callback(false, 'Error parsing JSON. Please verify file contents');
@@ -446,17 +446,29 @@ function JSONtoTemplateData (templates) {
     return formattedTemplates;
 }
 
-function JSONtoDomainData (domains) {
-    var nextID = getNextID(domains);
+function JSONtoDomainData (domains, callback) {
+    var nextID = 1;
     var formattedDomains = {};
 
     if (domains.constructor === Array) {
         $.each(domains, function (index, domain) {
-            domain.id = nextID;
-            formattedDomains[nextID++] = domain;
+            validateJSONDomainEntry(domain, callback);
+            var newDomain = {
+                'id': nextID,
+                'name': domain
+            };
+            formattedDomains[newDomain.id] = newDomain;
+
+            nextID++;
         });
     }
     return formattedDomains;
+}
+
+function validateJSONDomainEntry (domain, callback) {
+    if (!domain || typeof (domain) !== 'string') {
+        callback(false, 'Error parsing JSON. Please verify file contents');
+    }
 }
 
 function templateDataToJSON (templates) {
@@ -474,7 +486,7 @@ function domainDataToJSON (domains) {
 
     $.each(domains, function (key, domain) {
         delete domain.id;
-        formattedDomains.push(domain);
+        formattedDomains.push(domain.name);
     });
     return formattedDomains;
 }
