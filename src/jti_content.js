@@ -276,7 +276,7 @@ function observeDocumentBody (mutation) {
 // Create observer to monitor for description field if the domain is a monitored one
 
 chrome.runtime.sendMessage({JDTIfunction: 'getDomains'}, function (response) {
-    $.each(response, function (index, domain) {
+    $.each(response.data, function (index, domain) {
         var pattern = new RegExp(domain.name);
         if (pattern.test(window.location.href)) {
             var observer = new MutationObserver(function (mutations) {
