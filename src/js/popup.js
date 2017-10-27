@@ -469,25 +469,34 @@ $(document).ready(function () {
                     Materialize.toast('Error reading file. Please try again', 2000, 'toastNotification');
                 };
                 reader.onload = function () {
-                    var data = $.parseJSON(reader.result);
-                    chrome.runtime.sendMessage({
-                        JDTIfunction: 'upload',
-                        fileContents: data
-                    }, function (response) {
-                        if (response.status === 'success') {
-                            location.reload();
-                            Materialize.toast('Templates successfully loaded from file', 2000, 'toastNotification');
-                            dmTemplateUpdate('upload');
-                        } else {
-                            if (response.message) {
-                                dmError('upload', response.message);
-                                Materialize.toast(response.message, 2000, 'toastNotification');
+                    let validJSON = true;
+                    try {
+                        var data = JSON.parse(reader.result);
+                    } catch (err) {
+                        validJSON = false;
+                        dmError('upload', 'Error Parsing JSON');
+                        Materialize.toast('Error Parsing JSON', 2000, 'toastNotification');
+                    }
+                    if (validJSON) {
+                        chrome.runtime.sendMessage({
+                            JDTIfunction: 'upload',
+                            fileContents: data
+                        }, function (response) {
+                            if (response.status === 'success') {
+                                location.reload();
+                                Materialize.toast('Templates successfully loaded from file', 2000, 'toastNotification');
+                                dmTemplateUpdate('upload');
                             } else {
-                                dmError('upload', 'generic');
-                                Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                                if (response.message) {
+                                    dmError('upload', response.message);
+                                    Materialize.toast(response.message, 2000, 'toastNotification');
+                                } else {
+                                    dmError('upload', 'generic');
+                                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
                 };
             }
         } else {
@@ -770,21 +779,5 @@ $(document).ready(function () {
         dmUIClick('help');
         chrome.tabs.create({url: $(this).attr('href')});
         return false;
-    });
-
-    // Onchange Handlers
-    $('#fileSelector').change(function () {
-        var file = $(this)[0].files[0];
-        if (browserType !== 'Edge') {
-            if (file.type && file.type !== 'application/json') {
-                Materialize.toast('File must be of type JSON. Please select a valid file', 4000, 'toastNotification');
-                $(this).val('');
-            }
-        } else {
-            if (file.name.split('.').pop() !== 'json') {
-                Materialize.toast('File must be of type JSON. Please select a valid file', 4000, 'toastNotification');
-                $(this).val('');
-            }
-        }
     });
 });

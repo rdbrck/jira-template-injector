@@ -447,10 +447,9 @@ function JSONtoTemplateData (templates) {
 }
 
 function JSONtoDomainData (domains, callback) {
-    var nextID = getNextID(domains);
     var formattedDomains = {};
-
-    if (domains.constructor === Array) {
+    if (domains && domains.constructor === Array) {
+        var nextID = getNextID(domains);
         $.each(domains, function (index, domain) {
             validateJSONDomainEntry(domain, callback);
             var newDomain = {
@@ -458,10 +457,10 @@ function JSONtoDomainData (domains, callback) {
                 'name': domain
             };
             formattedDomains[newDomain.id] = newDomain;
-
             nextID++;
         });
     }
+
     return formattedDomains;
 }
 
