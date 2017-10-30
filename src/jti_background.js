@@ -356,7 +356,7 @@ function validateTemplate (newTemplate, templates, callback) {
 
 function loadLocalFile (fileContents, callback) {
     try {
-        var templateJSON = $.parseJSON(JSON.stringify(fileContents));
+        var templateJSON = JSON.parse(fileContents);
         templateJSON.templates = JSONtoTemplateData(templateJSON.templates);
         templateJSON.options.domains = JSONtoDomainData(templateJSON.options.domains, callback);
         saveTemplates(templateJSON, callback);
@@ -447,10 +447,9 @@ function JSONtoTemplateData (templates) {
 }
 
 function JSONtoDomainData (domains, callback) {
-    var nextID = getNextID(domains);
     var formattedDomains = {};
-
-    if (domains.constructor === Array) {
+    if (domains && domains.constructor === Array) {
+        var nextID = getNextID(domains);
         $.each(domains, function (index, domain) {
             validateJSONDomainEntry(domain, callback);
             var newDomain = {
@@ -458,10 +457,10 @@ function JSONtoDomainData (domains, callback) {
                 'name': domain
             };
             formattedDomains[newDomain.id] = newDomain;
-
             nextID++;
         });
     }
+
     return formattedDomains;
 }
 

@@ -469,10 +469,9 @@ $(document).ready(function () {
                     Materialize.toast('Error reading file. Please try again', 2000, 'toastNotification');
                 };
                 reader.onload = function () {
-                    var data = $.parseJSON(reader.result);
                     chrome.runtime.sendMessage({
                         JDTIfunction: 'upload',
-                        fileContents: data
+                        fileContents: reader.result
                     }, function (response) {
                         if (response.status === 'success') {
                             location.reload();
@@ -770,21 +769,5 @@ $(document).ready(function () {
         dmUIClick('help');
         chrome.tabs.create({url: $(this).attr('href')});
         return false;
-    });
-
-    // Onchange Handlers
-    $('#fileSelector').change(function () {
-        var file = $(this)[0].files[0];
-        if (browserType !== 'Edge') {
-            if (file.type && file.type !== 'application/json') {
-                Materialize.toast('File must be of type JSON. Please select a valid file', 4000, 'toastNotification');
-                $(this).val('');
-            }
-        } else {
-            if (file.name.split('.').pop() !== 'json') {
-                Materialize.toast('File must be of type JSON. Please select a valid file', 4000, 'toastNotification');
-                $(this).val('');
-            }
-        }
     });
 });
