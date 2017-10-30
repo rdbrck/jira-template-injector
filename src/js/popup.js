@@ -469,34 +469,24 @@ $(document).ready(function () {
                     Materialize.toast('Error reading file. Please try again', 2000, 'toastNotification');
                 };
                 reader.onload = function () {
-                    let validJSON = true;
-                    try {
-                        var data = JSON.parse(reader.result);
-                    } catch (err) {
-                        validJSON = false;
-                        dmError('upload', 'Error Parsing JSON');
-                        Materialize.toast('Error Parsing JSON', 2000, 'toastNotification');
-                    }
-                    if (validJSON) {
-                        chrome.runtime.sendMessage({
-                            JDTIfunction: 'upload',
-                            fileContents: data
-                        }, function (response) {
-                            if (response.status === 'success') {
-                                location.reload();
-                                Materialize.toast('Templates successfully loaded from file', 2000, 'toastNotification');
-                                dmTemplateUpdate('upload');
+                    chrome.runtime.sendMessage({
+                        JDTIfunction: 'upload',
+                        fileContents: reader.result
+                    }, function (response) {
+                        if (response.status === 'success') {
+                            location.reload();
+                            Materialize.toast('Templates successfully loaded from file', 2000, 'toastNotification');
+                            dmTemplateUpdate('upload');
+                        } else {
+                            if (response.message) {
+                                dmError('upload', response.message);
+                                Materialize.toast(response.message, 2000, 'toastNotification');
                             } else {
-                                if (response.message) {
-                                    dmError('upload', response.message);
-                                    Materialize.toast(response.message, 2000, 'toastNotification');
-                                } else {
-                                    dmError('upload', 'generic');
-                                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
-                                }
+                                dmError('upload', 'generic');
+                                Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                             }
-                        });
-                    }
+                        }
+                    });
                 };
             }
         } else {

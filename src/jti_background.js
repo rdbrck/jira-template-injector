@@ -356,7 +356,7 @@ function validateTemplate (newTemplate, templates, callback) {
 
 function loadLocalFile (fileContents, callback) {
     try {
-        var templateJSON = $.parseJSON(JSON.stringify(fileContents));
+        var templateJSON = JSON.parse(fileContents);
         templateJSON.templates = JSONtoTemplateData(templateJSON.templates);
         templateJSON.options.domains = JSONtoDomainData(templateJSON.options.domains, callback);
         saveTemplates(templateJSON, callback);
