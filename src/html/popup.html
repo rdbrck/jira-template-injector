@@ -125,10 +125,10 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                 <div class="section">
                     <div class="row">
                         <div class="col s8 valign-wrapper">
-                            <h6 class="left-align"> Manage Custom Domains:</h6>
+                            <h6 class="left-align"> Manage Custom Settings:</h6>
                         </div>
                         <div class="col s4 right-align">
-                            <a id="customDomains" class="btn-floating btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Manage Domains">
+                            <a id="customDomains" class="btn-floating btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Manage Settings">
                                 <i class="material-icons">format_list_bulleted</i>
                             </a>
                         </div>
@@ -226,22 +226,30 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
             <div class="custom-domain-list">
                 <!-- Back and clear buttons -->
                 <div class="row valign-wrapper">
-                    <div class="col s2">
+                    <div class="col">
                         <a id="customDomainsBackButton" class="btn-floating btn-jti tooltipped center-align" data-position="right" data-delay="50" data-tooltip="Back">
                             <i class="material-icons">arrow_back</i>
                         </a>
                     </div>
-                    <div class="col s8 center-align pull-s1">
-                        <div color="black" class="center-align custom-domain-label">Manage Custom Domains</div>
-                    </div>
-                    <div class="col s2 right-align">
-                        <a id="clearCustomDomains" class="btn-floating btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Clear All Domains">
-                                <i class="material-icons">delete</i>
-                        </a>
+                    <div class="col center-align">
+                        <div color="black" class="center-align custom-domain-label">Manage Custom Settings</div>
                     </div>
                 </div>
-                <!-- Add Custom Domain section -->
+
                 <div class="divider"></div>
+
+                <div class="row valign-wrapper">
+                    <div class="col">
+                        <a id="clearCustomDomains" class="btn-floating btn-jti tooltipped center-align" data-position="right" data-delay="50" data-tooltip="Clear All Domains">
+                            <i class="material-icons">delete</i>
+                        </a>
+                    </div>
+                    <div class="col center-align">
+                        <div color="black" class="center-align custom-domain-label">Custom Domains</div>
+                    </div>
+                </div>
+
+                <!-- Add Custom Domain section -->
                 <div class="section">
                     <div class="row">
                         <div class="col s5 valign-wrapper">
@@ -261,6 +269,40 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                 <!-- List of custom domains -->
                 <ul class="collection" id="customDomainsList">
                 </ul>
+
+                <div class="divider"></div>
+
+                <div class="row valign-wrapper">
+                        <div class="col">
+                            <a id="clearCustomIDs" class="btn-floating btn-jti tooltipped center-align" data-position="right" data-delay="50" data-tooltip="Clear All IDs">
+                                <i class="material-icons">delete</i>
+                            </a>
+                        </div>
+                        <div class="col center-align">
+                            <div color="black" class="center-align custom-domain-label">Custom Input IDs</div>
+                        </div>
+                    </div>
+    
+                    <!-- Add Custom Input ID section -->
+                    <div class="section">
+                        <div class="row">
+                            <div class="col s5 valign-wrapper">
+                                <h6> Add Custom Input IDs:</h6>
+                            </div>
+                            <div class="col s5">
+                                <input id="customIDInput" type="text" name="url" placeholder="Custom Input ID">
+                            </div>
+                            <div class="col s2 right-align">
+                                <a id="customIDInputButton" class="btn-floating btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Add ID">
+                                    <i class="material-icons">add</i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="divider spaced"></div>
+                    <!-- List of custom input IDs -->
+                    <ul class="collection" id="customIDsList">
+                    </ul>
             </div>
         </div>
 

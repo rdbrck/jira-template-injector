@@ -18,7 +18,10 @@ if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf
 }
 
 // Handle <TI> tag selection.
-$(document).on('click', '#description', function () {
+$(document).on('click', function (input, oject) {
+    if (id is in id) {
+
+    }
     var text = $(this).val(),
         ctrlDown = false,
         backtickKey = 192,
@@ -283,6 +286,9 @@ chrome.runtime.sendMessage({JDTIfunction: 'getDomains'}, function (response) {
                 mutations.forEach(observeDocumentBody);
             });
             observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['resolved'] });
+            chrome.runtime.sendMessage({JDTIfunction: 'getIDs'}, function (response) {
+                ids = resonse.id;
+            });
         }
     });
 });
