@@ -277,70 +277,44 @@ function addTemplate (templateName, issueTypeField, projectsField, text, callbac
 }
 
 function addInputID (IDName, callback) {
-
-    console.log("add custom input id clicked");
-    console.log("IDName passed in is", IDName);
-
     chrome.storage.sync.get(StorageID, function (data) {
         var domainJSON = {};
-        console.log("DOMAINJSON", domainJSON);
-
         if(data[StorageID]) {
             domainJSON = data[StorageID];
         }
-        console.log("data", data);
-        console.log("domain json object in add input id:", domainJSON);
 
         var newID = {
             'id': getNextID(domainJSON.options.inputIDs),
             'name': IDName
         };
 
-        console.log("newID", newID.id);
-
         validateInputID(IDName, function (message) {
             if(message) {
                 callback(false, message);
             } else {
-                console.log("message is", message);
-                console.log("inside else");
-                console.log("domainjson in else:", domainJSON.options.inputIDs);
                 domainJSON.options.inputIDs[newID.id] = newID;
                 saveTemplates(domainJSON, callback, newID.id);
-                console.log("inside else");
             }
-
-            //console.log("updated domain json", domainJSON);
         });
     });
 }
 
 function addDomain (domainName, callback) {
-
-    console.log("add custom domain name clicked");
-
     chrome.storage.sync.get(StorageID, function (data) {
         var domainJSON = {};
-        console.log("DOMAINJSON", domainJSON);
-
         if (data[StorageID]) {
             domainJSON = data[StorageID];
         }
-
-        console.log("domain json object in add domain:", domainJSON);
 
         var newDomain = {
             'id': getNextID(domainJSON.options.domains),
             'name': domainName
         };
 
-        console.log("newdomain", newDomain);
-
         validateDomain(domainName, function (message) {
             if (message) {
                 callback(false, message);
             } else {
-                console.log("message is", message);
                 domainJSON.options.domains[newDomain.id] = newDomain;
                 // Refresh existing pages with this URL.
                 matchRegexToJsRegex(domainName);
@@ -360,8 +334,6 @@ function addDomain (domainName, callback) {
 }
 
 function removeDomain (domainID, removeAll, callback) {
-
-    console.log("in remove domain");
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID]) {
             var domainJSON = data[StorageID];
@@ -378,8 +350,6 @@ function removeDomain (domainID, removeAll, callback) {
 }
 
 function removeInputID (inputID, removeAll, callback) {
-
-    console.log("in remove inputid");
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID]) {
             var domainJSON = data[StorageID];
@@ -409,7 +379,6 @@ function validateDomain (domainName, callback) {
                 return false;
             }
         });
-        console.log('message', message)
         callback(message);
     });
 }
@@ -628,8 +597,6 @@ function domainDataToJSON (domains) {
         formattedDomains.push(domain.name);
     });
 
-    console.log("formatted domains:", formattedDomains);
-
     return formattedDomains;
 }
 
@@ -640,15 +607,10 @@ function inputIDDataToJSON (inputIDs) {
         formattedInputIDs.push(inputID.name);
     });
 
-    console.log("formatted inputids:", formattedInputIDs);
-
     return formattedInputIDs;
 }
 
 function getNextID (templates) {
-
-    console.log("templates", templates);
-
     var highestID = 0;
     $.each(templates, function (key, template) {
         var templateID = parseInt(template.id);
@@ -664,7 +626,6 @@ function getNextID (templates) {
 chrome.storage.sync.get(StorageID, function (templates) {
     // Check if we have any loaded templates in storage.
     if (Object.keys(templates).length === 0 && JSON.stringify(templates) === JSON.stringify({})) {
-        console.log("hey im here");
         // No data in storage yet - Load default templates.
         setDefaultTemplates(function (status, result) {});
     }

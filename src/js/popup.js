@@ -160,9 +160,6 @@ function loadTemplateEditor (openTemplate = null) {
     //Load in the custom input IDs.
     chrome.runtime.sendMessage({JDTIfunction: 'getInputIDs'}, function (response) {
         if (response.data) {
-
-            console.log("testing");
-
             //send a message to sandbox.html to build the input ids list
             //once the template is compiled, a 'message' event will be sent to this window with the html
             var sandboxIFrameInputIDs = document.getElementById('sandbox_window');
@@ -361,7 +358,6 @@ $(document).ready(function () {
     });
 
     $('#customDomains').click(function () {
-        console.log("manage custom settings");
         dmUIClick('customDomains');
         if (!$(this).hasClass('disabled')) {
             $('.custom-domain-list').toggle();
@@ -407,9 +403,6 @@ $(document).ready(function () {
     });
 
     $('#customDomainInputButton').click(function () {
-
-        console.log("add custom domain name clicked");
-
         dmUIClick('customDomainInputButton');
         var domainName = $('#customDomainInput').val();
 
@@ -417,8 +410,6 @@ $(document).ready(function () {
             JDTIfunction: 'addDomain',
             domainName: domainName
         }, function (response) {
-
-            console.log("response is: ", response);
             if (response.status === 'success') {
                 $('#customDomainInput').val('');
                 loadTemplateEditor();
@@ -442,20 +433,12 @@ $(document).ready(function () {
     });
 
     $('#customIDInputButton').click(function () {
-
-        console.log("add custom input id clicked");
-
         dmUIClick('customIDInputButton');
         var IDName = $('#customIDInput').val();
-
-        console.log("idname is:", IDName);
-
         chrome.runtime.sendMessage({
             JDTIfunction: 'addInputID',
             IDName: IDName
         }, function (response) {
-
-            console.log("response is: ", response);
             if(response.status === 'success') {
                 $('#customIDInput').val('');
                 loadTemplateEditor();
@@ -475,9 +458,6 @@ $(document).ready(function () {
     // Because the template editing section is dynamically built, need to monitor document rather then the buttons directly
     $(document).on('click', '.custom-domain-remove-button', function () {
         dmUIClick('custom-domain-remove-button');
-
-        console.log("event:", event)
-
         chrome.runtime.sendMessage({
             JDTIfunction: 'removeDomain',
             domainID: event.target.id,
@@ -499,12 +479,7 @@ $(document).ready(function () {
     });
 
     $(document).on('click', '.custom-inputID-remove-button', function () {
-
-        console.log("testt remove id");
         dmUIClick('custom-inputID-remove-button');
-
-        console.log("event:", event)
-
         chrome.runtime.sendMessage({
             JDTIfunction: 'removeInputID',
             inputID: event.target.id,
