@@ -475,6 +475,9 @@ $(document).ready(function () {
     // Because the template editing section is dynamically built, need to monitor document rather then the buttons directly
     $(document).on('click', '.custom-domain-remove-button', function () {
         dmUIClick('custom-domain-remove-button');
+
+        console.log("event:", event)
+
         chrome.runtime.sendMessage({
             JDTIfunction: 'removeDomain',
             domainID: event.target.id,
@@ -489,6 +492,33 @@ $(document).ready(function () {
                     Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
                     dmError('custom-domain-remove-button', 'generic');
+                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                }
+            }
+        });
+    });
+
+    $(document).on('click', '.custom-inputID-remove-button', function () {
+
+        console.log("testt remove id");
+        dmUIClick('custom-inputID-remove-button');
+
+        console.log("event:", event)
+
+        chrome.runtime.sendMessage({
+            JDTIfunction: 'removeInputID',
+            inputID: event.target.id,
+            removeAll: false
+        }, function (response) {
+            if (response.status === 'success') {
+                loadTemplateEditor();
+                Materialize.toast('Input ID successfully removed', 2000, 'toastNotification');
+            } else {
+                if (response.message) {
+                    dmError('custom-inputID-remove-button', response.message);
+                    Materialize.toast(response.message, 2000, 'toastNotification');
+                } else {
+                    dmError('custom-inputID-remove-button', 'generic');
                     Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }

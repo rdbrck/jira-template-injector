@@ -128,6 +128,7 @@ function getData (callback) {
             var templateJSON = templates[StorageID];
             templateJSON.templates = templateDataToJSON(templateJSON.templates);
             templateJSON.options.domains = domainDataToJSON(templateJSON.options.domains);
+            templateJSON.options.inputIDs = inputIDDataToJSON(templateJSON.options.inputIDs);
             callback(true, '', templateJSON);
         } else {
             callback(false, 'No data is currently loaded');
@@ -192,6 +193,7 @@ function setDefaultTemplates (callback) {
         if (status) {
             data.templates = JSONtoTemplateData(data.templates);
             data.options.domains = JSONtoDomainData(data.options.domains);
+            data.options.inputIDs = JSONtoInputIDData(data.options.inputIDs);
             saveTemplates(data, callback);
         } else {
             callback(false, message);
@@ -204,6 +206,7 @@ function downloadJSONData (url, callback) {
         if (status) {
             data.templates = JSONtoTemplateData(data.templates);
             data.options.domains = JSONtoDomainData(data.options.domains);
+            data.options.inputIDs = JSONtoInputIDData(data.options.inputIDs);
             saveTemplates(data, callback);
         } else {
             callback(false, message);
@@ -357,6 +360,8 @@ function addDomain (domainName, callback) {
 }
 
 function removeDomain (domainID, removeAll, callback) {
+
+    console.log("in remove domain");
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID]) {
             var domainJSON = data[StorageID];
@@ -364,6 +369,24 @@ function removeDomain (domainID, removeAll, callback) {
                 domainJSON.options.domains = {};
             } else {
                 delete domainJSON.options.domains[domainID];
+            }
+            saveTemplates(domainJSON, callback);
+        } else {
+            callback(false, 'No data available to remove');
+        }
+    });
+}
+
+function removeInputID (inputID, removeAll, callback) {
+
+    console.log("in remove inputid");
+    chrome.storage.sync.get(StorageID, function (data) {
+        if (data[StorageID]) {
+            var domainJSON = data[StorageID];
+            if (removeAll === true) {
+                domainJSON.options.inputIDs = {};
+            } else {
+                delete domainJSON.options.inputIDs[inputID];
             }
             saveTemplates(domainJSON, callback);
         } else {
@@ -452,6 +475,7 @@ function loadLocalFile (fileContents, callback) {
         var templateJSON = JSON.parse(fileContents);
         templateJSON.templates = JSONtoTemplateData(templateJSON.templates);
         templateJSON.options.domains = JSONtoDomainData(templateJSON.options.domains, callback);
+        templateJSON.options.inputIDs = JSONtoInputIDData(templateJSON.options.inputIDs, callback);
         saveTemplates(templateJSON, callback);
     } catch (e) {
         callback(false, 'Error parsing JSON. Please verify file contents');
@@ -557,8 +581,32 @@ function JSONtoDomainData (domains, callback) {
     return formattedDomains;
 }
 
+function JSONtoInputIDData (inputIDs, callback) {
+    var formattedInputIDs = {};
+    if (inputIDs && inputIDs.constructor === Array) {
+        var nextID = getNextID(inputIDs);
+        $.each(inputIDs, function (index, inputID) {
+            validateJSONInputIDEntry(inputID, callback);
+            var newInputID = {
+                'id': nextID,
+                'name': inputID
+            };
+            formattedInputIDs[newInputID.id] = newInputID;
+            nextID++;
+        });
+    }
+
+    return formattedInputIDs;
+}
+
 function validateJSONDomainEntry (domain, callback) {
     if (!domain || typeof (domain) !== 'string') {
+        callback(false, 'Error parsing JSON. Please verify file contents');
+    }
+}
+
+function validateJSONInputIDEntry (inputID, callback) {
+    if (!inputID || typeof (inputID) !== 'string') {
         callback(false, 'Error parsing JSON. Please verify file contents');
     }
 }
@@ -579,7 +627,22 @@ function domainDataToJSON (domains) {
     $.each(domains, function (key, domain) {
         formattedDomains.push(domain.name);
     });
+
+    console.log("formatted domains:", formattedDomains);
+
     return formattedDomains;
+}
+
+function inputIDDataToJSON (inputIDs) {
+    var formattedInputIDs = [];
+
+    $.each(inputIDs, function(key, inputID) {
+        formattedInputIDs.push(inputID.name);
+    });
+
+    console.log("formatted inputids:", formattedInputIDs);
+
+    return formattedInputIDs;
 }
 
 function getNextID (templates) {
@@ -723,6 +786,12 @@ chrome.runtime.onMessage.addListener(
             break;
         case 'removeDomain':
             removeDomain(request.domainID, request.removeAll, function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'removeInputID':
+            removeInputID(request.inputID, request.removeAll, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });

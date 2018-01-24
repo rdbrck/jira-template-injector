@@ -114,7 +114,7 @@
                             </div>
                             <div class='col s2'>
                                 <a class='btn-floating btn-jti tooltipped' data-position='left' data-delay='50' data-tooltip='Remove Input ID'>
-                                    <i id={{this.id}} class='custom-domain-remove-button material-icons'>delete</i>
+                                    <i id={{this.id}} class='custom-inputID-remove-button material-icons'>delete</i>
                                 </a>
                             </div>
                         </div>
@@ -154,7 +154,6 @@
                         }, event.origin);
                         break;
                     case "renderInputIDs":
-                    console.log("inside render id case");
                         var inputIDSource = document.getElementById('addInputIDs').innerHTML;
                         var htmlInputIDTemplate = Handlebars.compile(inputIDSource);
                         event.source.postMessage({
