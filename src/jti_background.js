@@ -48,8 +48,11 @@ var StorageID = 'Jira-Template-Injector';
 var DefaultDomainList = [
     {'name': 'atlassian.net'}
 ];
+var DefaultIDList = [
+    {'name': 'description'}
+];
 var StorageToggleID = 'JTI-Toggle';
-var emptyData = {'options': {'limit': [], 'domains': []}, 'templates': {}};
+var emptyData = {'options': {'limit': [], 'domains': [], 'inputIDs': []}, 'templates': {}};
 var toggles = {'rateClicked': false};
 
 function saveTemplates (templateJSON, callback, responseData = null) {
@@ -61,6 +64,29 @@ function saveTemplates (templateJSON, callback, responseData = null) {
         } else {
             callback(true, null, responseData);
         }
+    });
+}
+
+function getInputIDs (callback) {
+    var IDListCustom = {};
+    //Get the default input IDs
+    var IDList = $.map(DefaultIDList, function (inputID, index) {
+        inputID.default = true;
+        return inputID;
+    });
+    //Get the custom input IDs
+    chrome.storage.sync.get(StorageID, function (data) {
+        if (data[StorageID]) {
+            IDListCustom = $.map(data[StorageID].options.inputIDs, function (inputID, index) {
+                inputID.default = false;
+                return inputID;
+            });
+            //Sort them
+            IDListCustom = utils.sortArrayByProperty(IDListCustom, 'name');
+            //combine so that the default entries are always at the top
+            IDList = IDList.concat(IDListCustom);
+        }
+        callback(true, null, IDList);
     });
 }
 
@@ -247,23 +273,71 @@ function addTemplate (templateName, issueTypeField, projectsField, text, callbac
     });
 }
 
-function addDomain (domainName, callback) {
+function addInputID (IDName, callback) {
+
+    console.log("add custom input id clicked");
+    console.log("IDName passed in is", IDName);
+
     chrome.storage.sync.get(StorageID, function (data) {
         var domainJSON = {};
+        console.log("DOMAINJSON", domainJSON);
+
+        if(data[StorageID]) {
+            domainJSON = data[StorageID];
+        }
+        console.log("data", data);
+        console.log("domain json object in add input id:", domainJSON);
+
+        var newID = {
+            'id': getNextID(domainJSON.options.inputIDs),
+            'name': IDName
+        };
+
+        console.log("newID", newID.id);
+
+        validateInputID(IDName, function (message) {
+            if(message) {
+                callback(false, message);
+            } else {
+                console.log("message is", message);
+                console.log("inside else");
+                console.log("domainjson in else:", domainJSON.options.inputIDs);
+                domainJSON.options.inputIDs[newID.id] = newID;
+                saveTemplates(domainJSON, callback, newID.id);
+                console.log("inside else");
+            }
+
+            //console.log("updated domain json", domainJSON);
+        });
+    });
+}
+
+function addDomain (domainName, callback) {
+
+    console.log("add custom domain name clicked");
+
+    chrome.storage.sync.get(StorageID, function (data) {
+        var domainJSON = {};
+        console.log("DOMAINJSON", domainJSON);
 
         if (data[StorageID]) {
             domainJSON = data[StorageID];
         }
+
+        console.log("domain json object in add domain:", domainJSON);
 
         var newDomain = {
             'id': getNextID(domainJSON.options.domains),
             'name': domainName
         };
 
+        console.log("newdomain", newDomain);
+
         validateDomain(domainName, function (message) {
             if (message) {
                 callback(false, message);
             } else {
+                console.log("message is", message);
                 domainJSON.options.domains[newDomain.id] = newDomain;
                 // Refresh existing pages with this URL.
                 matchRegexToJsRegex(domainName);
@@ -309,6 +383,25 @@ function validateDomain (domainName, callback) {
         $.each(response, function (index, domain) {
             if (domain.name.localeCompare(domainName) === 0) {
                 message = `Domain Name: "${domainName}" already exists`;
+                return false;
+            }
+        });
+        console.log('message', message)
+        callback(message);
+    });
+}
+
+function validateInputID (IDName, callback) {
+    getInputIDs(function (status, msg, response) {
+        //Verify that there are no empty input IDs
+        let message = null;
+        if (!IDName) {
+            message = 'Input ID is blank';
+        }
+        //Verify that there are no duplicate input IDs
+        $.each(response, function (index, inputID) {
+            if (inputID.name.localeCompare(IDName) === 0) {
+                message = `Input ID: "${IDName}" already exists`;
                 return false;
             }
         });
@@ -490,6 +583,9 @@ function domainDataToJSON (domains) {
 }
 
 function getNextID (templates) {
+
+    console.log("templates", templates);
+
     var highestID = 0;
     $.each(templates, function (key, template) {
         var templateID = parseInt(template.id);
@@ -505,6 +601,7 @@ function getNextID (templates) {
 chrome.storage.sync.get(StorageID, function (templates) {
     // Check if we have any loaded templates in storage.
     if (Object.keys(templates).length === 0 && JSON.stringify(templates) === JSON.stringify({})) {
+        console.log("hey im here");
         // No data in storage yet - Load default templates.
         setDefaultTemplates(function (status, result) {});
     }
@@ -618,6 +715,12 @@ chrome.runtime.onMessage.addListener(
                 sendResponse(response);
             });
             break;
+        case 'addInputID':
+            addInputID(request.IDName, function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
         case 'removeDomain':
             removeDomain(request.domainID, request.removeAll, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
@@ -626,6 +729,12 @@ chrome.runtime.onMessage.addListener(
             break;
         case 'getDomains':
             getDomains(function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'getInputIDs':
+            getInputIDs(function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });

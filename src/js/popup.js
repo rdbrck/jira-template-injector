@@ -67,6 +67,8 @@ function loadTemplateEditor (openTemplate = null) {
         $('#addDefaultDropdown').empty();
         // remove all domains, so that the whole list can be re-added in proper order.
         $('.custom-domain-collection').remove();
+        //remove all input ids, so that the whole list can be re-added in proper order.
+        $('.custom-inputID-collection').remove();
 
         if (templates[StorageID].templates) {
             templates = templates[StorageID].templates;
@@ -151,6 +153,22 @@ function loadTemplateEditor (openTemplate = null) {
             sandboxIFrameDomains.contentWindow.postMessage({
                 command: 'renderDomains',
                 context: { domains: response.data }
+            }, '*');
+        }
+    });
+
+    //Load in the custom input IDs.
+    chrome.runtime.sendMessage({JDTIfunction: 'getInputIDs'}, function (response) {
+        if (response.data) {
+
+            console.log("testing");
+
+            //send a message to sandbox.html to build the input ids list
+            //once the template is compiled, a 'message' event will be sent to this window with the html
+            var sandboxIFrameInputIDs = document.getElementById('sandbox_window');
+            sandboxIFrameInputIDs.contentWindow.postMessage({
+                command: 'renderInputIDs',
+                context: { inputIDs: response.data }
             }, '*');
         }
     });
@@ -343,6 +361,7 @@ $(document).ready(function () {
     });
 
     $('#customDomains').click(function () {
+        console.log("manage custom settings");
         dmUIClick('customDomains');
         if (!$(this).hasClass('disabled')) {
             $('.custom-domain-list').toggle();
@@ -388,6 +407,9 @@ $(document).ready(function () {
     });
 
     $('#customDomainInputButton').click(function () {
+
+        console.log("add custom domain name clicked");
+
         dmUIClick('customDomainInputButton');
         var domainName = $('#customDomainInput').val();
 
@@ -395,6 +417,8 @@ $(document).ready(function () {
             JDTIfunction: 'addDomain',
             domainName: domainName
         }, function (response) {
+
+            console.log("response is: ", response);
             if (response.status === 'success') {
                 $('#customDomainInput').val('');
                 loadTemplateEditor();
@@ -405,6 +429,43 @@ $(document).ready(function () {
                     Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
                     dmError('customDomainInputButton', 'generic');
+                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                }
+            }
+        });
+    });
+
+    $('#customIDInput').keyup(function (event) {
+        if (event.keyCode === 13) {
+            $('#customIDInputButton').click();
+        }
+    });
+
+    $('#customIDInputButton').click(function () {
+
+        console.log("add custom input id clicked");
+
+        dmUIClick('customIDInputButton');
+        var IDName = $('#customIDInput').val();
+
+        console.log("idname is:", IDName);
+
+        chrome.runtime.sendMessage({
+            JDTIfunction: 'addInputID',
+            IDName: IDName
+        }, function (response) {
+
+            console.log("response is: ", response);
+            if(response.status === 'success') {
+                $('#customIDInput').val('');
+                loadTemplateEditor();
+                Materialize.toast('Input ID successfully added', 2000, 'toastNotification');
+            } else {
+                if (response.message) {
+                    dmError('customIDInputButton', response.message);
+                    Materialize.toast(response.message, 2000, 'toastNotification');
+                } else {
+                    dmError('customIDInputButton', 'generic');
                     Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
@@ -654,7 +715,11 @@ $(document).ready(function () {
             }
         } else if (event.data.content === 'domain-list') {
             if (event.data.html) {
-                $('.collection').append(event.data.html);
+                $('#customDomainsList').append(event.data.html);
+            }
+        } else if (event.data.content === 'inputID-list') {
+            if (event.data.html) {
+                $('#customIDsList').append(event.data.html);
             }
         }
     });

@@ -94,6 +94,35 @@
             {{/each}}
         </script>
 
+        <script id="addInputIDs" type="text/x-handlebars-template">
+            {{#each inputIDs}}
+                {{#if this.default}}
+                    <li class='collection-item container custom-inputID-collection'>
+                        <div class='row valign-wrapper remove-margin'>
+                            <div class='col s10 left-align custom-domain-label'>
+                                {{ this.name }}
+                            </div>
+                            <div class='col s2'>
+                            </div>
+                        </div>
+                    </li>
+                {{else}}
+                    <li class='collection-item custom-inputID-collection container'>
+                        <div class='row valign-wrapper remove-margin' style: >
+                            <div class='col s10 left-align custom-domain-label'>
+                                {{ this.name }}
+                            </div>
+                            <div class='col s2'>
+                                <a class='btn-floating btn-jti tooltipped' data-position='left' data-delay='50' data-tooltip='Remove Input ID'>
+                                    <i id={{this.id}} class='custom-domain-remove-button material-icons'>delete</i>
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+                {{/if}}
+            {{/each}}
+        </script>
+
         <script>
             Handlebars.registerHelper('boldIfDefault', function (template) {
                 if (!template['issuetype-field'] && !template['projects-field']) {
@@ -118,9 +147,19 @@
                     case "renderDomains":
                         var domainSource = document.getElementById('addDomains').innerHTML;
                         var htmlDomainTemplate = Handlebars.compile(domainSource);
-                            event.source.postMessage({
+                        event.source.postMessage({
                             content: 'domain-list',
                             html: htmlDomainTemplate(event.data.context),
+                            callback: event.data.callback
+                        }, event.origin);
+                        break;
+                    case "renderInputIDs":
+                    console.log("inside render id case");
+                        var inputIDSource = document.getElementById('addInputIDs').innerHTML;
+                        var htmlInputIDTemplate = Handlebars.compile(inputIDSource);
+                        event.source.postMessage({
+                            content: 'inputID-list',
+                            html: htmlInputIDTemplate(event.data.context),
                             callback: event.data.callback
                         }, event.origin);
                         break;
