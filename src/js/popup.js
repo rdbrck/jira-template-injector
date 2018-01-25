@@ -367,10 +367,33 @@ $(document).ready(function () {
         }
     });
 
-    $('#customDomainsBackButton').click(function () {
-        dmUIClick('customDomainsBackButton');
+    $('#customSettingsBackButton').click(function () {
+        dmUIClick('customSettingsBackButton');
         $('.custom-domain-list').toggle();
         $('main').toggle();
+    });
+
+    $('#clearCustomIDs').click(function () {
+        dmUIClick('clearCustomIDs');
+        // remove all added input IDs:
+        chrome.runtime.sendMessage({
+            JDTIfunction: 'removeInputID',
+            IDName: '',
+            removeAll: true
+        }, function (response) {
+            if (response.status === 'success') {
+                loadTemplateEditor();
+                Materialize.toast('Input IDs successfully removed', 2000, 'toastNotification');
+            } else {
+                if (response.message) {
+                    dmError('clearCustomIDs', response.message);
+                    Materialize.toast(response.message, 2000, 'toastNotification');
+                } else {
+                    dmError('clearCustomIDs', 'generic');
+                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotifcation');
+                }
+            }
+        });
     });
 
     $('#clearCustomDomains').click(function () {

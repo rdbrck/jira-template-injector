@@ -278,13 +278,13 @@ function addTemplate (templateName, issueTypeField, projectsField, text, callbac
 
 function addInputID (IDName, callback) {
     chrome.storage.sync.get(StorageID, function (data) {
-        var domainJSON = {};
+        var JSONData = {};
         if (data[StorageID]) {
-            domainJSON = data[StorageID];
+            JSONData = data[StorageID];
         }
 
         var newID = {
-            'id': getNextID(domainJSON.options.inputIDs),
+            'id': getNextID(JSONData.options.inputIDs),
             'name': IDName
         };
 
@@ -292,8 +292,9 @@ function addInputID (IDName, callback) {
             if (message) {
                 callback(false, message);
             } else {
-                domainJSON.options.inputIDs[newID.id] = newID;
-                saveTemplates(domainJSON, callback, newID.id);
+                JSONData.options.inputIDs[newID.id] = newID;
+                reloadMatchingTabs();
+                saveTemplates(JSONData, callback, newID.id);
             }
         });
     });
@@ -301,13 +302,13 @@ function addInputID (IDName, callback) {
 
 function addDomain (domainName, callback) {
     chrome.storage.sync.get(StorageID, function (data) {
-        var domainJSON = {};
+        var JSONData = {};
         if (data[StorageID]) {
-            domainJSON = data[StorageID];
+            JSONData = data[StorageID];
         }
 
         var newDomain = {
-            'id': getNextID(domainJSON.options.domains),
+            'id': getNextID(JSONData.options.domains),
             'name': domainName
         };
 
@@ -315,19 +316,9 @@ function addDomain (domainName, callback) {
             if (message) {
                 callback(false, message);
             } else {
-                domainJSON.options.domains[newDomain.id] = newDomain;
-                // Refresh existing pages with this URL.
-                matchRegexToJsRegex(domainName);
-                chrome.tabs.query({windowId: chrome.windows.WINDOW_ID_CURRENT}, function (tabs) {
-                    $.each(tabs, function (tabIndex, tab) {
-                        // So we don't infinitely reload the chrome://extensions page, reloading JTI, reloading...
-                        var chromeRegex = new RegExp('chrome://extensions');
-                        if (matchRegexToJsRegex(domainName).test(tab.url) && (!chromeRegex.test(tab.url))) {
-                            chrome.tabs.reload(tab.id);
-                        }
-                    });
-                    saveTemplates(domainJSON, callback, newDomain.id);
-                });
+                JSONData.options.domains[newDomain.id] = newDomain;
+                reloadMatchingTabs();
+                saveTemplates(JSONData, callback, newDomain.id);
             }
         });
     });
@@ -336,13 +327,13 @@ function addDomain (domainName, callback) {
 function removeDomain (domainID, removeAll, callback) {
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID]) {
-            var domainJSON = data[StorageID];
+            var JSONData = data[StorageID];
             if (removeAll === true) {
-                domainJSON.options.domains = {};
+                JSONData.options.domains = {};
             } else {
-                delete domainJSON.options.domains[domainID];
+                delete JSONData.options.domains[domainID];
             }
-            saveTemplates(domainJSON, callback);
+            saveTemplates(JSONData, callback);
         } else {
             callback(false, 'No data available to remove');
         }
@@ -352,13 +343,13 @@ function removeDomain (domainID, removeAll, callback) {
 function removeInputID (inputID, removeAll, callback) {
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID]) {
-            var domainJSON = data[StorageID];
+            var JSONData = data[StorageID];
             if (removeAll === true) {
-                domainJSON.options.inputIDs = {};
+                JSONData.options.inputIDs = {};
             } else {
-                delete domainJSON.options.inputIDs[inputID];
+                delete JSONData.options.inputIDs[inputID];
             }
-            saveTemplates(domainJSON, callback);
+            saveTemplates(JSONData, callback);
         } else {
             callback(false, 'No data available to remove');
         }
@@ -631,6 +622,28 @@ chrome.storage.sync.get(StorageID, function (templates) {
     }
 });
 
+function reloadMatchingTabs () {
+    var urlRegexs = [];
+    // Access all of the values in the 'domains', then reload the matching tabs
+    getDomains(function (status, msg, response) {
+        $.each(response, function (index, domain) {
+            urlRegexs.push(matchRegexToJsRegex(domain.name));
+        });
+
+        chrome.tabs.query({windowId: chrome.windows.WINDOW_ID_CURRENT}, function (tabs) {
+            $.each(tabs, function (tabIndex, tab) {
+                $.each(urlRegexs, function (regexIndex, regex) {
+                    // So we don't infinitely reload the chrome://extensions page, reloading JTI, reloading...
+                    var chromeRegex = new RegExp('chrome://extensions');
+                    if (regex.test(tab.url) && (!chromeRegex.test(tab.url))) {
+                        chrome.tabs.reload(tab.id);
+                    }
+                });
+            });
+        });
+    });
+}
+
 // Listen for when extension is installed or updated
 chrome.runtime.onInstalled.addListener(
     function (details) {
@@ -639,26 +652,7 @@ chrome.runtime.onInstalled.addListener(
         }
 
         if (details.reason === 'install' || details.reason === 'update') {
-            var urlRegexs = [];
-
-            // Access all of the values in the 'domains', then reload the matching tabs
-            getDomains(function (status, msg, response) {
-                $.each(response, function (index, domain) {
-                    urlRegexs.push(matchRegexToJsRegex(domain.name));
-                });
-                chrome.tabs.query({windowId: chrome.windows.WINDOW_ID_CURRENT}, function (tabs) {
-                    $.each(tabs, function (tabIndex, tab) {
-                        $.each(urlRegexs, function (regexIndex, regex) {
-                            // So we don't infinitely reload the chrome://extensions page, reloading JTI, reloading...
-                            var chromeRegex = new RegExp('chrome://extensions');
-                            if (regex.test(tab.url) && (!chromeRegex.test(tab.url))) {
-                                chrome.tabs.reload(tab.id);
-                                return false;
-                            }
-                        });
-                    });
-                });
-            });
+            reloadMatchingTabs();
         }
     }
 );

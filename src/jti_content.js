@@ -24,12 +24,7 @@ chrome.runtime.sendMessage({JDTIfunction: 'getInputIDs'}, function (response) {
         inputIDs.push(inputID.name);
     });
 
-    var idList = inputIDs.join(', #');
-    idList = '#' + idList;
-
-    $(document).on('click', idList, function (inputID) {
-        var id = inputID.currentTarget.id;
-        id = '#' + id;
+    $(document).on('click', '#' + inputIDs.join(', #'), function (inputID) {
         var text = $(this).val(),
             ctrlDown = false,
             backtickKey = 192,
@@ -82,14 +77,14 @@ chrome.runtime.sendMessage({JDTIfunction: 'getInputIDs'}, function (response) {
         }
 
         // Detect ctrl or cmd pressed
-        $(`${id}`).keydown(function (e) {
+        $(`#${inputID.currentTarget.id}`).keydown(function (e) {
             if (e.keyCode === ctrlKey) ctrlDown = true;
         }).keyup(function (e) {
             if (e.keyCode === ctrlKey) ctrlDown = false;
         });
 
         // Keypress listener
-        $(`${id}`).keydown(function (e) {
+        $(`#${inputID.currentTarget.id}`).keydown(function (e) {
             if (ctrlDown && (e.keyCode === backtickKey)) { // If ctrl is pressed
                 let {start: tagStartIndex, end: tagEndIndex} = getAllIndexes($(this).val()); // Find all <TI> and </TI> tags in selected template.
                 if (tagStartIndex.length !== 0 && tagEndIndex.length !== 0) { // Works only if the selected template contains any <TI> tag
