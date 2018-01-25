@@ -26,16 +26,10 @@ chrome.runtime.sendMessage({JDTIfunction: 'getInputIDs'}, function (response) {
 
     var idList = inputIDs.join(', #');
     idList = '#' + idList;
-    console.log("idlist is:", idList);
 
     $(document).on('click', idList, function (inputID) {
-
-        console.log("inputid array after selectors:", inputIDs);
-        console.log("inputid value:", inputID);
         var id = inputID.currentTarget.id;
-        id = "#" + id;
-        console.log("id to use later is:", id);
-
+        id = '#' + id;
         var text = $(this).val(),
             ctrlDown = false,
             backtickKey = 192,
@@ -277,7 +271,6 @@ function descriptionChangeEvent (changeEvent) {
 function observeDocumentBody (mutation) {
     if (document.getElementById('create-issue-dialog') !== null || document.getElementById('create-subtask-dialog') !== null) { // Only interested in document changes related to Create Issue Dialog box or Create Sub-task Dialog box.
         if (inputIDs.includes(mutation.target.id)) { // Only interested in the existing input id fields.
-            console.log("entered case successfully with mutation.target.id equalling: ", mutation.target.id);
             var descriptionElement = mutation.target;
             isDefaultDescription(descriptionElement.value, function (result) {
                 if (result) { // Only inject if description field has not been modified by the user.

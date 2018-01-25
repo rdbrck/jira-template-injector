@@ -69,21 +69,21 @@ function saveTemplates (templateJSON, callback, responseData = null) {
 
 function getInputIDs (callback) {
     var IDListCustom = {};
-    //Get the default input IDs
+    // Get the default input IDs
     var IDList = $.map(DefaultIDList, function (inputID, index) {
         inputID.default = true;
         return inputID;
     });
-    //Get the custom input IDs
+    // Get the custom input IDs
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID]) {
             IDListCustom = $.map(data[StorageID].options.inputIDs, function (inputID, index) {
                 inputID.default = false;
                 return inputID;
             });
-            //Sort them
+            // Sort them
             IDListCustom = utils.sortArrayByProperty(IDListCustom, 'name');
-            //combine so that the default entries are always at the top
+            // combine so that the default entries are always at the top
             IDList = IDList.concat(IDListCustom);
         }
         callback(true, null, IDList);
@@ -279,7 +279,7 @@ function addTemplate (templateName, issueTypeField, projectsField, text, callbac
 function addInputID (IDName, callback) {
     chrome.storage.sync.get(StorageID, function (data) {
         var domainJSON = {};
-        if(data[StorageID]) {
+        if (data[StorageID]) {
             domainJSON = data[StorageID];
         }
 
@@ -289,7 +289,7 @@ function addInputID (IDName, callback) {
         };
 
         validateInputID(IDName, function (message) {
-            if(message) {
+            if (message) {
                 callback(false, message);
             } else {
                 domainJSON.options.inputIDs[newID.id] = newID;
@@ -385,12 +385,12 @@ function validateDomain (domainName, callback) {
 
 function validateInputID (IDName, callback) {
     getInputIDs(function (status, msg, response) {
-        //Verify that there are no empty input IDs
+        // Verify that there are no empty input IDs
         let message = null;
         if (!IDName) {
             message = 'Input ID is blank';
         }
-        //Verify that there are no duplicate input IDs
+        // Verify that there are no duplicate input IDs
         $.each(response, function (index, inputID) {
             if (inputID.name.localeCompare(IDName) === 0) {
                 message = `Input ID: "${IDName}" already exists`;
@@ -603,7 +603,7 @@ function domainDataToJSON (domains) {
 function inputIDDataToJSON (inputIDs) {
     var formattedInputIDs = [];
 
-    $.each(inputIDs, function(key, inputID) {
+    $.each(inputIDs, function (key, inputID) {
         formattedInputIDs.push(inputID.name);
     });
 

@@ -67,7 +67,7 @@ function loadTemplateEditor (openTemplate = null) {
         $('#addDefaultDropdown').empty();
         // remove all domains, so that the whole list can be re-added in proper order.
         $('.custom-domain-collection').remove();
-        //remove all input ids, so that the whole list can be re-added in proper order.
+        // remove all input ids, so that the whole list can be re-added in proper order.
         $('.custom-inputID-collection').remove();
 
         if (templates[StorageID].templates) {
@@ -157,11 +157,11 @@ function loadTemplateEditor (openTemplate = null) {
         }
     });
 
-    //Load in the custom input IDs.
+    // Load in the custom input IDs.
     chrome.runtime.sendMessage({JDTIfunction: 'getInputIDs'}, function (response) {
         if (response.data) {
-            //send a message to sandbox.html to build the input ids list
-            //once the template is compiled, a 'message' event will be sent to this window with the html
+            // send a message to sandbox.html to build the input ids list
+            // once the template is compiled, a 'message' event will be sent to this window with the html
             var sandboxIFrameInputIDs = document.getElementById('sandbox_window');
             sandboxIFrameInputIDs.contentWindow.postMessage({
                 command: 'renderInputIDs',
@@ -439,7 +439,7 @@ $(document).ready(function () {
             JDTIfunction: 'addInputID',
             IDName: IDName
         }, function (response) {
-            if(response.status === 'success') {
+            if (response.status === 'success') {
                 $('#customIDInput').val('');
                 loadTemplateEditor();
                 Materialize.toast('Input ID successfully added', 2000, 'toastNotification');
