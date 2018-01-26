@@ -151,8 +151,9 @@ function loadTemplateEditor (openTemplate = null) {
             // Once the template is compiled, a 'message' event will be sent to this window with the html
             var sandboxIFrameDomains = document.getElementById('sandbox_window');
             sandboxIFrameDomains.contentWindow.postMessage({
-                command: 'renderDomains',
-                context: { domains: response.data }
+                command: 'renderObject',
+                context: { object: response.data },
+                type: 'customDomainsList'
             }, '*');
         }
     });
@@ -164,8 +165,9 @@ function loadTemplateEditor (openTemplate = null) {
             // once the template is compiled, a 'message' event will be sent to this window with the html
             var sandboxIFrameInputIDs = document.getElementById('sandbox_window');
             sandboxIFrameInputIDs.contentWindow.postMessage({
-                command: 'renderInputIDs',
-                context: { inputIDs: response.data }
+                command: 'renderObject',
+                context: { object: response.data },
+                type: 'customIDsList'
             }, '*');
         }
     });
@@ -357,10 +359,10 @@ $(document).ready(function () {
         });
     });
 
-    $('#customDomains').click(function () {
-        dmUIClick('customDomains');
+    $('#customSettings').click(function () {
+        dmUIClick('customSettings');
         if (!$(this).hasClass('disabled')) {
-            $('.custom-domain-list').toggle();
+            $('.custom-settings-options').toggle();
             $('main').toggle();
         } else {
             Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
@@ -369,7 +371,7 @@ $(document).ready(function () {
 
     $('#customSettingsBackButton').click(function () {
         dmUIClick('customSettingsBackButton');
-        $('.custom-domain-list').toggle();
+        $('.custom-settings-options').toggle();
         $('main').toggle();
     });
 
@@ -378,7 +380,6 @@ $(document).ready(function () {
         // remove all added input IDs:
         chrome.runtime.sendMessage({
             JDTIfunction: 'removeInputID',
-            IDName: '',
             removeAll: true
         }, function (response) {
             if (response.status === 'success') {
@@ -741,15 +742,11 @@ $(document).ready(function () {
                     openCollapsible(event.data.openTemplate);
                 }
             }
-        } else if (event.data.content === 'domain-list') {
+        } else if (event.data.content === 'settings-list') {
             if (event.data.html) {
-                $('#customDomainsList').append(event.data.html);
+                $(`#${event.data.listID}`).append(event.data.html);
             }
-        } else if (event.data.content === 'inputID-list') {
-            if (event.data.html) {
-                $('#customIDsList').append(event.data.html);
-            }
-        }
+         }
     });
 
     // Because the template editing section is dynamically build, need to monitor document rather then the classes directly

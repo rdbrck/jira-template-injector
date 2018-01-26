@@ -12,6 +12,6 @@
    "options":{
      "limit": [],
      "domains":[],
-     "inputIDs":{}
+     "inputIDs":[]
    }
 }

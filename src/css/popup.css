@@ -247,7 +247,7 @@ textarea.materialize-textarea:focus:not([readonly]) {
 	top: 18px;
 }
 
-.custom-domain-list {
+.custom-settings-options {
 	margin-top: 10px;
 	display: none;
 }
@@ -277,7 +277,7 @@ textarea.materialize-textarea:focus:not([readonly]) {
 	margin-bottom: 15px;
 }
 
-.custom-domain-label {
+.custom-label {
 	font-size: 1.3rem;
 	width: 290px;
 	white-space: nowrap;

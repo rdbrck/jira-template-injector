@@ -128,7 +128,7 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                             <h6 class="left-align"> Manage Custom Settings:</h6>
                         </div>
                         <div class="col s4 right-align">
-                            <a id="customDomains" class="btn-floating btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Manage Settings">
+                            <a id="customSettings" class="btn-floating btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Manage Settings">
                                 <i class="material-icons">format_list_bulleted</i>
                             </a>
                         </div>
@@ -218,13 +218,13 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
             <!-- Dropdown Structure -->
             <ul id="addDefaultDropdown" class="dropdown-content">
                 <!-- Dynamically built -->
-            </ul>customSettingsBackButton
+            </ul>
         </main>
 
-        <!-- Manage custom domains section -->
+        <!-- Manage custom settings section -->
         <div class="container">
-            <div class="custom-domain-list">
-                <!-- Back and clear buttons -->
+            <div class="custom-settings-options">
+                <!-- Back button -->
                 <div class="row valign-wrapper">
                     <div class="col">
                         <a id="customSettingsBackButton" class="btn-floating btn-jti tooltipped center-align" data-position="right" data-delay="50" data-tooltip="Back">
@@ -232,12 +232,13 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                         </a>
                     </div>
                     <div class="col center-align">
-                        <div color="black" class="center-align custom-domain-label">Manage Custom Settings</div>
+                        <div color="black" class="center-align custom-label">Manage Custom Settings</div>
                     </div>
                 </div>
 
                 <div class="divider"></div>
 
+                <!-- Custom Domain section -->
                 <div class="row valign-wrapper">
                     <div class="col">
                         <a id="clearCustomDomains" class="btn-floating btn-jti tooltipped center-align" data-position="right" data-delay="50" data-tooltip="Clear All Domains">
@@ -245,11 +246,10 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                         </a>
                     </div>
                     <div class="col center-align">
-                        <div color="black" class="center-align custom-domain-label">Custom Domains</div>
+                        <div color="black" class="center-align custom-label">Custom Domains</div>
                     </div>
                 </div>
 
-                <!-- Add Custom Domain section -->
                 <div class="section">
                     <div class="row">
                         <div class="col s5 valign-wrapper">
@@ -272,6 +272,7 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
 
                 <div class="divider"></div>
 
+                <!-- Custom Input ID section -->
                 <div class="row valign-wrapper">
                         <div class="col">
                             <a id="clearCustomIDs" class="btn-floating btn-jti tooltipped center-align" data-position="right" data-delay="50" data-tooltip="Clear All IDs">
@@ -279,11 +280,10 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                             </a>
                         </div>
                         <div class="col center-align">
-                            <div color="black" class="center-align custom-domain-label">Custom Input IDs</div>
+                            <div color="black" class="center-align custom-label">Custom Input IDs</div>
                         </div>
                     </div>
     
-                    <!-- Add Custom Input ID section -->
                     <div class="section">
                         <div class="row">
                             <div class="col s5 valign-wrapper">
