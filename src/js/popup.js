@@ -746,7 +746,7 @@ $(document).ready(function () {
             if (event.data.html) {
                 $(`#${event.data.listID}`).append(event.data.html);
             }
-         }
+        }
     });
 
     // Because the template editing section is dynamically build, need to monitor document rather then the classes directly
