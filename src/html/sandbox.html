@@ -85,7 +85,11 @@
                             </div>
                             <div class='col s2'>
                                 <a class='btn-floating btn-jti tooltipped' data-position='left' data-delay='50' data-tooltip='Remove Domain'> 
-                                    <i id={{this.id}} class='custom-domain-remove-button material-icons'>delete</i> 
+                                    {{#if this.domainType}}
+                                        <i id={{this.id}} class='custom-domain-remove-button material-icons'>delete</i>
+                                    {{else}}
+                                        <i id={{this.id}} class='custom-inputID-remove-button material-icons'>delete</i>
+                                    {{/if}}
                                 </a>
                             </div>
                         </div>

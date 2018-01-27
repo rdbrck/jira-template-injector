@@ -76,7 +76,7 @@ function getInputIDs (callback) {
     });
     // Get the custom input IDs
     chrome.storage.sync.get(StorageID, function (data) {
-        if (data[StorageID] && data[StorageID].options !== undefined) {
+        if (data[StorageID]) {
             IDListCustom = $.map(data[StorageID].options.inputIDs, function (inputID, index) {
                 inputID.default = false;
                 return inputID;
@@ -99,7 +99,7 @@ function getDomains (callback) {
     });
     // Get the custom domains
     chrome.storage.sync.get(StorageID, function (data) {
-        if (data[StorageID] && data[StorageID].options !== undefined) {
+        if (data[StorageID]) {
             domainListCustom = $.map(data[StorageID].options.domains, function (domain, index) {
                 domain.default = false;
                 return domain;
@@ -174,14 +174,6 @@ function fetchDefaultTemplates (callback) {
     });
 }
 
-function JSONtoData (data) {
-    data.templates = JSONtoTemplateData(data.templates);
-    if (typeof data.options !== 'undefined') {
-        data.options.domains = JSONtoDomainData(data.options.domains);
-        data.options.inputIDs = JSONtoInputIDData(data.options.inputIDs);
-    }
-}
-
 function getData (callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         if (templates[StorageID]) {
@@ -221,15 +213,20 @@ function downloadJSONData (url, callback) {
 function loadLocalFile (fileContents, callback) {
     try {
         var templateJSON = JSON.parse(fileContents);
-        templateJSON.templates = JSONtoTemplateData(templateJSON.templates);
-        if (typeof templateJSON.options !== 'undefined') {
-            templateJSON.options.domains = JSONtoDomainData(templateJSON.options.domains, callback);
-            templateJSON.options.inputIDs = JSONtoInputIDData(templateJSON.options.inputIDs, callback);
-        }
+        JSONtoData(templateJSON);
         saveTemplates(templateJSON, callback);
     } catch (e) {
         callback(false, 'Error parsing JSON. Please verify file contents');
     }
+}
+
+function JSONtoData (data) {
+    data.templates = JSONtoTemplateData(data.templates);
+    if (data.options === undefined) {
+        data.options = emptyData.options;
+    }
+    data.options.domains = JSONtoDomainData(data.options.domains);
+    data.options.inputIDs = JSONtoInputIDData(data.options.inputIDs);
 }
 
 function removeTemplate (templateID, callback) {

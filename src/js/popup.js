@@ -147,6 +147,9 @@ function loadTemplateEditor (openTemplate = null) {
     // Load in the custom domains.
     chrome.runtime.sendMessage({JDTIfunction: 'getDomains'}, function (response) {
         if (response.data) {
+            (response.data).forEach(function (obj) {
+                obj.domainType = true;
+            });
             // Send a message to sandbox.html to build the domains list
             // Once the template is compiled, a 'message' event will be sent to this window with the html
             var sandboxIFrameDomains = document.getElementById('sandbox_window');
@@ -161,12 +164,15 @@ function loadTemplateEditor (openTemplate = null) {
     // Load in the custom input IDs.
     chrome.runtime.sendMessage({JDTIfunction: 'getInputIDs'}, function (response) {
         if (response.data) {
+            (response.data).forEach(function (obj) {
+                obj.inputIDType = true;
+            });
             // send a message to sandbox.html to build the input ids list
             // once the template is compiled, a 'message' event will be sent to this window with the html
             var sandboxIFrameInputIDs = document.getElementById('sandbox_window');
             sandboxIFrameInputIDs.contentWindow.postMessage({
                 command: 'renderObject',
-                context: { object: response.data },
+                context: { object: response.data, type: 'customIDsList' },
                 type: 'customIDsList'
             }, '*');
         }
