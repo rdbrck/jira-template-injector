@@ -172,7 +172,7 @@ function loadTemplateEditor (openTemplate = null) {
             var sandboxIFrameInputIDs = document.getElementById('sandbox_window');
             sandboxIFrameInputIDs.contentWindow.postMessage({
                 command: 'renderObject',
-                context: { object: response.data, type: 'customIDsList' },
+                context: { object: response.data },
                 type: 'customIDsList'
             }, '*');
         }
