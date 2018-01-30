@@ -7,7 +7,7 @@ If you find it useful please leave a [review](https://chrome.google.com/webstore
 
 This extension automatically inserts a template of your choosing into the JIRA Create Issue Description field. The template injected is relative to the selected "Project" and “Issue Type” within the Create Issue modal on JIRA.
 
-By default the extension works for cloud hosted JIRA instances (*.atlassian.net domains). If you are using a self hosted JIRA instance or a custom domain, you may add your own custom domains for the extension to check against. You may also add any custom input IDs in which you would like your templates to be injected into.
+By default the extension works for cloud hosted JIRA instances (*.atlassian.net domains). If you are using a self hosted JIRA instance or a custom domain, you may add your own custom domains for the extension to check against. You may also add any custom input IDs for which you would like your templates to be injected into.
 
 On initial install a default list of templates are pre populated for you. These can easily be removed/restored at any time.
 

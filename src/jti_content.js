@@ -24,7 +24,7 @@ chrome.runtime.sendMessage({JDTIfunction: 'getInputIDs'}, function (response) {
         inputIDs.push(inputID.name);
     });
 
-    $(document).on('click', '#' + inputIDs.join(', #'), function (inputID) {
+    $(document).on('click', `#${inputIDs.join(', #')}`, function (inputID) {
         var text = $(this).val(),
             ctrlDown = false,
             backtickKey = 192,
