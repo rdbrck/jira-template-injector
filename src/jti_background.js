@@ -222,9 +222,9 @@ function loadLocalFile (fileContents, callback) {
 
 function JSONtoData (data) {
     data.templates = JSONtoTemplateData(data.templates);
-    if (data.options === undefined) {
-        data.options = emptyData.options;
-    }
+    // copy data provided in JSON file and other data from emptyData object
+    var copiedData = $.extend(true, {}, emptyData, data);
+    $.extend(data, copiedData);
     data.options.domains = JSONtoDomainData(data.options.domains);
     data.options.inputIDs = JSONtoInputIDData(data.options.inputIDs);
 }

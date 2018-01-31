@@ -68,28 +68,24 @@
         <script id="addObject" type="text/x-handlebars-template">
             {{#each object}}
                 {{#if this.default}}
-                    <li class='collection-item container custom-domain-collection'>
-                        <div class='row valign-wrapper remove-margin'>
-                            <div class='col s10 left-align custom-label'>
+                    <li class="collection-item container custom-domain-collection">
+                        <div class="row valign-wrapper remove-margin">
+                            <div class="col s10 left-align custom-label">
                                 {{ this.name }} 
                             </div>
-                            <div class='col s2'>
+                            <div class="col s2">
                             </div>
                         </div>
                     </li>
                 {{else}}
-                    <li class='collection-item custom-domain-collection container'>
-                        <div class='row valign-wrapper remove-margin' style: >
+                    <li class="collection-item custom-domain-collection container">
+                        <div class="row valign-wrapper remove-margin" style: >
                             <div class="col s10 left-align custom-label">
-                                {{ this.name }} 
+                                {{ this.name }}
                             </div>
-                            <div class='col s2'>
-                                <a class='btn-floating btn-jti tooltipped' data-position='left' data-delay='50' data-tooltip='Remove Domain'> 
-                                    {{#if this.domainType}}
-                                        <i id={{this.id}} class='custom-domain-remove-button material-icons'>delete</i>
-                                    {{else}}
-                                        <i id={{this.id}} class='custom-inputID-remove-button material-icons'>delete</i>
-                                    {{/if}}
+                            <div class="col s2">
+                                <a class="btn-floating btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Remove Domain"> 
+                                    <i id={{this.id}} class="custom-{{../../classAddition}}-remove-button material-icons">delete</i>
                                 </a>
                             </div>
                         </div>
