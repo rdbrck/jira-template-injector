@@ -191,7 +191,7 @@ function getData (callback) {
 function setDefaultTemplates (callback) {
     fetchDefaultTemplates(function (status, message, data) {
         if (status) {
-            JSONtoData(data);
+            data = JSONtoData(data);
             saveTemplates(data, callback);
         } else {
             callback(false, message);
@@ -202,7 +202,7 @@ function setDefaultTemplates (callback) {
 function downloadJSONData (url, callback) {
     fetchJSON(url, function (status, message, data) {
         if (status) {
-            JSONtoData(data);
+            data = JSONtoData(data);
             saveTemplates(data, callback);
         } else {
             callback(false, message);
@@ -213,20 +213,22 @@ function downloadJSONData (url, callback) {
 function loadLocalFile (fileContents, callback) {
     try {
         var templateJSON = JSON.parse(fileContents);
-        JSONtoData(templateJSON);
+        templateJSON = JSONtoData(templateJSON);
         saveTemplates(templateJSON, callback);
     } catch (e) {
         callback(false, 'Error parsing JSON. Please verify file contents');
     }
 }
 
-function JSONtoData (data) {
-    data.templates = JSONtoTemplateData(data.templates);
+function JSONtoData (JSONData) {
     // copy data provided in JSON file and other data from emptyData object
-    var copiedData = $.extend(true, {}, emptyData, data);
-    $.extend(data, copiedData);
-    data.options.domains = JSONtoDomainData(data.options.domains);
-    data.options.inputIDs = JSONtoInputIDData(data.options.inputIDs);
+    var completeData = {};
+    $.extend(true, completeData, emptyData, JSONData);
+    // convert the JSON data to the proper format and return the formatted data
+    completeData.templates = JSONtoTemplateData(completeData.templates);
+    completeData.options.domains = JSONtoDomainData(completeData.options.domains);
+    completeData.options.inputIDs = JSONtoInputIDData(completeData.options.inputIDs);
+    return completeData;
 }
 
 function removeTemplate (templateID, callback) {
