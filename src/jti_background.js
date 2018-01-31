@@ -122,20 +122,6 @@ function fetchJSON (url, callback) {
         });
 }
 
-function getData (callback) {
-    chrome.storage.sync.get(StorageID, function (templates) {
-        if (templates[StorageID]) {
-            var templateJSON = templates[StorageID];
-            templateJSON.templates = templateDataToJSON(templateJSON.templates);
-            templateJSON.options.domains = domainDataToJSON(templateJSON.options.domains);
-            templateJSON.options.inputIDs = inputIDDataToJSON(templateJSON.options.inputIDs);
-            callback(true, '', templateJSON);
-        } else {
-            callback(false, 'No data is currently loaded');
-        }
-    });
-}
-
 // Get toggle status based on 'toggleType'
 function getToggleStatus (toggleType, callback) {
     chrome.storage.sync.get(StorageToggleID, function (toggles) {
@@ -188,12 +174,24 @@ function fetchDefaultTemplates (callback) {
     });
 }
 
+function getData (callback) {
+    chrome.storage.sync.get(StorageID, function (templates) {
+        if (templates[StorageID]) {
+            var templateJSON = templates[StorageID];
+            templateJSON.templates = templateDataToJSON(templateJSON.templates);
+            templateJSON.options.domains = domainDataToJSON(templateJSON.options.domains);
+            templateJSON.options.inputIDs = inputIDDataToJSON(templateJSON.options.inputIDs);
+            callback(true, '', templateJSON);
+        } else {
+            callback(false, 'No data is currently loaded');
+        }
+    });
+}
+
 function setDefaultTemplates (callback) {
     fetchDefaultTemplates(function (status, message, data) {
         if (status) {
-            data.templates = JSONtoTemplateData(data.templates);
-            data.options.domains = JSONtoDomainData(data.options.domains);
-            data.options.inputIDs = JSONtoInputIDData(data.options.inputIDs);
+            data = JSONtoData(data);
             saveTemplates(data, callback);
         } else {
             callback(false, message);
@@ -204,14 +202,33 @@ function setDefaultTemplates (callback) {
 function downloadJSONData (url, callback) {
     fetchJSON(url, function (status, message, data) {
         if (status) {
-            data.templates = JSONtoTemplateData(data.templates);
-            data.options.domains = JSONtoDomainData(data.options.domains);
-            data.options.inputIDs = JSONtoInputIDData(data.options.inputIDs);
+            data = JSONtoData(data);
             saveTemplates(data, callback);
         } else {
             callback(false, message);
         }
     });
+}
+
+function loadLocalFile (fileContents, callback) {
+    try {
+        var templateJSON = JSON.parse(fileContents);
+        templateJSON = JSONtoData(templateJSON);
+        saveTemplates(templateJSON, callback);
+    } catch (e) {
+        callback(false, 'Error parsing JSON. Please verify file contents');
+    }
+}
+
+function JSONtoData (JSONData) {
+    // copy data provided in JSON file and other data from emptyData object
+    var completeData = {};
+    $.extend(true, completeData, emptyData, JSONData);
+    // convert the JSON data to the proper format and return the formatted data
+    completeData.templates = JSONtoTemplateData(completeData.templates);
+    completeData.options.domains = JSONtoDomainData(completeData.options.domains);
+    completeData.options.inputIDs = JSONtoInputIDData(completeData.options.inputIDs);
+    return completeData;
 }
 
 function removeTemplate (templateID, callback) {
@@ -428,18 +445,6 @@ function validateTemplate (newTemplate, templates, callback) {
         }
     });
     return valid;
-}
-
-function loadLocalFile (fileContents, callback) {
-    try {
-        var templateJSON = JSON.parse(fileContents);
-        templateJSON.templates = JSONtoTemplateData(templateJSON.templates);
-        templateJSON.options.domains = JSONtoDomainData(templateJSON.options.domains, callback);
-        templateJSON.options.inputIDs = JSONtoInputIDData(templateJSON.options.inputIDs, callback);
-        saveTemplates(templateJSON, callback);
-    } catch (e) {
-        callback(false, 'Error parsing JSON. Please verify file contents');
-    }
 }
 
 function responseMessage (status, message = null, data = null) {

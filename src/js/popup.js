@@ -152,7 +152,7 @@ function loadTemplateEditor (openTemplate = null) {
             var sandboxIFrameDomains = document.getElementById('sandbox_window');
             sandboxIFrameDomains.contentWindow.postMessage({
                 command: 'renderObject',
-                context: { object: response.data },
+                context: { object: response.data, classAddition: 'domain' },
                 type: 'customDomainsList'
             }, '*');
         }
@@ -166,7 +166,7 @@ function loadTemplateEditor (openTemplate = null) {
             var sandboxIFrameInputIDs = document.getElementById('sandbox_window');
             sandboxIFrameInputIDs.contentWindow.postMessage({
                 command: 'renderObject',
-                context: { object: response.data },
+                context: { object: response.data, classAddition: 'inputID' },
                 type: 'customIDsList'
             }, '*');
         }
