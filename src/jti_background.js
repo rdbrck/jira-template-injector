@@ -177,10 +177,7 @@ function fetchDefaultTemplates (callback) {
 function getData (callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         if (templates[StorageID]) {
-            var templateJSON = templates[StorageID];
-            templateJSON.templates = templateDataToJSON(templateJSON.templates);
-            templateJSON.options.domains = domainDataToJSON(templateJSON.options.domains);
-            templateJSON.options.inputIDs = inputIDDataToJSON(templateJSON.options.inputIDs);
+            var templateJSON = dataToJSON(templates[StorageID]);
             callback(true, '', templateJSON);
         } else {
             callback(false, 'No data is currently loaded');
@@ -191,8 +188,7 @@ function getData (callback) {
 function setDefaultTemplates (callback) {
     fetchDefaultTemplates(function (status, message, data) {
         if (status) {
-            data = JSONtoData(data);
-            saveTemplates(data, callback);
+            saveTemplates(JSONtoData(data), callback);
         } else {
             callback(false, message);
         }
@@ -202,8 +198,7 @@ function setDefaultTemplates (callback) {
 function downloadJSONData (url, callback) {
     fetchJSON(url, function (status, message, data) {
         if (status) {
-            data = JSONtoData(data);
-            saveTemplates(data, callback);
+            saveTemplates(JSONtoData(data), callback);
         } else {
             callback(false, message);
         }
@@ -212,9 +207,7 @@ function downloadJSONData (url, callback) {
 
 function loadLocalFile (fileContents, callback) {
     try {
-        var templateJSON = JSON.parse(fileContents);
-        templateJSON = JSONtoData(templateJSON);
-        saveTemplates(templateJSON, callback);
+        saveTemplates(JSONtoData(JSON.parse(fileContents), callback));
     } catch (e) {
         callback(false, 'Error parsing JSON. Please verify file contents');
     }
@@ -229,6 +222,13 @@ function JSONtoData (JSONData) {
     completeData.options.domains = JSONtoDomainData(completeData.options.domains);
     completeData.options.inputIDs = JSONtoInputIDData(completeData.options.inputIDs);
     return completeData;
+}
+
+function dataToJSON (data) {
+    data.templates = templateDataToJSON(data.templates);
+    data.options.domains = domainDataToJSON(data.options.domains);
+    data.options.inputIDs = inputIDDataToJSON(data.options.inputIDs);
+    return data;
 }
 
 function removeTemplate (templateID, callback) {
