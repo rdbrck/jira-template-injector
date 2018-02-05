@@ -5,6 +5,21 @@
     </head>
     <body>
         <script id="edit_template" type="text/x-handlebars-template">
+            <div class="row">
+                <div class="col s8 valign-wrapper">
+                    {{#if tempLoaded}}
+                        <h6 id="templateEditorTitle">Templates:</h6>
+                    {{else}}
+                        <h6 id="templateEditorTitle">No templates are currently loaded</h6>
+                    {{/if}}
+                </div>
+                <div class="col s4 right-align">
+                    <!-- Modal Trigger -->
+                    <a id="add" class="btn-floating btn-jti tooltipped modal-trigger" data-position="left" data-delay="50" data-tooltip="Add a Template">
+                        <i class="material-icons">add</i>
+                    </a>
+                </div>
+            </div>
             {{#each templates}}
                 <li>
                     <div class="collapsible-header grey lighten-5 {{{ boldIfDefault this }}}" data-templateID="{{ this.id }}" >
@@ -85,7 +100,7 @@
                             </div>
                             <div class="col s2">
                                 <a class="btn-floating btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Remove Domain"> 
-                                    <i id={{this.id}} class="custom-{{../../classAddition}}-remove-button material-icons">delete</i>
+                                    <i id={{this.id}} class="custom-{{../../classAddition}}-remove-button custom-{{../../classAddition}}-ui material-icons">delete</i>
                                 </a>
                             </div>
                         </div>

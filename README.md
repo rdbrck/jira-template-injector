@@ -70,11 +70,9 @@ The JSON format is:
         * "add"         -> disable add new template menu
         * "add-custom"  -> disable adding custom template
         * "add-default" -> disable adding default template
-        * "custom-settings"  -> disable adding custom settings
-        * "add-domain"       -> disable adding custom domains
-        * "delete-domains"   -> disable deleting all existing custom domains
-        * "add-inputid"      -> disable adding custom input IDs
-        * "delete-inputids"  -> disable deleting all existing custom input IDs
+        * "custom-settings"  -> disable access to the custom settings panel
+        * "custom-domains"   -> disable adding/removing any custom domains
+        * "custom-input"     -> disable adding/removing any custom input ids
 * Export Templates to JSON file. Easily share template JSON file.
 
 ### Future Features:

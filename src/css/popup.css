@@ -351,6 +351,14 @@ textarea.materialize-textarea:focus:not([readonly]) {
 	box-shadow: none;
 }
 
+a.disabled i {
+	color: #9F9F9F;
+}
+
+i.disabled {
+	color: #9F9F9F;
+}
+
 .btn-floating i {
 	font-size: 1.3rem;
 }

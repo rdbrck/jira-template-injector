@@ -70,25 +70,26 @@ function loadTemplateEditor (openTemplate = null) {
         // remove all input ids, so that the whole list can be re-added in proper order.
         $('.custom-inputID-collection').remove();
 
-        if (templates[StorageID].templates) {
-            templates = templates[StorageID].templates;
+        templates = templates[StorageID].templates;
 
-            $('#templateEditorTitle').text('Templates:');
-
-            // Sort Alphabetically except with DEFAULT TEMPLATE at the top.
-            var templatesArray = sortTemplates(templates);
-
-            // Send a message to sandbox.html to build the collapsible template editor
-            // Once the template is compiled, a 'message' event will be sent to this window with the html
-            var sandboxIFrame = document.getElementById('sandbox_window');
-            sandboxIFrame.contentWindow.postMessage({
-                command: 'renderTemplates',
-                context: { templates: templatesArray },
-                openTemplate: openTemplate
-            }, '*');
+        var tempLoaded;
+        if (jQuery.isEmptyObject(templates)) {
+            tempLoaded = false;
         } else {
-            $('#templateEditorTitle').text('No templates are currently loaded');
+            tempLoaded = true;
         }
+
+        // Sort Alphabetically except with DEFAULT TEMPLATE at the top.
+        var templatesArray = sortTemplates(templates);
+
+        // Send a message to sandbox.html to build the collapsible template editor
+        // Once the template is compiled, a 'message' event will be sent to this window with the html
+        var sandboxIFrame = document.getElementById('sandbox_window');
+        sandboxIFrame.contentWindow.postMessage({
+            command: 'renderTemplates',
+            context: { templates: templatesArray, tempLoaded },
+            openTemplate: openTemplate
+        }, '*');
 
         // Populate the add default template dropdown - excluding any templates already loaded.
         chrome.runtime.sendMessage({JDTIfunction: 'fetchDefault'}, function (response) {
@@ -134,7 +135,7 @@ function loadTemplateEditor (openTemplate = null) {
             }
         });
 
-        limitAccess();
+        // limitAccess();
     });
 
     // Check the "rate" flag. If the flag is not set, display "rate it now" button
@@ -196,10 +197,12 @@ function limitAccess (callback = false) {
                     $('#customTemplateProjectsField').prop('disabled', true);
                     $('#addDefaultDropdownButton').addClass('disabled');
                     $('#customSettings').addClass('disabled');
-                    $('#customDomainInputButton').addClass('disabled');
-                    $('#clearCustomDomains').addClass('disabled');
-                    $('#customIDInputButton').addClass('disabled');
-                    $('#clearCustomIDs').addClass('disabled');
+                    $('.custom-domain-ui').each(function (row) {
+                        $(this).addClass('disabled');
+                    });
+                    $('.custom-inputID-ui').each(function (row) {
+                        $(this).addClass('disabled');
+                    });
                     break;
                 case 'url':
                     $('#jsonURLInput').prop('disabled', true);
@@ -234,18 +237,15 @@ function limitAccess (callback = false) {
                 case 'custom-settings':
                     $('#customSettings').addClass('disabled');
                     break;
-                case 'add-domain':
-                    console.log('add domain case');
-                    $('#customDomainInputButton').addClass('disabled');
+                case 'custom-domains':
+                    $('.custom-domain-ui').each(function (row) {
+                        $(this).addClass('disabled');
+                    });
                     break;
-                case 'delete-domains':
-                    $('#clearCustomDomains').addClass('disabled');
-                    break;
-                case 'add-inputid':
-                    $('#customIDInputButton').addClass('disabled');
-                    break;
-                case 'delete-inputids':
-                    $('#clearCustomIDs').addClass('disabled');
+                case 'custom-input':
+                    $('.custom-inputID-ui').each(function (row) {
+                        $(this).addClass('disabled');
+                    });
                     break;
                 }
             });
@@ -515,46 +515,54 @@ $(document).ready(function () {
     // Because the template editing section is dynamically built, need to monitor document rather then the buttons directly
     $(document).on('click', '.custom-domain-remove-button', function () {
         dmUIClick('custom-domain-remove-button');
-        chrome.runtime.sendMessage({
-            JDTIfunction: 'removeDomain',
-            domainID: event.target.id,
-            removeAll: false
-        }, function (response) {
-            if (response.status === 'success') {
-                loadTemplateEditor();
-                Materialize.toast('Domain successfully removed', 2000, 'toastNotification');
-            } else {
-                if (response.message) {
-                    dmError('custom-domain-remove-button', response.message);
-                    Materialize.toast(response.message, 2000, 'toastNotification');
+        if (!$(this).hasClass('disabled')) {
+            chrome.runtime.sendMessage({
+                JDTIfunction: 'removeDomain',
+                domainID: event.target.id,
+                removeAll: false
+            }, function (response) {
+                if (response.status === 'success') {
+                    loadTemplateEditor();
+                    Materialize.toast('Domain successfully removed', 2000, 'toastNotification');
                 } else {
-                    dmError('custom-domain-remove-button', 'generic');
-                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    if (response.message) {
+                        dmError('custom-domain-remove-button', response.message);
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                    } else {
+                        dmError('custom-domain-remove-button', 'generic');
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
     });
 
     $(document).on('click', '.custom-inputID-remove-button', function () {
         dmUIClick('custom-inputID-remove-button');
-        chrome.runtime.sendMessage({
-            JDTIfunction: 'removeInputID',
-            inputID: event.target.id,
-            removeAll: false
-        }, function (response) {
-            if (response.status === 'success') {
-                loadTemplateEditor();
-                Materialize.toast('Input ID successfully removed', 2000, 'toastNotification');
-            } else {
-                if (response.message) {
-                    dmError('custom-inputID-remove-button', response.message);
-                    Materialize.toast(response.message, 2000, 'toastNotification');
+        if (!$(this).hasClass('disabled')) {
+            chrome.runtime.sendMessage({
+                JDTIfunction: 'removeInputID',
+                inputID: event.target.id,
+                removeAll: false
+            }, function (response) {
+                if (response.status === 'success') {
+                    loadTemplateEditor();
+                    Materialize.toast('Input ID successfully removed', 2000, 'toastNotification');
                 } else {
-                    dmError('custom-inputID-remove-button', 'generic');
-                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    if (response.message) {
+                        dmError('custom-inputID-remove-button', response.message);
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                    } else {
+                        dmError('custom-inputID-remove-button', 'generic');
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
     });
 
     $('#rate').click(function () {
@@ -780,6 +788,8 @@ $(document).ready(function () {
                 $(`#${event.data.listID}`).append(event.data.html);
             }
         }
+
+        limitAccess();
     });
 
     // Because the template editing section is dynamically build, need to monitor document rather then the classes directly
