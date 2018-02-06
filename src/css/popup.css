@@ -353,10 +353,12 @@ textarea.materialize-textarea:focus:not([readonly]) {
 
 a.disabled i {
 	color: #9F9F9F;
+	cursor: default;
 }
 
 i.disabled {
 	color: #9F9F9F;
+	cursor: default;
 }
 
 .btn-floating i {
