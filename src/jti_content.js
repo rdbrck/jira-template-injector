@@ -265,7 +265,7 @@ function descriptionChangeEvent (changeEvent) {
 
 function observeDocumentBody (mutation) {
     if (document.getElementById('create-issue-dialog') !== null || document.getElementById('create-subtask-dialog') !== null) { // Only interested in document changes related to Create Issue Dialog box or Create Sub-task Dialog box.
-        if (inputIDs.includes(mutation.target.id)) { // Only interested in the existing input id fields.
+        if (inputIDs.includes(mutation.target.id)) { // Only interested in select input id fields.
             var descriptionElement = mutation.target;
             isDefaultDescription(descriptionElement.value, function (result) {
                 if (result) { // Only inject if description field has not been modified by the user.

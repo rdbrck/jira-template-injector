@@ -72,13 +72,6 @@ function loadTemplateEditor (openTemplate = null) {
 
         templates = templates[StorageID].templates;
 
-        var tempLoaded;
-        if (jQuery.isEmptyObject(templates)) {
-            tempLoaded = false;
-        } else {
-            tempLoaded = true;
-        }
-
         // Sort Alphabetically except with DEFAULT TEMPLATE at the top.
         var templatesArray = sortTemplates(templates);
 
@@ -87,7 +80,7 @@ function loadTemplateEditor (openTemplate = null) {
         var sandboxIFrame = document.getElementById('sandbox_window');
         sandboxIFrame.contentWindow.postMessage({
             command: 'renderTemplates',
-            context: { templates: templatesArray, tempLoaded },
+            context: { templates: templatesArray },
             openTemplate: openTemplate
         }, '*');
 
@@ -134,8 +127,6 @@ function loadTemplateEditor (openTemplate = null) {
                 Materialize.toast('Error loading default templates please reload the extension', 2000, 'toastNotification');
             }
         });
-
-        // limitAccess();
     });
 
     // Check the "rate" flag. If the flag is not set, display "rate it now" button
@@ -197,10 +188,10 @@ function limitAccess (callback = false) {
                     $('#customTemplateProjectsField').prop('disabled', true);
                     $('#addDefaultDropdownButton').addClass('disabled');
                     $('#customSettings').addClass('disabled');
-                    $('.custom-domain-ui').each(function (row) {
+                    $('.custom-domain-ui').each(function () {
                         $(this).addClass('disabled');
                     });
-                    $('.custom-inputID-ui').each(function (row) {
+                    $('.custom-inputID-ui').each(function () {
                         $(this).addClass('disabled');
                     });
                     break;
@@ -238,12 +229,12 @@ function limitAccess (callback = false) {
                     $('#customSettings').addClass('disabled');
                     break;
                 case 'custom-domains':
-                    $('.custom-domain-ui').each(function (row) {
+                    $('.custom-domain-ui').each(function () {
                         $(this).addClass('disabled');
                     });
                     break;
                 case 'custom-input':
-                    $('.custom-inputID-ui').each(function (row) {
+                    $('.custom-inputID-ui').each(function () {
                         $(this).addClass('disabled');
                     });
                     break;
