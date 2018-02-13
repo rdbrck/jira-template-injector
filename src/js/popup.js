@@ -67,26 +67,22 @@ function loadTemplateEditor (openTemplate = null) {
         $('#addDefaultDropdown').empty();
         // remove all domains, so that the whole list can be re-added in proper order.
         $('.custom-domain-collection').remove();
+        // remove all input ids, so that the whole list can be re-added in proper order.
+        $('.custom-inputID-collection').remove();
 
-        if (templates[StorageID].templates) {
-            templates = templates[StorageID].templates;
+        templates = templates[StorageID].templates;
 
-            $('#templateEditorTitle').text('Templates:');
+        // Sort Alphabetically except with DEFAULT TEMPLATE at the top.
+        var templatesArray = sortTemplates(templates);
 
-            // Sort Alphabetically except with DEFAULT TEMPLATE at the top.
-            var templatesArray = sortTemplates(templates);
-
-            // Send a message to sandbox.html to build the collapsible template editor
-            // Once the template is compiled, a 'message' event will be sent to this window with the html
-            var sandboxIFrame = document.getElementById('sandbox_window');
-            sandboxIFrame.contentWindow.postMessage({
-                command: 'renderTemplates',
-                context: { templates: templatesArray },
-                openTemplate: openTemplate
-            }, '*');
-        } else {
-            $('#templateEditorTitle').text('No templates are currently loaded');
-        }
+        // Send a message to sandbox.html to build the collapsible template editor
+        // Once the template is compiled, a 'message' event will be sent to this window with the html
+        var sandboxIFrame = document.getElementById('sandbox_window');
+        sandboxIFrame.contentWindow.postMessage({
+            command: 'renderTemplates',
+            context: { templates: templatesArray },
+            openTemplate: openTemplate
+        }, '*');
 
         // Populate the add default template dropdown - excluding any templates already loaded.
         chrome.runtime.sendMessage({JDTIfunction: 'fetchDefault'}, function (response) {
@@ -131,8 +127,6 @@ function loadTemplateEditor (openTemplate = null) {
                 Materialize.toast('Error loading default templates please reload the extension', 2000, 'toastNotification');
             }
         });
-
-        limitAccess();
     });
 
     // Check the "rate" flag. If the flag is not set, display "rate it now" button
@@ -149,8 +143,23 @@ function loadTemplateEditor (openTemplate = null) {
             // Once the template is compiled, a 'message' event will be sent to this window with the html
             var sandboxIFrameDomains = document.getElementById('sandbox_window');
             sandboxIFrameDomains.contentWindow.postMessage({
-                command: 'renderDomains',
-                context: { domains: response.data }
+                command: 'renderObject',
+                context: { object: response.data, classAddition: 'domain' },
+                type: 'customDomainsList'
+            }, '*');
+        }
+    });
+
+    // Load in the custom input IDs.
+    chrome.runtime.sendMessage({JDTIfunction: 'getInputIDs'}, function (response) {
+        if (response.data) {
+            // send a message to sandbox.html to build the input ids list
+            // once the template is compiled, a 'message' event will be sent to this window with the html
+            var sandboxIFrameInputIDs = document.getElementById('sandbox_window');
+            sandboxIFrameInputIDs.contentWindow.postMessage({
+                command: 'renderObject',
+                context: { object: response.data, classAddition: 'inputID' },
+                type: 'customIDsList'
             }, '*');
         }
     });
@@ -178,7 +187,7 @@ function limitAccess (callback = false) {
                     $('#customTemplateIssueTypeField').prop('disabled', true);
                     $('#customTemplateProjectsField').prop('disabled', true);
                     $('#addDefaultDropdownButton').addClass('disabled');
-                    $('#customDomains').addClass('disabled');
+                    $('#customSettings').addClass('disabled');
                     break;
                 case 'url':
                     $('#jsonURLInput').prop('disabled', true);
@@ -210,8 +219,18 @@ function limitAccess (callback = false) {
                 case 'add-default':
                     $('#addDefaultDropdownButton').addClass('disabled');
                     break;
-                case 'add-domain':
-                    $('#customDomains').addClass('disabled');
+                case 'custom-settings':
+                    $('#customSettings').addClass('disabled');
+                    break;
+                case 'custom-domains':
+                    $('.custom-domain-ui').each(function () {
+                        $(this).addClass('disabled');
+                    });
+                    break;
+                case 'custom-input':
+                    $('.custom-inputID-ui').each(function () {
+                        $(this).addClass('disabled');
+                    });
                     break;
                 }
             });
@@ -342,43 +361,73 @@ $(document).ready(function () {
         });
     });
 
-    $('#customDomains').click(function () {
-        dmUIClick('customDomains');
+    $('#customSettings').click(function () {
+        dmUIClick('customSettings');
         if (!$(this).hasClass('disabled')) {
-            $('.custom-domain-list').toggle();
+            $('.custom-settings-options').toggle();
             $('main').toggle();
         } else {
             Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
         }
     });
 
-    $('#customDomainsBackButton').click(function () {
-        dmUIClick('customDomainsBackButton');
-        $('.custom-domain-list').toggle();
+    $('#customSettingsBackButton').click(function () {
+        dmUIClick('customSettingsBackButton');
+        $('.custom-settings-options').toggle();
         $('main').toggle();
+    });
+
+    $('#clearCustomIDs').click(function () {
+        dmUIClick('clearCustomIDs');
+        if (!$(this).hasClass('disabled')) {
+            // remove all added input IDs:
+            chrome.runtime.sendMessage({
+                JDTIfunction: 'removeInputID',
+                removeAll: true
+            }, function (response) {
+                if (response.status === 'success') {
+                    loadTemplateEditor();
+                    Materialize.toast('Input IDs successfully removed', 2000, 'toastNotification');
+                } else {
+                    if (response.message) {
+                        dmError('clearCustomIDs', response.message);
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                    } else {
+                        dmError('clearCustomIDs', 'generic');
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotifcation');
+                    }
+                }
+            });
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
     });
 
     $('#clearCustomDomains').click(function () {
         dmUIClick('clearCustomDomains');
-        // remove all added domains:
-        chrome.runtime.sendMessage({
-            JDTIfunction: 'removeDomain',
-            domainName: '',
-            removeAll: true
-        }, function (response) {
-            if (response.status === 'success') {
-                loadTemplateEditor();
-                Materialize.toast('Domains successfully removed', 2000, 'toastNotification');
-            } else {
-                if (response.message) {
-                    dmError('clearCustomDomains', response.message);
-                    Materialize.toast(response.message, 2000, 'toastNotification');
+        if (!$(this).hasClass('disabled')) {
+            // remove all added domains:
+            chrome.runtime.sendMessage({
+                JDTIfunction: 'removeDomain',
+                domainName: '',
+                removeAll: true
+            }, function (response) {
+                if (response.status === 'success') {
+                    loadTemplateEditor();
+                    Materialize.toast('Domains successfully removed', 2000, 'toastNotification');
                 } else {
-                    dmError('clearCustomDomains', 'generic');
-                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    if (response.message) {
+                        dmError('clearCustomDomains', response.message);
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                    } else {
+                        dmError('clearCustomDomains', 'generic');
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
     });
 
     $('#customDomainInput').keyup(function (event) {
@@ -389,49 +438,116 @@ $(document).ready(function () {
 
     $('#customDomainInputButton').click(function () {
         dmUIClick('customDomainInputButton');
-        var domainName = $('#customDomainInput').val();
+        if (!$(this).hasClass('disabled')) {
+            var domainName = $('#customDomainInput').val();
 
-        chrome.runtime.sendMessage({
-            JDTIfunction: 'addDomain',
-            domainName: domainName
-        }, function (response) {
-            if (response.status === 'success') {
-                $('#customDomainInput').val('');
-                loadTemplateEditor();
-                Materialize.toast('Domain successfully added', 2000, 'toastNotification');
-            } else {
-                if (response.message) {
-                    dmError('customDomainInputButton', response.message);
-                    Materialize.toast(response.message, 2000, 'toastNotification');
+            chrome.runtime.sendMessage({
+                JDTIfunction: 'addDomain',
+                domainName: domainName
+            }, function (response) {
+                if (response.status === 'success') {
+                    $('#customDomainInput').val('');
+                    loadTemplateEditor();
+                    Materialize.toast('Domain successfully added', 2000, 'toastNotification');
                 } else {
-                    dmError('customDomainInputButton', 'generic');
-                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    if (response.message) {
+                        dmError('customDomainInputButton', response.message);
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                    } else {
+                        dmError('customDomainInputButton', 'generic');
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
+    });
+
+    $('#customIDInput').keyup(function (event) {
+        if (event.keyCode === 13) {
+            $('#customIDInputButton').click();
+        }
+    });
+
+    $('#customIDInputButton').click(function () {
+        dmUIClick('customIDInputButton');
+        if (!$(this).hasClass('disabled')) {
+            var IDName = $('#customIDInput').val();
+            chrome.runtime.sendMessage({
+                JDTIfunction: 'addInputID',
+                IDName: IDName
+            }, function (response) {
+                if (response.status === 'success') {
+                    $('#customIDInput').val('');
+                    loadTemplateEditor();
+                    Materialize.toast('Input ID successfully added', 2000, 'toastNotification');
+                } else {
+                    if (response.message) {
+                        dmError('customIDInputButton', response.message);
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                    } else {
+                        dmError('customIDInputButton', 'generic');
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    }
+                }
+            });
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
     });
 
     // Because the template editing section is dynamically built, need to monitor document rather then the buttons directly
     $(document).on('click', '.custom-domain-remove-button', function () {
         dmUIClick('custom-domain-remove-button');
-        chrome.runtime.sendMessage({
-            JDTIfunction: 'removeDomain',
-            domainID: event.target.id,
-            removeAll: false
-        }, function (response) {
-            if (response.status === 'success') {
-                loadTemplateEditor();
-                Materialize.toast('Domain successfully removed', 2000, 'toastNotification');
-            } else {
-                if (response.message) {
-                    dmError('custom-domain-remove-button', response.message);
-                    Materialize.toast(response.message, 2000, 'toastNotification');
+        if (!$(this).hasClass('disabled')) {
+            chrome.runtime.sendMessage({
+                JDTIfunction: 'removeDomain',
+                domainID: event.target.id,
+                removeAll: false
+            }, function (response) {
+                if (response.status === 'success') {
+                    loadTemplateEditor();
+                    Materialize.toast('Domain successfully removed', 2000, 'toastNotification');
                 } else {
-                    dmError('custom-domain-remove-button', 'generic');
-                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    if (response.message) {
+                        dmError('custom-domain-remove-button', response.message);
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                    } else {
+                        dmError('custom-domain-remove-button', 'generic');
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
+    });
+
+    $(document).on('click', '.custom-inputID-remove-button', function () {
+        dmUIClick('custom-inputID-remove-button');
+        if (!$(this).hasClass('disabled')) {
+            chrome.runtime.sendMessage({
+                JDTIfunction: 'removeInputID',
+                inputID: event.target.id,
+                removeAll: false
+            }, function (response) {
+                if (response.status === 'success') {
+                    loadTemplateEditor();
+                    Materialize.toast('Input ID successfully removed', 2000, 'toastNotification');
+                } else {
+                    if (response.message) {
+                        dmError('custom-inputID-remove-button', response.message);
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                    } else {
+                        dmError('custom-inputID-remove-button', 'generic');
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    }
+                }
+            });
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
     });
 
     $('#rate').click(function () {
@@ -652,11 +768,13 @@ $(document).ready(function () {
                     openCollapsible(event.data.openTemplate);
                 }
             }
-        } else if (event.data.content === 'domain-list') {
+        } else if (event.data.content === 'settings-list') {
             if (event.data.html) {
-                $('.collection').append(event.data.html);
+                $(`#${event.data.listID}`).append(event.data.html);
             }
         }
+
+        limitAccess();
     });
 
     // Because the template editing section is dynamically build, need to monitor document rather then the classes directly
