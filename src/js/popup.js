@@ -188,12 +188,6 @@ function limitAccess (callback = false) {
                     $('#customTemplateProjectsField').prop('disabled', true);
                     $('#addDefaultDropdownButton').addClass('disabled');
                     $('#customSettings').addClass('disabled');
-                    $('.custom-domain-ui').each(function () {
-                        $(this).addClass('disabled');
-                    });
-                    $('.custom-inputID-ui').each(function () {
-                        $(this).addClass('disabled');
-                    });
                     break;
                 case 'url':
                     $('#jsonURLInput').prop('disabled', true);
