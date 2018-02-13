@@ -1,7 +1,7 @@
 /* Copyright 2016 Redbrick Technologies, Inc. */
 /* https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE */
 
-/* global $dm, chrome, browser */
+/* global chrome, browser */
 
 var browserType = 'Chrome'; // eslint-disable-line no-unused-vars
 if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf('Edge') !== -1) {
@@ -14,35 +14,6 @@ if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf
         browserType = 'Edge';
     }
 }
-
-// -------------------------- Desk Metrics ---------------------------------- //
-// DeskMetrics JavaScript SDK Currently does not support Firefox.
-// It is planned for a future release.
-if (browserType !== 'Firefox') {
-    // Initialise and start the DeskMetrics (DM) SDK with the appropriate app ID.
-    $dm.start({ 'appId': '<appID>' }, function () {
-        $dm.setProperty('tracking_id', chrome.runtime.getManifest().version);
-        /*
-            Set the extension uninstall URL. When the extension is uninstalled DM
-            will fire an uninstall event and redirect the user to the supplied URL.
-        */
-        $dm.setUninstallURL('http://jiratemplate.com/remove');
-    });
-
-    /*
-    Initialize a chrome message listener for DM events.
-    As this is in the extension background page, this message listener will
-    continuously run in the background allowing us to send DM events from
-    anywhere in our extension.
-    */
-    chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
-        if (message.type === 'analytics') {
-            $dm.send(message.name, message.body);
-        }
-    });
-}
-
-// -------------------------------------------------------------------------- //
 
 var StorageID = 'Jira-Template-Injector';
 var DefaultDomainList = [
