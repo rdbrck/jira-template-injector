@@ -242,97 +242,7 @@ function limitAccess (callback = false) {
     });
 }
 
-/*
-    For this extension we have broken down the DM events into three categories.
-    1. UI events (when the user interacts with a UI element)
-    2. Template Update events (when the user updates the templates)
-    3. Errors (when something goes wrong)
-
-    The following three functions minimises code redundancy allowing simple one line DM
-    events to be placed throughout the code.
- */
-
-/*
-    Simple function to fire DM 'ui_click' events.
-    Arguments: UI element that was interacted with.
-    In this extension this is generally the DOM element ID.
-
-    Why collect this information?
-    We are collecting this information to determine which UI elements are most used
-    and are least used. With this information we can determine how best to improve
-    UI design. I.E simplifying the UI by removing rarely used elements
- */
-function dmUIClick (element) {
-    chrome.runtime.sendMessage({
-        type: 'analytics', name: 'ui_click', body: {
-            'element': element,
-            'ip_address': '${dm.meta:request_ip}',
-            'geo': '${dm.meta:request_geo}',
-            'ua': '${dm.ua:user_agent}'
-        }
-    });
-}
-
-/*
-    Simple function to fire DM 'template_update' events.
-    Arguments: Action performed on the template.
-    Currently the extension performs the following actions:
-        'reset'         - Templates were reset to their default state.
-        'upload'        - Templates were loaded from local json file.
-        'download'      - Templates were loaded from remote json file.
-        'clear'         - All templates were deleted.
-        'add-custom'    - A custom template was created for a ticket type
-                            not included with the default templates.
-        'add-default'   - A default template was added back.
-        'remove-single' - A single template (custom or default) was removed.
-        'update-single' - A single template was updated.
-
-        Why collect this information?
-        We are collecting this information to better understand how users use the
-        extension. Is a feature heavily used? Maybe we can improve it. Is a feature
-        hardly used? Maybe it is not needed.
- */
-function dmTemplateUpdate (action) {
-    chrome.runtime.sendMessage({
-        type: 'analytics', name: 'template_update', body: {
-            'action': action,
-            'ip_address': '${dm.meta:request_ip}',
-            'geo': '${dm.meta:request_geo}',
-            'ua': '${dm.ua:user_agent}'
-        }
-    });
-}
-
-/*
-    Simple function to fire DM 'error' events.
-    Arguments:
-        Action performed resulting in error.
-        Error message.
-
-    Why collect this information?
-    If errors are occurring we need to fix them.
- */
-function dmError (action, message) {
-    chrome.runtime.sendMessage({
-        type: 'analytics', name: 'error', body: {
-            'action': action,
-            'message': message,
-            'ip_address': '${dm.meta:request_ip}',
-            'geo': '${dm.meta:request_geo}',
-            'ua': '${dm.ua:user_agent}'
-        }
-    });
-}
-
 $(document).ready(function () {
-    chrome.runtime.sendMessage({
-        type: 'analytics', name: 'launch', body: {
-            'ip_address': '${dm.meta:request_ip}',
-            'geo': '${dm.meta:request_geo}',
-            'ua': '${dm.ua:user_agent}'
-        }
-    });
-
     document.addEventListener('focusin', onInitialFocus);
     $('#sandbox_window').load(function () {
         loadTemplateEditor();
@@ -340,21 +250,17 @@ $(document).ready(function () {
 
     // Click Handlers
     $('#reset').click(function () {
-        dmUIClick('reset');
         chrome.runtime.sendMessage({
             JDTIfunction: 'reset'
         }, function (response) {
             if (response.status === 'success') {
                 location.reload();
                 Materialize.toast('Default templates successfully loaded', 2000, 'toastNotification');
-                dmTemplateUpdate('reset');
             } else {
                 $('#templateEditor').empty();
                 if (response.message) {
-                    dmError('reset', response.message);
                     Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
-                    dmError('reset', 'generic');
                     Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
@@ -362,7 +268,6 @@ $(document).ready(function () {
     });
 
     $('#customSettings').click(function () {
-        dmUIClick('customSettings');
         if (!$(this).hasClass('disabled')) {
             $('.custom-settings-options').toggle();
             $('main').toggle();
@@ -372,13 +277,11 @@ $(document).ready(function () {
     });
 
     $('#customSettingsBackButton').click(function () {
-        dmUIClick('customSettingsBackButton');
         $('.custom-settings-options').toggle();
         $('main').toggle();
     });
 
     $('#clearCustomIDs').click(function () {
-        dmUIClick('clearCustomIDs');
         if (!$(this).hasClass('disabled')) {
             // remove all added input IDs:
             chrome.runtime.sendMessage({
@@ -390,10 +293,8 @@ $(document).ready(function () {
                     Materialize.toast('Input IDs successfully removed', 2000, 'toastNotification');
                 } else {
                     if (response.message) {
-                        dmError('clearCustomIDs', response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
-                        dmError('clearCustomIDs', 'generic');
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotifcation');
                     }
                 }
@@ -404,7 +305,6 @@ $(document).ready(function () {
     });
 
     $('#clearCustomDomains').click(function () {
-        dmUIClick('clearCustomDomains');
         if (!$(this).hasClass('disabled')) {
             // remove all added domains:
             chrome.runtime.sendMessage({
@@ -417,10 +317,8 @@ $(document).ready(function () {
                     Materialize.toast('Domains successfully removed', 2000, 'toastNotification');
                 } else {
                     if (response.message) {
-                        dmError('clearCustomDomains', response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
-                        dmError('clearCustomDomains', 'generic');
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -437,7 +335,6 @@ $(document).ready(function () {
     });
 
     $('#customDomainInputButton').click(function () {
-        dmUIClick('customDomainInputButton');
         if (!$(this).hasClass('disabled')) {
             var domainName = $('#customDomainInput').val();
 
@@ -451,10 +348,8 @@ $(document).ready(function () {
                     Materialize.toast('Domain successfully added', 2000, 'toastNotification');
                 } else {
                     if (response.message) {
-                        dmError('customDomainInputButton', response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
-                        dmError('customDomainInputButton', 'generic');
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -471,7 +366,6 @@ $(document).ready(function () {
     });
 
     $('#customIDInputButton').click(function () {
-        dmUIClick('customIDInputButton');
         if (!$(this).hasClass('disabled')) {
             var IDName = $('#customIDInput').val();
             chrome.runtime.sendMessage({
@@ -484,10 +378,8 @@ $(document).ready(function () {
                     Materialize.toast('Input ID successfully added', 2000, 'toastNotification');
                 } else {
                     if (response.message) {
-                        dmError('customIDInputButton', response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
-                        dmError('customIDInputButton', 'generic');
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -499,7 +391,6 @@ $(document).ready(function () {
 
     // Because the template editing section is dynamically built, need to monitor document rather then the buttons directly
     $(document).on('click', '.custom-domain-remove-button', function () {
-        dmUIClick('custom-domain-remove-button');
         if (!$(this).hasClass('disabled')) {
             chrome.runtime.sendMessage({
                 JDTIfunction: 'removeDomain',
@@ -511,10 +402,8 @@ $(document).ready(function () {
                     Materialize.toast('Domain successfully removed', 2000, 'toastNotification');
                 } else {
                     if (response.message) {
-                        dmError('custom-domain-remove-button', response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
-                        dmError('custom-domain-remove-button', 'generic');
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -525,7 +414,6 @@ $(document).ready(function () {
     });
 
     $(document).on('click', '.custom-inputID-remove-button', function () {
-        dmUIClick('custom-inputID-remove-button');
         if (!$(this).hasClass('disabled')) {
             chrome.runtime.sendMessage({
                 JDTIfunction: 'removeInputID',
@@ -537,10 +425,8 @@ $(document).ready(function () {
                     Materialize.toast('Input ID successfully removed', 2000, 'toastNotification');
                 } else {
                     if (response.message) {
-                        dmError('custom-inputID-remove-button', response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
-                        dmError('custom-inputID-remove-button', 'generic');
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -551,7 +437,6 @@ $(document).ready(function () {
     });
 
     $('#rate').click(function () {
-        dmUIClick('rate');
         chrome.runtime.sendMessage({
             JDTIfunction: 'setToggleStatus',
             toggleType: 'rateClicked',
@@ -560,10 +445,8 @@ $(document).ready(function () {
             window.open('https://chrome.google.com/webstore/detail/jira-template-injector/' + chrome.runtime.id + '/reviews?hl=en', '_blank'); // Open extension user reviews page
             if (response.status !== 'success') {
                 if (response.message) {
-                    dmError('rate', response.message);
                     Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
-                    dmError('rate', 'Error saving Rate Now click status');
                     Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
@@ -572,7 +455,6 @@ $(document).ready(function () {
 
     $('#upload').click(function () {
         if (!$(this).hasClass('disabled')) {
-            dmUIClick('upload');
             if (!$('#fileSelector')[0].files[0]) {
                 Materialize.toast('No file selected. Please select a file and try again', 2000, 'toastNotification');
             } else {
@@ -581,7 +463,6 @@ $(document).ready(function () {
                 reader.readAsText($('input#fileSelector')[0].files[0]);
                 // Handle success and errors
                 reader.onerror = function () {
-                    dmError('upload', 'Error reading file');
                     Materialize.toast('Error reading file. Please try again', 2000, 'toastNotification');
                 };
                 reader.onload = function () {
@@ -592,13 +473,10 @@ $(document).ready(function () {
                         if (response.status === 'success') {
                             location.reload();
                             Materialize.toast('Templates successfully loaded from file', 2000, 'toastNotification');
-                            dmTemplateUpdate('upload');
                         } else {
                             if (response.message) {
-                                dmError('upload', response.message);
                                 Materialize.toast(response.message, 2000, 'toastNotification');
                             } else {
-                                dmError('upload', 'generic');
                                 Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                             }
                         }
@@ -612,7 +490,6 @@ $(document).ready(function () {
 
     $('#download').click(function () {
         if (!$(this).hasClass('disabled')) {
-            dmUIClick('download');
             chrome.runtime.sendMessage({
                 JDTIfunction: 'download',
                 'url': $('#jsonURLInput').val()
@@ -620,13 +497,10 @@ $(document).ready(function () {
                 if (response.status === 'success') {
                     location.reload();
                     Materialize.toast('Templates successfully loaded from URL', 2000, 'toastNotification');
-                    dmTemplateUpdate('download');
                 } else {
                     if (response.message) {
-                        dmError('download', response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
-                        dmError('download', 'generic');
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -638,21 +512,17 @@ $(document).ready(function () {
 
     $('#clear').click(function () {
         if (!$(this).hasClass('disabled')) {
-            dmUIClick('clear');
             chrome.runtime.sendMessage({
                 JDTIfunction: 'clear'
             }, function (response) {
                 if (response.status === 'success') {
                     location.reload();
                     Materialize.toast('All templates deleted', 2000, 'toastNotification');
-                    dmTemplateUpdate('clear');
                 } else {
                     $('#templateEditor').empty();
                     if (response.message) {
-                        dmError('clear', response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
-                        dmError('clear', 'generic');
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -664,7 +534,6 @@ $(document).ready(function () {
 
     $('#add').click(function (event) {
         event.preventDefault();
-        dmUIClick('add');
         if (!$(this).hasClass('disabled')) {
             $('#addTemplateModal').openModal();
         } else {
@@ -674,7 +543,6 @@ $(document).ready(function () {
 
     $('#addCustomTemplate').click(function () {
         if (!$(this).hasClass('disabled')) {
-            dmUIClick('add-custom');
             var templateName = $('#customTemplateName').val();
             var issueTypeField = $('#customTemplateIssueTypeField').val();
             var projectsField = $('#customTemplateProjectsField').val();
@@ -690,13 +558,10 @@ $(document).ready(function () {
                     $('#addTemplateModal').closeModal();
                     loadTemplateEditor(response.data);
                     Materialize.toast('Template successfully added', 2000, 'toastNotification');
-                    dmTemplateUpdate('add-custom');
                 } else {
                     if (response.message) {
-                        dmError('add-custom', response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
-                        dmError('add-custom', 'generic');
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -712,7 +577,6 @@ $(document).ready(function () {
         } else if ($('#addDefaultDropdownButton').hasClass('disabled')) {
             Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
         } else {
-            dmUIClick('add-default-dropdown');
             // Dropdown is not initialized on load to support disabling through json options
             // If it's not disabled initialize it on click
             var attr = $(this).attr('data-activates');
@@ -725,7 +589,6 @@ $(document).ready(function () {
     });
 
     $('#export').click(function () {
-        dmUIClick('export');
         if (browserType !== 'Edge') {
             chrome.runtime.sendMessage({
                 JDTIfunction: 'getData'
@@ -736,10 +599,8 @@ $(document).ready(function () {
                     saveAs(blob, 'templates.json');
                 } else {
                     if (response.message) {
-                        dmError('export', response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
-                        dmError('export', 'generic');
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -780,7 +641,6 @@ $(document).ready(function () {
     // Because the template editing section is dynamically build, need to monitor document rather then the classes directly
     $(document).on('click', 'a.removeSingleTemplate', function () {
         if (!$(this).hasClass('disabled')) {
-            dmUIClick('remove-single');
             chrome.runtime.sendMessage({
                 JDTIfunction: 'delete',
                 templateID: $(this).attr('template')
@@ -788,13 +648,10 @@ $(document).ready(function () {
                 if (response.status === 'success') {
                     loadTemplateEditor();
                     Materialize.toast('Template successfully removed', 2000, 'toastNotification');
-                    dmTemplateUpdate('remove-single');
                 } else {
                     if (response.message) {
-                        dmError('remove-single', response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
-                        dmError('remove-single', 'generic');
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -806,7 +663,6 @@ $(document).ready(function () {
 
     $(document).on('click', 'a.updateSingleTemplate', function () {
         if (!$(this).hasClass('disabled')) {
-            dmUIClick('update-single');
             var templateID = $(this).attr('template');
             var form = $('form[template="' + templateID + '"]');
             chrome.runtime.sendMessage({
@@ -820,13 +676,10 @@ $(document).ready(function () {
                 if (response.status === 'success') {
                     loadTemplateEditor(templateID);
                     Materialize.toast('Template successfully updated', 2000, 'toastNotification');
-                    dmTemplateUpdate('update-single');
                 } else {
                     if (response.message) {
-                        dmError('update-single', response.message);
                         Materialize.toast(response.message, 2000, 'toastNotification');
                     } else {
-                        dmError('update-single', 'generic');
                         Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                     }
                 }
@@ -837,7 +690,6 @@ $(document).ready(function () {
     });
 
     $(document).on('click', '.dropdownOption', function () {
-        dmUIClick('add-default-dropdown-selection');
         // Close the Modal
         var templateName = $(this).text();
         var issueTypeField = $(this).data('issuefieldtype');
@@ -856,14 +708,11 @@ $(document).ready(function () {
             if (response.status === 'success') {
                 loadTemplateEditor(response.data);
                 Materialize.toast('Template successfully added', 2000, 'toastNotification');
-                dmTemplateUpdate('add-default');
             } else {
                 loadTemplateEditor();
                 if (response.message) {
-                    dmError('add-default-dropdown-selection', response.message);
                     Materialize.toast(response.message, 2000, 'toastNotification');
                 } else {
-                    dmError('add-default-dropdown-selection', 'generic');
                     Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
                 }
             }
@@ -884,7 +733,6 @@ $(document).ready(function () {
 
     // Force links to open in new tab
     $(document).on('click', '.newTabLinks', function () {
-        dmUIClick('help');
         chrome.tabs.create({url: $(this).attr('href')});
         return false;
     });

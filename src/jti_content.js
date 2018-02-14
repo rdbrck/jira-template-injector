@@ -153,29 +153,6 @@ function getAllIndexes (str) {
     return { start: startIndexes, end: endIndexes };
 }
 
-/*
-    When user submits a ticket track the ticket type.
-    Send DM event 'issue_type' to learn what the most commonly used ticket types are.
-    '${dm.meta:request_ip}' DM Metadata enrichment to pass back the originating IP.
-    '${dm.meta:request_geo}' DM Metadata enrichment to pass back standard geo-ip properties.
-    '${dm.ua:user_agent}' DM Metadata enrichment to pass back standard user-agent properties.
-
-    Why collect this information?
-    This information will allow us to better set the default templates.
-    If we find a template is used very often we can add it as a default to simplify peoples' ticket creation.
- */
-$(document).on('click', '#create-issue-submit', function () {
-    chrome.runtime.sendMessage({type: 'analytics', name: 'issue_type', body:
-    {
-        'type': $('#issuetype-field').val(),
-        'version': chrome.runtime.getManifest().version,
-        'ip_address': '${dm.meta:request_ip}',
-        'geo': '${dm.meta:request_geo}',
-        'ua': '${dm.ua:user_agent}'
-    }
-    });
-});
-
 function isDefaultDescription (value, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;

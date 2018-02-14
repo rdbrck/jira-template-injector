@@ -32,6 +32,5 @@ run:
       echo "Building '$VERSION' as '$ZIP_FILE.zip'"
     fi
     echo $VERSION > ../tmp-version/version
-    sed -i "s/<appID>/${DM_APP_ID}/g" src/jti_background.js
     npm run build
     cp jti.zip ../build-outputs/$ZIP_FILE.zip
