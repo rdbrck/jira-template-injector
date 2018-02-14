@@ -22,7 +22,6 @@
     },
     "background": {
         "scripts": [
-            "lib/deskmetrics/deskmetrics-2.2.0.js",
             "lib/jquery/jquery-2.2.3.js",
             "js/utils.js",
             "jti_background.js"

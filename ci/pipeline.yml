@@ -132,8 +132,6 @@ jobs:
           input_mapping:
             extension-source: jti-pull-request
             extension-version: jti-version
-          params:
-            DM_APP_ID: {{dm-app-id}}
         - put: jti-artifacts-pr
           params:
             file: build-outputs/*.zip
@@ -174,8 +172,6 @@ jobs:
           input_mapping:
             extension-source: jti-master
             extension-version: jti-version
-          params:
-            DM_APP_ID: {{dm-app-id}}
       - aggregate:
         - put: jti-artifacts-rc
           params:
