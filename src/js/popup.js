@@ -242,6 +242,12 @@ function limitAccess (callback = false) {
     });
 }
 
+$(document).on('mouseover', '.tooltipped', function () {
+    $('[data-toggle="tooltip"]').tooltip({
+        trigger: 'hover'
+    });
+});
+
 $(document).ready(function () {
     document.addEventListener('focusin', onInitialFocus);
     $('#sandbox_window').load(function () {
@@ -532,7 +538,8 @@ $(document).ready(function () {
         }
     });
 
-    $('#add').click(function (event) {
+    $(document).on('click', '#add', function (event) {
+        console.log('add templates clicked');
         event.preventDefault();
         if (!$(this).hasClass('disabled')) {
             $('#addTemplateModal').openModal();
