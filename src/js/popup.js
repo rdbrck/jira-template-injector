@@ -539,7 +539,6 @@ $(document).ready(function () {
     });
 
     $(document).on('click', '#add', function (event) {
-        console.log('add templates clicked');
         event.preventDefault();
         if (!$(this).hasClass('disabled')) {
             $('#addTemplateModal').openModal();
