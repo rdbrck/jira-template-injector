@@ -55,6 +55,8 @@ function onInitialFocus (event) {
 }
 
 function loadTemplateEditor (openTemplate = null) {
+    // remove all tooltips
+    $('[data-toggle="tooltip"]').tooltip('remove');
     // Dynamically build the template editor from stored json.
     chrome.storage.sync.get(StorageID, function (templates) {
         // Clear previous templates in the Collapsible Template Editor.
@@ -144,7 +146,7 @@ function loadTemplateEditor (openTemplate = null) {
             var sandboxIFrameDomains = document.getElementById('sandbox_window');
             sandboxIFrameDomains.contentWindow.postMessage({
                 command: 'renderObject',
-                context: { object: response.data, classAddition: 'domain' },
+                context: { object: response.data, classAddition: 'Domain' },
                 type: 'customDomainsList'
             }, '*');
         }
@@ -158,7 +160,7 @@ function loadTemplateEditor (openTemplate = null) {
             var sandboxIFrameInputIDs = document.getElementById('sandbox_window');
             sandboxIFrameInputIDs.contentWindow.postMessage({
                 command: 'renderObject',
-                context: { object: response.data, classAddition: 'inputID' },
+                context: { object: response.data, classAddition: 'ID' },
                 type: 'customIDsList'
             }, '*');
         }
@@ -223,12 +225,12 @@ function limitAccess (callback = false) {
                     $('#customSettings').addClass('disabled');
                     break;
                 case 'custom-domains':
-                    $('.custom-domain-ui').each(function () {
+                    $('.custom-Domain-ui').each(function () {
                         $(this).addClass('disabled');
                     });
                     break;
                 case 'custom-input':
-                    $('.custom-inputID-ui').each(function () {
+                    $('.custom-ID-ui').each(function () {
                         $(this).addClass('disabled');
                     });
                     break;
@@ -390,7 +392,7 @@ $(document).ready(function () {
     });
 
     // Because the template editing section is dynamically built, need to monitor document rather then the buttons directly
-    $(document).on('click', '.custom-domain-remove-button', function () {
+    $(document).on('click', '.custom-Domain-remove-button', function () {
         if (!$(this).hasClass('disabled')) {
             chrome.runtime.sendMessage({
                 JDTIfunction: 'removeDomain',
@@ -413,7 +415,7 @@ $(document).ready(function () {
         }
     });
 
-    $(document).on('click', '.custom-inputID-remove-button', function () {
+    $(document).on('click', '.custom-ID-remove-button', function () {
         if (!$(this).hasClass('disabled')) {
             chrome.runtime.sendMessage({
                 JDTIfunction: 'removeInputID',
@@ -532,7 +534,7 @@ $(document).ready(function () {
         }
     });
 
-    $('#add').click(function (event) {
+    $(document).on('click', '#add', function (event) {
         event.preventDefault();
         if (!$(this).hasClass('disabled')) {
             $('#addTemplateModal').openModal();
@@ -634,7 +636,7 @@ $(document).ready(function () {
                 $(`#${event.data.listID}`).append(event.data.html);
             }
         }
-
+        $('[data-toggle="tooltip"]').tooltip();
         limitAccess();
     });
 
