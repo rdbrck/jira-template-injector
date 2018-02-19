@@ -178,7 +178,7 @@ function downloadJSONData (url, callback) {
 
 function loadLocalFile (fileContents, callback) {
     try {
-        saveTemplates(JSONtoData(JSON.parse(fileContents), callback));
+        saveTemplates(JSONtoData(JSON.parse(fileContents)), callback);
     } catch (e) {
         callback(false, 'Error parsing JSON. Please verify file contents');
     }
