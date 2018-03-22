@@ -6,7 +6,7 @@
 
 html, body {
   width: 400px;
-  min-height: 590px;
+  min-height: 400px;
   overflow: auto;
   -ms-overflow-style: none;
 }
