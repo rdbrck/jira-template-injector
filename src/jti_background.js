@@ -281,8 +281,10 @@ function addInputID (IDName, callback) {
                 callback(false, message);
             } else {
                 JSONData.options.inputIDs[newID.id] = newID;
-                reloadMatchingTabs();
-                saveTemplates(JSONData, callback, newID.id);
+                saveTemplates(JSONData, function (status, message, data) {
+                    reloadMatchingTabs();
+                    callback(status, message, data);
+                }, newID.id);
             }
         });
     });
@@ -305,8 +307,10 @@ function addDomain (domainName, callback) {
                 callback(false, message);
             } else {
                 JSONData.options.domains[newDomain.id] = newDomain;
-                reloadMatchingTabs();
-                saveTemplates(JSONData, callback, newDomain.id);
+                saveTemplates(JSONData, function (status, message, data) {
+                    reloadMatchingTabs();
+                    callback(status, message, data);
+                }, newDomain.id);
             }
         });
     });
