@@ -598,7 +598,20 @@ $(document).ready(function () {
                 if (response.status === 'success') {
                     var data = JSON.stringify(response.data, undefined, 4);
                     var blob = new Blob([data], {type: 'text/json;charset=utf-8'});
-                    saveAs(blob, 'templates.json');
+                    var filename = 'templates.json';
+                    // Generate file for download
+                    if (window.navigator.msSaveOrOpenBlob) {
+                        window.navigator.msSaveBlob(blob, filename);
+                    } else {
+                        var a = window.document.createElement('a');
+                        a.href = window.URL.createObjectURL(blob);
+                        a.download = 'templates.json';
+                        a.target = '_blank';
+                        // Append anchor to body
+                        document.body.appendChild(a); a.click();
+                        // Remove anchor from body
+                        document.body.removeChild(a);
+                    }
                 } else {
                     if (response.message) {
                         Materialize.toast(response.message, 2000, 'toastNotification');
