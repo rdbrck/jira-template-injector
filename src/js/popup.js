@@ -1,7 +1,7 @@
 /* Copyright 2016 Redbrick Technologies, Inc. */
 /* https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE */
 
-/* global chrome, browser, saveAs, Materialize */
+/* global chrome, browser, Materialize */
 
 var StorageID = 'Jira-Template-Injector';
 var disabledOptionToast =
