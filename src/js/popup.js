@@ -245,6 +245,15 @@ function limitAccess (callback = false) {
 }
 
 $(document).ready(function () {
+    // set the display:block of the content in a timeout to avoid resizing of popup
+    setTimeout(function () {
+        const style = document.querySelector('body').style;
+        style.display = 'block';
+        setTimeout(function () {
+            style.opacity = 1;
+        });
+    }, 150);
+
     document.addEventListener('focusin', onInitialFocus);
     $('#sandbox_window').load(function () {
         loadTemplateEditor();
