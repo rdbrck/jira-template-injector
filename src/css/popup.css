@@ -12,8 +12,11 @@ html, body {
 }
 
 body {
-	font-family: 'Source Sans Pro',Arial,sans-serif;
-	overflow: hidden;
+    font-family: 'Source Sans Pro',Arial,sans-serif;
+    overflow: hidden;
+    display: none;
+    opacity: 0;
+    transition: opacity 200ms ease;
 }
 
 nav {
