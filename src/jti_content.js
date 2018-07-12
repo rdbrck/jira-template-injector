@@ -5,11 +5,13 @@
 
 var StorageID = 'Jira-Template-Injector';
 var inputIDs = [];
+var syncTemplates = [];
+var hasDomain = false;
 
 var browserType = 'Chrome'; // eslint-disable-line no-unused-vars
 if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf('Edge') !== -1) {
     chrome = browser; // eslint-disable-line no-native-reassign
-    chrome.storage.sync = browser.storage.local;
+    chrome.storage.local = browser.storage.local;
     if (navigator.userAgent.indexOf('Firefox') !== -1) {
         browserType = 'Firefox';
     }
@@ -154,7 +156,7 @@ function getAllIndexes (str) {
 }
 
 function isDefaultDescription (value, callback) {
-    chrome.storage.sync.get(StorageID, function (templates) {
+    chrome.storage.local.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;
         var match = false;
 
@@ -165,16 +167,28 @@ function isDefaultDescription (value, callback) {
 
         // Check if we've already loaded a template.
         if (!match) {
-            $.each(templates, function (key, template) {
-                if (value === template.text) {
-                    match = true;
-                    return false;
-                }
-            });
+            match = getMatchedTemplate(templates, value);
+            if (!match && syncTemplates.length > 0) {
+                $.each(syncTemplates, function (key, temps) {
+                    if (!match) {
+                        match = getMatchedTemplate(temps, value);
+                    }
+                });
+            }
         }
-
         callback(match);
     });
+}
+
+function getMatchedTemplate (templates, value) {
+    var match = false;
+    $.each(templates, function (key, template) {
+        if (value === template.text) {
+            match = true;
+            return false;
+        }
+    });
+    return match;
 }
 
 // Given the project name as formatted in JIRA's dropdown "PROJECT (KEY)", parse out the key
@@ -185,8 +199,10 @@ function parseProjectKey (projectElement) {
 
 function injectDescriptionTemplate (descriptionElement) {
     // Each issue type for each project can have its own template.
-    chrome.storage.sync.get(StorageID, function (templates) {
-        templates = templates[StorageID].templates;
+    chrome.storage.local.get(StorageID, function (templates) {
+        templates = $.map(templates[StorageID].templates, function (template, index) {
+            return template;
+        });
 
         var templateText = '',
             projectElement = $('#project-field'),
@@ -194,36 +210,16 @@ function injectDescriptionTemplate (descriptionElement) {
 
         if (issueTypeElement !== null && projectElement !== null) {
             var projectKey = parseProjectKey(projectElement);
-            var override = 0;
-
-            $.each(templates, function (key, template) {
-                // Default template (no issue type, no project)
-                if (!template['issuetype-field'] && !template['projects-field']) {
-                    if (override < 1) {
-                        override = 1;
-                        templateText = template.text;
-                    }
-                // Override if project, no issue type
-                } else if (!template['issuetype-field'] && $.inArray(projectKey, utils.parseProjects(template['projects-field'])) !== -1) {
-                    if (override < 2) {
-                        override = 2;
-                        templateText = template.text;
-                    }
-                // Override if issue type, no project
-                } else if (!template['projects-field'] && template['issuetype-field'] === issueTypeElement.val()) {
-                    if (override < 3) {
-                        override = 3;
-                        templateText = template.text;
-                    }
-                // Override if issue type and project
-                } else if (template['issuetype-field'] === issueTypeElement.val() &&
-                        $.inArray(projectKey, utils.parseProjects(template['projects-field'])) !== -1) {
-                    templateText = template.text;
-                    return false;
-                }
-            });
-
+            templateText = getDescriptionFromTemplates(projectKey, issueTypeElement, templates);
             descriptionElement.value = templateText;
+            if (syncTemplates.length > 0) {
+                $.each(syncTemplates, function (key, temps) {
+                    templateText = getDescriptionFromTemplates(projectKey, issueTypeElement, temps);
+                    if (templateText.length > 0) {
+                        descriptionElement.value = templateText;
+                    }
+                });
+            }
         } else {
             if (issueTypeElement === null) {
                 console.error('*** Error: Element Id "issuetype-field" not found.');
@@ -232,6 +228,38 @@ function injectDescriptionTemplate (descriptionElement) {
             }
         }
     });
+}
+
+function getDescriptionFromTemplates (projectKey, issueTypeElement, templates) {
+    var override = 0;
+    var templateText = '';
+    $.each(templates, function (key, template) {
+        // Default template (no issue type, no project)
+        if (!template['issuetype-field'] && !template['projects-field']) {
+            if (override < 1) {
+                override = 1;
+                templateText = template.text;
+            }
+        // Override if project, no issue type
+        } else if (!template['issuetype-field'] && $.inArray(projectKey, utils.parseProjects(template['projects-field'])) !== -1) {
+            if (override < 2) {
+                override = 2;
+                templateText = template.text;
+            }
+        // Override if issue type, no project
+        } else if (!template['projects-field'] && template['issuetype-field'] === issueTypeElement.val()) {
+            if (override < 3) {
+                override = 3;
+                templateText = template.text;
+            }
+        // Override if issue type and project
+        } else if (template['issuetype-field'] === issueTypeElement.val() &&
+                $.inArray(projectKey, utils.parseProjects(template['projects-field'])) !== -1) {
+            templateText = template.text;
+            return false;
+        }
+    });
+    return templateText;
 }
 
 function descriptionChangeEvent (changeEvent) {
@@ -250,6 +278,10 @@ function observeDocumentBody (mutation) {
                     if (descriptionElement.className.indexOf('ajs-dirty-warning-exempt') === -1) { // Default template injection should not pop up dirtyDialogMessage.
                         descriptionElement.className += ' ajs-dirty-warning-exempt';
                         descriptionElement.addEventListener('change', descriptionChangeEvent);
+                        var elem = $('#issuetype-field');
+                        $(elem.context).on('change', '#issuetype-field', function (changeEvent) {
+                            injectDescriptionTemplate(descriptionElement);
+                        });
                     }
                 }
             });
@@ -262,10 +294,33 @@ chrome.runtime.sendMessage({JDTIfunction: 'getDomains'}, function (response) {
     $.each(response.data, function (index, domain) {
         var pattern = new RegExp(domain.name);
         if (pattern.test(window.location.href)) {
+            hasDomain = true;
             var observer = new MutationObserver(function (mutations) {
                 mutations.forEach(observeDocumentBody);
             });
             observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['resolved'] });
         }
     });
+    refreshAutoSyncTemplates();
 });
+
+function refreshAutoSyncTemplates () {
+    if (hasDomain) {
+        syncTemplates = [];
+        chrome.runtime.sendMessage({JDTIfunction: 'downloadTemplates'}, function (response) {
+            if (response.status) {
+                // download all the template and cache them for this page
+                $.each(response.data, function (index, data) {
+                    syncTemplates.push(data.templates);
+                });
+            }
+        });
+    }
+}
+
+chrome.runtime.onMessage.addListener(
+    function (request, sender, sendResponse) {
+        if (request.refreshAutoSyncTemplates) {
+            refreshAutoSyncTemplates();
+        }
+    });

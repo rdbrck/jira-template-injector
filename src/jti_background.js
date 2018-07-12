@@ -6,7 +6,7 @@
 var browserType = 'Chrome'; // eslint-disable-line no-unused-vars
 if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf('Edge') !== -1) {
     chrome = browser; // eslint-disable-line no-native-reassign
-    chrome.storage.sync = browser.storage.local;
+    chrome.storage.local = browser.storage.local;
     if (navigator.userAgent.indexOf('Firefox') !== -1) {
         browserType = 'Firefox';
     }
@@ -29,7 +29,7 @@ var toggles = {'rateClicked': false};
 function saveTemplates (templateJSON, callback, responseData = null) {
     var data = {};
     data[StorageID] = templateJSON;
-    chrome.storage.sync.set(data, function () {
+    chrome.storage.local.set(data, function () {
         if (chrome.runtime.lastError) {
             callback(false, 'Error saving data. Please try again');
         } else {
@@ -46,7 +46,7 @@ function getInputIDs (callback) {
         return inputID;
     });
     // Get the custom input IDs
-    chrome.storage.sync.get(StorageID, function (data) {
+    chrome.storage.local.get(StorageID, function (data) {
         if (data[StorageID]) {
             IDListCustom = $.map(data[StorageID].options.inputIDs, function (inputID, index) {
                 inputID.default = false;
@@ -69,7 +69,7 @@ function getDomains (callback) {
         return domain;
     });
     // Get the custom domains
-    chrome.storage.sync.get(StorageID, function (data) {
+    chrome.storage.local.get(StorageID, function (data) {
         if (data[StorageID]) {
             domainListCustom = $.map(data[StorageID].options.domains, function (domain, index) {
                 domain.default = false;
@@ -84,6 +84,68 @@ function getDomains (callback) {
     });
 }
 
+function getAutoSyncUrls (callback) {
+    var autoSyncUrls = [];
+    // Get the custom domains
+    chrome.storage.local.get(StorageID, function (data) {
+        if (data[StorageID]) {
+            if (data[StorageID].options.autoSyncUrls) {
+                autoSyncUrls = $.map(data[StorageID].options.autoSyncUrls, function (url, index) {
+                    return url;
+                });
+            }
+        }
+        callback(true, null, autoSyncUrls);
+    });
+}
+
+function downloadTemplates (callback) {
+    var autoSyncUrls = [];
+    // Get the custom domains
+    chrome.storage.local.get(StorageID, function (data) {
+        if (data[StorageID]) {
+            if (data[StorageID].options.autoSyncUrls) {
+                autoSyncUrls = $.map(data[StorageID].options.autoSyncUrls, function (url, index) {
+                    return url;
+                });
+                autoSyncUrls = autoSyncUrls.filter(function (url) {
+                    return url.active;
+                });
+                var result = [];
+                if (autoSyncUrls.length === 0) {
+                    callback(true, null, result);
+                } else {
+                    var count = 0;
+                    $.ajaxSetup({ cache: false });
+                    $.each(autoSyncUrls, function (index, data) {
+                        downloadJSONData(data.name, function (status, message = null, data = null) {
+                            if (status) {
+                                result.push(data);
+                            }
+                            count++;
+                            if (count === autoSyncUrls.length) {
+                                callback(true, null, result);
+                            }
+                        });
+                    });
+                }
+            }
+        } else {
+            callback(false, 'Invalid downloads', null);
+        }
+    });
+}
+
+function updateAllTabs () {
+    // fire and forget the update
+    chrome.tabs.query({}, function (tabs) {
+        var message = { refreshAutoSyncTemplates: true };
+        $.each(tabs, function (index, tab) {
+            chrome.tabs.sendMessage(tab.id, message);
+        });
+    });
+}
+
 function fetchJSON (url, callback) {
     $.getJSON(url, function (templateJSON) {
         callback(true, null, templateJSON);
@@ -95,7 +157,7 @@ function fetchJSON (url, callback) {
 
 // Get toggle status based on 'toggleType'
 function getToggleStatus (toggleType, callback) {
-    chrome.storage.sync.get(StorageToggleID, function (toggles) {
+    chrome.storage.local.get(StorageToggleID, function (toggles) {
         if (jQuery.isEmptyObject(toggles)) { // If user does not have any toggle settings in storage
             callback(false, 'No data is currently loaded');
         } else {
@@ -113,7 +175,7 @@ function setToggleStatus (toggleType, toggleInput, callback) {
     var data = {};
     toggles[toggleType] = toggleInput;
     data[StorageToggleID] = toggles;
-    chrome.storage.sync.set(data, function () {
+    chrome.storage.local.set(data, function () {
         if (chrome.runtime.lastError) {
             callback(false, 'Error saving data. Please try again');
         } else {
@@ -124,10 +186,10 @@ function setToggleStatus (toggleType, toggleInput, callback) {
 
 function clearTemplates (callback) {
     // Need to save the domains, then re-add them here.
-    chrome.storage.sync.get(StorageID, function (data) {
+    chrome.storage.local.get(StorageID, function (data) {
         var clearedData = emptyData;
         clearedData.options.domains = data[StorageID].options.domains;
-        chrome.storage.sync.clear(function () {
+        chrome.storage.local.clear(function () {
             if (chrome.runtime.lastError) {
                 callback(false, 'Error clearing data. Please try again');
             } else {
@@ -146,7 +208,7 @@ function fetchDefaultTemplates (callback) {
 }
 
 function getData (callback) {
-    chrome.storage.sync.get(StorageID, function (templates) {
+    chrome.storage.local.get(StorageID, function (templates) {
         if (templates[StorageID]) {
             var templateJSON = dataToJSON(templates[StorageID]);
             callback(true, '', templateJSON);
@@ -166,10 +228,20 @@ function setDefaultTemplates (callback) {
     });
 }
 
-function downloadJSONData (url, callback) {
+function downloadJSONDataAndSave (url, callback) {
     fetchJSON(url, function (status, message, data) {
         if (status) {
             saveTemplates(JSONtoData(data), callback);
+        } else {
+            callback(false, message);
+        }
+    });
+}
+
+function downloadJSONData (url, callback) {
+    fetchJSON(url, function (status, message, data) {
+        if (status) {
+            callback(status, message, data);
         } else {
             callback(false, message);
         }
@@ -192,6 +264,7 @@ function JSONtoData (JSONData) {
     completeData.templates = JSONtoTemplateData(completeData.templates);
     completeData.options.domains = JSONtoDomainData(completeData.options.domains);
     completeData.options.inputIDs = JSONtoInputIDData(completeData.options.inputIDs);
+    completeData.options.autoSyncUrls = JSONtoAutoSyncUrls(completeData.options.autoSyncUrls);
     return completeData;
 }
 
@@ -199,11 +272,12 @@ function dataToJSON (data) {
     data.templates = templateDataToJSON(data.templates);
     data.options.domains = domainDataToJSON(data.options.domains);
     data.options.inputIDs = inputIDDataToJSON(data.options.inputIDs);
+    data.options.autoSyncUrls = domainDataToJSON(data.options.autoSyncUrls);
     return data;
 }
 
 function removeTemplate (templateID, callback) {
-    chrome.storage.sync.get(StorageID, function (templates) {
+    chrome.storage.local.get(StorageID, function (templates) {
         if (templates[StorageID]) {
             var templateJSON = templates[StorageID];
             delete templateJSON.templates[templateID];
@@ -215,7 +289,7 @@ function removeTemplate (templateID, callback) {
 }
 
 function updateTemplate (templateID, templateName, templateIssueType, templateProjects, templateText, callback) {
-    chrome.storage.sync.get(StorageID, function (templates) {
+    chrome.storage.local.get(StorageID, function (templates) {
         if (templates[StorageID]) {
             var templateJSON = templates[StorageID];
             var modifiedTemplate = {
@@ -241,7 +315,7 @@ function updateTemplate (templateID, templateName, templateIssueType, templatePr
 }
 
 function addTemplate (templateName, issueTypeField, projectsField, text, callback) {
-    chrome.storage.sync.get(StorageID, function (templates) {
+    chrome.storage.local.get(StorageID, function (templates) {
         var templateJSON = {};
 
         if (templates[StorageID]) {
@@ -265,7 +339,7 @@ function addTemplate (templateName, issueTypeField, projectsField, text, callbac
 }
 
 function addInputID (IDName, callback) {
-    chrome.storage.sync.get(StorageID, function (data) {
+    chrome.storage.local.get(StorageID, function (data) {
         var JSONData = {};
         if (data[StorageID]) {
             JSONData = data[StorageID];
@@ -291,14 +365,14 @@ function addInputID (IDName, callback) {
 }
 
 function addDomain (domainName, callback) {
-    chrome.storage.sync.get(StorageID, function (data) {
+    chrome.storage.local.get(StorageID, function (data) {
         var JSONData = {};
         if (data[StorageID]) {
             JSONData = data[StorageID];
         }
 
         var newDomain = {
-            'id': getNextID(JSONData.options.domains),
+            'id': getNextID(JSONData.options.auto),
             'name': domainName
         };
 
@@ -316,8 +390,57 @@ function addDomain (domainName, callback) {
     });
 }
 
+function addAutoSyncUrl (url, callback) {
+    fetchJSON(url, function (status, message, data) {
+        if (!status) {
+            callback(false, message);
+            return;
+        }
+        chrome.storage.local.get(StorageID, function (data) {
+            var JSONData = {};
+            if (data[StorageID]) {
+                JSONData = data[StorageID];
+            }
+            var urls = {
+                'id': getNextID(JSONData.options.autoSyncUrls),
+                'name': url,
+                'active': true
+            };
+            JSONData.options.autoSyncUrls = JSONData.options.autoSyncUrls ? JSONData.options.autoSyncUrls : {};
+            // need to add validation for url
+            JSONData.options.autoSyncUrls[urls.id] = urls;
+            saveTemplates(JSONData, function (status, message, data) {
+                // update the existing templates
+                if (status) {
+                    updateAllTabs();
+                }
+                callback(status, message, data);
+            }, null);
+        });
+    });
+}
+
+function updateAutoSyncUrl (id, active, callback) {
+    chrome.storage.local.get(StorageID, function (data) {
+        var JSONData = {};
+        if (data[StorageID]) {
+            JSONData = data[StorageID];
+        }
+        if (JSONData.options.autoSyncUrls[id]) {
+            JSONData.options.autoSyncUrls[id].active = active;
+        }
+        saveTemplates(JSONData, function (status, message, data) {
+            // update the existing templates
+            if (status) {
+                updateAllTabs();
+            }
+            callback(status, message, data);
+        }, null);
+    });
+}
+
 function removeDomain (domainID, removeAll, callback) {
-    chrome.storage.sync.get(StorageID, function (data) {
+    chrome.storage.local.get(StorageID, function (data) {
         if (data[StorageID]) {
             var JSONData = data[StorageID];
             if (removeAll === true) {
@@ -332,8 +455,30 @@ function removeDomain (domainID, removeAll, callback) {
     });
 }
 
+function removeAutoSyncUrl (url, removeAll, callback) {
+    chrome.storage.local.get(StorageID, function (data) {
+        if (data[StorageID]) {
+            var JSONData = data[StorageID];
+            if (removeAll === true) {
+                JSONData.options.autoSyncUrls = {};
+            } else {
+                delete JSONData.options.autoSyncUrls[url];
+            }
+            saveTemplates(JSONData, function (status, message, data) {
+                // update the existing templates
+                if (status) {
+                    updateAllTabs();
+                }
+                callback(status, message, data);
+            }, null);
+        } else {
+            callback(false, 'No data available to remove');
+        }
+    });
+}
+
 function removeInputID (inputID, removeAll, callback) {
-    chrome.storage.sync.get(StorageID, function (data) {
+    chrome.storage.local.get(StorageID, function (data) {
         if (data[StorageID]) {
             var JSONData = data[StorageID];
             if (removeAll === true) {
@@ -465,7 +610,7 @@ function migrateTemplateKeys (callback = null) {
         callback = function (status, message) {};
     }
 
-    chrome.storage.sync.get(StorageID, function (templates) {
+    chrome.storage.local.get(StorageID, function (templates) {
         if (!templates[StorageID]) {
             return;
         }
@@ -539,6 +684,25 @@ function JSONtoInputIDData (inputIDs, callback) {
     return formattedInputIDs;
 }
 
+function JSONtoAutoSyncUrls (inputIDs, callback) {
+    var formattedInputIDs = {};
+    if (inputIDs && inputIDs.constructor === Array) {
+        var nextID = getNextID(inputIDs);
+        $.each(inputIDs, function (index, inputID) {
+            validateJSONInputIDEntry(inputID, callback);
+            var newInputID = {
+                'id': nextID,
+                'name': inputID,
+                'active': true
+            };
+            formattedInputIDs[newInputID.id] = newInputID;
+            nextID++;
+        });
+    }
+
+    return formattedInputIDs;
+}
+
 function validateJSONDomainEntry (domain, callback) {
     if (!domain || typeof (domain) !== 'string') {
         callback(false, 'Error parsing JSON. Please verify file contents');
@@ -594,7 +758,7 @@ function getNextID (templates) {
 }
 
 // This file will load the default templates into storage on install or update if no previous versions are already loaded.
-chrome.storage.sync.get(StorageID, function (templates) {
+chrome.storage.local.get(StorageID, function (templates) {
     // Check if we have any loaded templates in storage.
     if (Object.keys(templates).length === 0 && JSON.stringify(templates) === JSON.stringify({})) {
         // No data in storage yet - Load default templates.
@@ -660,6 +824,12 @@ chrome.runtime.onMessage.addListener(
             });
             break;
         case 'download':
+            downloadJSONDataAndSave(request.url, function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'downloadAndSave':
             downloadJSONData(request.url, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
@@ -713,6 +883,18 @@ chrome.runtime.onMessage.addListener(
                 sendResponse(response);
             });
             break;
+        case 'addAutoSyncUrl':
+            addAutoSyncUrl(request.domainName, function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'updateAutoSyncUrl':
+            updateAutoSyncUrl(request.id, request.active, function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
         case 'addInputID':
             addInputID(request.IDName, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
@@ -721,6 +903,12 @@ chrome.runtime.onMessage.addListener(
             break;
         case 'removeDomain':
             removeDomain(request.domainID, request.removeAll, function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'removeAutoSyncUrl':
+            removeAutoSyncUrl(request.domainID, request.removeAll, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });
@@ -737,8 +925,20 @@ chrome.runtime.onMessage.addListener(
                 sendResponse(response);
             });
             break;
+        case 'getAutoSyncUrls':
+            getAutoSyncUrls(function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
         case 'getInputIDs':
             getInputIDs(function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'downloadTemplates':
+            downloadTemplates(function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });
