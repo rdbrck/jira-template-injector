@@ -20,6 +20,7 @@ if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf
 
 // Handle <TI> tag selection.
 chrome.runtime.sendMessage({JDTIfunction: 'getInputIDs'}, function (response) {
+ 
     $.each(response.data, function (index, inputID) {
         inputIDs.push(inputID.name);
     });
@@ -179,11 +180,13 @@ function isDefaultDescription (value, callback) {
 
 // Given the project name as formatted in JIRA's dropdown "PROJECT (KEY)", parse out the key
 function parseProjectKey (projectElement) {
+    console.log("PARSE PROJECT KEY");
     var project = projectElement.val();
     return project.substring(project.lastIndexOf('(') + 1, project.length - 1);
 }
 
 function injectDescriptionTemplate (descriptionElement) {
+    console.log('DESCRIPTION INJECT');
     // Each issue type for each project can have its own template.
     chrome.storage.sync.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;
@@ -241,6 +244,7 @@ function descriptionChangeEvent (changeEvent) {
 }
 
 function observeDocumentBody (mutation) {
+   
     if (document.getElementById('create-issue-dialog') !== null || document.getElementById('create-subtask-dialog') !== null) { // Only interested in document changes related to Create Issue Dialog box or Create Sub-task Dialog box.
         if (inputIDs.includes(mutation.target.id)) { // Only interested in select input id fields.
             var descriptionElement = mutation.target;
@@ -265,7 +269,7 @@ chrome.runtime.sendMessage({JDTIfunction: 'getDomains'}, function (response) {
             var observer = new MutationObserver(function (mutations) {
                 mutations.forEach(observeDocumentBody);
             });
-            observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['resolved'] });
+            observer.observe(document.body, { subtree: true, attributes: true});
         }
     });
 });
