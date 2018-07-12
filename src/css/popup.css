@@ -255,6 +255,11 @@ textarea.materialize-textarea:focus:not([readonly]) {
 	display: none;
 }
 
+.auto-sync-settings-options {
+	margin-top: 10px;
+	display: none;
+}
+
 .custom-domain-collection {
 	padding-top: 5px;
 	padding-bottom: 5px;
@@ -370,4 +375,16 @@ i.disabled {
 
 .font-bold {
 	font-weight: bold;
+}
+
+/* .custom-url-active-button
+{
+	left: 0px !important;
+	opacity: 1 !important;
+	position: relative !important;
+} */
+
+.lbl-materialize 
+{
+	width:270px
 }

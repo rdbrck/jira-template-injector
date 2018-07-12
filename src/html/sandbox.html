@@ -109,6 +109,38 @@
             {{/each}}
         </script>
 
+        <script id="addAutoSync" type="text/x-handlebars-template">
+            {{#each object}}
+                <li class="collection-item container custom-domain-collection">
+                    <div class="row valign-wrapper remove-margin">
+                        <div class="col s0 lbl-materialize">
+                            {{#if this.active}}
+                                <p>
+                                    <input type="checkbox" class="filled-in btn-jti custom-url-active-button" id={{this.id}} checked/>
+                                    <label for={{this.id}}>{{ this.name }}</label>
+                                </p>
+                            {{else}}
+                                <p>
+                                    <input type="checkbox" class="filled-in btn-jti custom-url-active-button" id={{this.id}} />
+                                    <label for={{this.id}}>{{ this.name }}</label>
+                                </p>
+                            {{/if}}
+                        </div>
+                        <div class="col s1">
+                            <a id="download" class="btn-floating btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Download Template">
+                                <i id={{this.id}} class="material-icons custom-url-download-button" title={{this.name}}>cloud_download</i>
+                            </a>
+                        </div>
+                        <div class="col s2">
+                            <a class="btn-floating btn-jti" data-position="left" data-delay="50" data-tooltip="Remove Url">
+                                <i id={{this.id}} class="material-icons custom-url-remove-button">delete</i>
+                            </a>
+                        </div>
+                    </div>
+                </li>
+            {{/each}}
+        </script>
+
         <script>
             Handlebars.registerHelper('boldIfDefault', function (template) {
                 if (!template['issuetype-field'] && !template['projects-field']) {
@@ -135,6 +167,16 @@
                         var htmlDomainTemplate = Handlebars.compile(objectSource);
                         event.source.postMessage({
                             content: 'settings-list',
+                            html: htmlDomainTemplate(event.data.context),
+                            callback: event.data.callback,
+                            listID: event.data.type
+                        }, event.origin);
+                        break;
+                    case "renderAutoSync":
+                        var objectSource = document.getElementById('addAutoSync').innerHTML;
+                        var htmlDomainTemplate = Handlebars.compile(objectSource);
+                        event.source.postMessage({
+                            content: 'autoSync-list',
                             html: htmlDomainTemplate(event.data.context),
                             callback: event.data.callback,
                             listID: event.data.type
