@@ -13,6 +13,8 @@ if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf
     if (navigator.userAgent.indexOf('Edge') !== -1) {
         browserType = 'Edge';
     }
+} else {
+    chrome.storage.sync = chrome.storage.local;
 }
 
 var StorageID = 'Jira-Template-Injector';
