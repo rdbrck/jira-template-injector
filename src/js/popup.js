@@ -152,6 +152,20 @@ function loadTemplateEditor (openTemplate = null) {
         }
     });
 
+    // Load in the custom domains.
+    chrome.runtime.sendMessage({JDTIfunction: 'getAutoSyncUrls'}, function (response) {
+        if (response.data) {
+            // Send a message to sandbox.html to build the domains list
+            // Once the template is compiled, a 'message' event will be sent to this window with the html
+            var sandboxIFrameDomains = document.getElementById('sandbox_window');
+            sandboxIFrameDomains.contentWindow.postMessage({
+                command: 'renderAutoSync',
+                context: { object: response.data, classAddition: 'Domain' },
+                type: 'autoSyncList'
+            }, '*');
+        }
+    });
+
     // Load in the custom input IDs.
     chrome.runtime.sendMessage({JDTIfunction: 'getInputIDs'}, function (response) {
         if (response.data) {
@@ -190,6 +204,7 @@ function limitAccess (callback = false) {
                     $('#customTemplateProjectsField').prop('disabled', true);
                     $('#addDefaultDropdownButton').addClass('disabled');
                     $('#customSettings').addClass('disabled');
+                    $('#autoSyncSettings').addClass('disabled');
                     break;
                 case 'url':
                     $('#jsonURLInput').prop('disabled', true);
@@ -223,6 +238,9 @@ function limitAccess (callback = false) {
                     break;
                 case 'custom-settings':
                     $('#customSettings').addClass('disabled');
+                    break;
+                case 'auto-sync-settings':
+                    $('#autoSyncSettings').addClass('disabled');
                     break;
                 case 'custom-domains':
                     $('.custom-Domain-ui').each(function () {
@@ -289,6 +307,20 @@ $(document).ready(function () {
 
     $('#customSettingsBackButton').click(function () {
         $('.custom-settings-options').toggle();
+        $('main').toggle();
+    });
+
+    $('#autoSyncSettings').click(function () {
+        if (!$(this).hasClass('disabled')) {
+            $('.auto-sync-settings-options').toggle();
+            $('main').toggle();
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
+    });
+
+    $('#autoSyncSettingsBackButton').click(function () {
+        $('.auto-sync-settings-options').toggle();
         $('main').toggle();
     });
 
@@ -370,6 +402,31 @@ $(document).ready(function () {
         }
     });
 
+    $('#addAutoSyncUrlButton').click(function () {
+        if (!$(this).hasClass('disabled')) {
+            var domainName = $('#autoSyncUrlInput').val();
+
+            chrome.runtime.sendMessage({
+                JDTIfunction: 'addAutoSyncUrl',
+                domainName: domainName
+            }, function (response) {
+                if (response.status === 'success') {
+                    $('#autoSyncUrlInput').val('');
+                    loadTemplateEditor();
+                    Materialize.toast('Auto sync url successfully added', 2000, 'toastNotification');
+                } else {
+                    if (response.message) {
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                    } else {
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    }
+                }
+            });
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
+    });
+
     $('#customIDInput').keyup(function (event) {
         if (event.keyCode === 13) {
             $('#customIDInputButton').click();
@@ -411,6 +468,76 @@ $(document).ready(function () {
                 if (response.status === 'success') {
                     loadTemplateEditor();
                     Materialize.toast('Domain successfully removed', 2000, 'toastNotification');
+                } else {
+                    if (response.message) {
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                    } else {
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    }
+                }
+            });
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
+    });
+
+    $(document).on('click', '.custom-url-remove-button', function () {
+        if (!$(this).hasClass('disabled')) {
+            chrome.runtime.sendMessage({
+                JDTIfunction: 'removeAutoSyncUrl',
+                domainID: event.target.id,
+                removeAll: false
+            }, function (response) {
+                if (response.status === 'success') {
+                    loadTemplateEditor();
+                    Materialize.toast('Url successfully removed', 2000, 'toastNotification');
+                } else {
+                    if (response.message) {
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                    } else {
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    }
+                }
+            });
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
+    });
+
+    $(document).on('click', '.custom-url-download-button', function () {
+        if (!$(this).hasClass('disabled')) {
+            chrome.runtime.sendMessage({
+                JDTIfunction: 'downloadAndSave',
+                'url': event.target.title
+            }, function (response) {
+                if (response.status === 'success') {
+                    var jsonData = JSON.stringify(response.data, undefined, 4);
+                    var blob = new Blob([jsonData], {type: 'text/json;charset=utf-8'});
+                    saveAs(blob, Date.now() + '.json');
+                    Materialize.toast('Templates successfully downloaded from URL', 2000, 'toastNotification');
+                } else {
+                    if (response.message) {
+                        Materialize.toast(response.message, 2000, 'toastNotification');
+                    } else {
+                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                    }
+                }
+            });
+        } else {
+            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+        }
+    });
+
+    $(document).on('click', '.custom-url-active-button', function () {
+        if (!$(this).hasClass('disabled')) {
+            chrome.runtime.sendMessage({
+                JDTIfunction: 'updateAutoSyncUrl',
+                id: event.target.id,
+                active: event.target.checked
+            }, function (response) {
+                if (response.status === 'success') {
+                    loadTemplateEditor();
+                    Materialize.toast('Url updated successfully', 2000, 'toastNotification');
                 } else {
                     if (response.message) {
                         Materialize.toast(response.message, 2000, 'toastNotification');
@@ -640,7 +767,7 @@ $(document).ready(function () {
                     openCollapsible(event.data.openTemplate);
                 }
             }
-        } else if (event.data.content === 'settings-list') {
+        } else if (event.data.content === 'settings-list' || event.data.content === 'autoSync-list') {
             if (event.data.html) {
                 $(`#${event.data.listID}`).append(event.data.html);
             }
