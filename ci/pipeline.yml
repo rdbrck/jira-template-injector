@@ -90,7 +90,7 @@ resources:
   - name: alert
     type: http-api
     source:
-      uri: https://hooks.slack.com/services/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
+      uri: https://hooks.slack.com/services/
       method: POST
       headers:
         Content-type: application/json
@@ -100,7 +100,7 @@ resources:
   - name: alert-chrome-store-published
     type: http-api
     source:
-      uri: https://hooks.slack.com/services/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
+      uri: https://hooks.slack.com/services/
       method: POST
       headers:
         Content-type: application/json
@@ -238,7 +238,7 @@ jobs:
             AWS_ACCESS_KEY_ID: {{s3-access-key-id}}
             AWS_SECRET_ACCESS_KEY: {{s3-secret-access-key}}
             BUCKET_NAME: chrome-extensions-artifacts
-            WEBHOOK_URL: https://hooks.slack.com/services/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
+            WEBHOOK_URL: https://hooks.slack.com/services/
             MESSAGE: "_Pull Request_ of *JIRA Template Injector* extension package is ready"
   - name: build-artifact-notify
     plan:
@@ -255,7 +255,7 @@ jobs:
             AWS_ACCESS_KEY_ID: {{s3-access-key-id}}
             AWS_SECRET_ACCESS_KEY: {{s3-secret-access-key}}
             BUCKET_NAME: chrome-extensions-artifacts
-            WEBHOOK_URL: https://hooks.slack.com/services/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
+            WEBHOOK_URL: https://hooks.slack.com/services/
             MESSAGE: "_Release Candidate_ of *JIRA Template Injector* extension package is ready"
   - name: release-artifact-notify
     plan:
@@ -272,7 +272,7 @@ jobs:
             AWS_ACCESS_KEY_ID: {{s3-access-key-id}}
             AWS_SECRET_ACCESS_KEY: {{s3-secret-access-key}}
             BUCKET_NAME: chrome-extensions-artifacts
-            WEBHOOK_URL: https://hooks.slack.com/services/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
+            WEBHOOK_URL: https://hooks.slack.com/services/
             MESSAGE: ":shipit: _Release_ of *JIRA Template Injector* extension package is ready"
 
   - name: jira-template-injector-publish
