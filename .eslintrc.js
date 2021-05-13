@@ -13,7 +13,8 @@ module.exports = {
     "env": {
         "browser": true,
         "jquery": true,
-        "es6": true
+        "es6": true,
+	    "worker": true
     },
     "rules": {
         "indent": ["error", 4],

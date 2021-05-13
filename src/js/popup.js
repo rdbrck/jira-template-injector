@@ -617,7 +617,7 @@ $(document).ready(function () {
                 }
             });
         } else {
-            chrome.tabs.create({'url': chrome.extension.getURL('/html/download.html')}, function (tab) {
+            chrome.tabs.create({'url': chrome.runtime.getURL('/html/download.html')}, function (tab) {
                 // Tab opened.
             });
         }
