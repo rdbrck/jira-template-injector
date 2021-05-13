@@ -3,12 +3,27 @@
 
 /* global chrome, browser */
 
+// Check for jQuery.
+if (typeof jQuery === 'undefined') {
+    var jQuery;
+    var $;
+    // Check if require is a defined function.
+    if (typeof require === 'function') {
+        jQuery = $ = require('jquery');
+        // Else use the dollar sign alias.
+    } else {
+        jQuery = $;
+    }
+}
+
+/* eslint no-global-assign: 0, no-native-reassign: 0 */
+
 var browserType = 'Chrome'; // eslint-disable-line no-unused-vars
 if (
     navigator.userAgent.indexOf('Firefox') !== -1 ||
     navigator.userAgent.indexOf('Edge') !== -1
 ) {
-    chrome = browser; // eslint-disable-line no-native-reassign
+    chrome = browser;
     chrome.storage.sync = browser.storage.local;
     if (navigator.userAgent.indexOf('Firefox') !== -1) {
         browserType = 'Firefox';
@@ -43,20 +58,17 @@ function saveTemplates(templateJSON, callback, responseData = null) {
 function getInputIDs(callback) {
     var IDListCustom = {};
     // Get the default input IDs
-    var IDList = DefaultIDList.map((inputID, index) => {
-        inputID.default = true;
-        return inputID;
-    });
+    var IDList = DefaultIDList.map((inputID) => ({
+        ...inputID,
+        default: true,
+    }));
     // Get the custom input IDs
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID]) {
-            IDListCustom = $.map(
-                data[StorageID].options.inputIDs,
-                function (inputID, index) {
-                    inputID.default = false;
-                    return inputID;
-                }
-            );
+            IDListCustom = data[StorageID].options.inputIDs.map((inputID) => ({
+                ...inputID,
+                default: false,
+            }));
             // Sort them
             IDListCustom = utils.sortArrayByProperty(IDListCustom, 'name');
             // combine so that the default entries are always at the top
@@ -69,20 +81,16 @@ function getInputIDs(callback) {
 function getDomains(callback) {
     var domainListCustom = {};
     // Get the default domains
-    var domainList = $.map(DefaultDomainList, function (domain, index) {
-        domain.default = true;
-        return domain;
-    });
+    var domainList = DefaultDomainList.map((domain) => ({
+        ...domain,
+        default: true,
+    }));
     // Get the custom domains
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID]) {
-            domainListCustom = $.map(
-                data[StorageID].options.domains,
-                function (domain, index) {
-                    domain.default = false;
-                    return domain;
-                }
-            );
+            domainListCustom = data[
+                StorageID
+            ].options.domains.map((domain) => ({ ...domain, default: false }));
             // Sort them
             domainListCustom = utils.sortArrayByProperty(
                 domainListCustom,
@@ -96,15 +104,9 @@ function getDomains(callback) {
 }
 
 function fetchJSON(url, callback) {
-    $.getJSON(url, function (templateJSON) {
-        callback(true, null, templateJSON);
-    }).error(function () {
-        callback(
-            false,
-            'Invalid URL. Please correct the URL and try again',
-            null
-        );
-    });
+    fetch(url)
+        .then((res) => callback(true, null, res.json()))
+        .catch((err) => callback(false, err, null));
 }
 
 // Get toggle status based on 'toggleType'
@@ -405,7 +407,7 @@ function validateDomain(domainName, callback) {
             message = 'Domain Name is blank';
         }
         // Verify that there are no duplicate domains
-        $.each(response, function (index, domain) {
+        response.forEach((domain) => {
             if (domain.name.localeCompare(domainName) === 0) {
                 message = `Domain Name: "${domainName}" already exists`;
                 return false;
@@ -423,7 +425,7 @@ function validateInputID(IDName, callback) {
             message = 'Input ID is blank';
         }
         // Verify that there are no duplicate input IDs
-        $.each(response, function (index, inputID) {
+        response.forEach((inputID) => {
             if (inputID.name.localeCompare(IDName) === 0) {
                 message = `Input ID: "${IDName}" already exists`;
                 return false;
@@ -439,7 +441,7 @@ function validateTemplate(newTemplate, templates, callback) {
     var newTemplateProjects = utils.parseProjects(
         newTemplate['projects-field']
     );
-    $.each(templates, function (name, template) {
+    templates.forEach((template) => {
         if (newTemplate['issuetype-field'] === template['issuetype-field']) {
             // Can't have two default templates (no issue type, no projects)
             if (
@@ -542,16 +544,11 @@ function formatProjectsField(projectsField) {
         return '';
     }
 
-    // Replace all commas with spaces
-    projectsField = projectsField.replace(/,/g, ' ');
-
-    // Remove leading and trailing spaces
-    projectsField = $.trim(projectsField);
-
-    // Replace groups of spaces with a comma and a space
-    projectsField = projectsField.replace(/\s+/g, ', ');
-
-    return projectsField;
+    // Replace all commas with spaces, trim, and replace runs of multiple whitespace with ', '
+    return projectsField
+        .replace(/,/g, ' ')
+        .trim(projectsField)
+        .replace(/\s+/g, ', ');
 }
 
 function migrateTemplateKeys(callback = null) {
@@ -567,7 +564,7 @@ function migrateTemplateKeys(callback = null) {
         var templateJSON = templates[StorageID];
 
         // If data is in old format, migrate it
-        $.each(templateJSON.templates, function (key, template) {
+        templateJSON.templates.forEach((template) => {
             if (!template.name) {
                 templateJSON.templates = JSONtoTemplateData(
                     templateJSON.templates
@@ -584,13 +581,13 @@ function JSONtoTemplateData(templates) {
     var formattedTemplates = {};
 
     if (templates.constructor === Array) {
-        $.each(templates, function (index, template) {
+        templates.forEach((template) => {
             template.id = nextID;
             formattedTemplates[nextID++] = template;
         });
     } else {
         // support old template format
-        $.each(templates, function (key, template) {
+        templates.forEach((template) => {
             template.name = key;
             template.id = nextID;
             formattedTemplates[nextID++] = template;
@@ -604,7 +601,7 @@ function JSONtoDomainData(domains, callback) {
     var formattedDomains = {};
     if (domains && domains.constructor === Array) {
         var nextID = getNextID(domains);
-        $.each(domains, function (index, domain) {
+        domains.forEach((domain) => {
             validateJSONDomainEntry(domain, callback);
             var newDomain = {
                 id: nextID,
@@ -622,7 +619,7 @@ function JSONtoInputIDData(inputIDs, callback) {
     var formattedInputIDs = {};
     if (inputIDs && inputIDs.constructor === Array) {
         var nextID = getNextID(inputIDs);
-        $.each(inputIDs, function (index, inputID) {
+        inputIDs.forEach((inputID) => {
             validateJSONInputIDEntry(inputID, callback);
             var newInputID = {
                 id: nextID,
@@ -649,19 +646,17 @@ function validateJSONInputIDEntry(inputID, callback) {
 }
 
 function templateDataToJSON(templates) {
-    var formattedTemplates = [];
-
-    $.each(templates, function (key, template) {
+    return templates.map((template) => {
+        let formattedTemplate = template;
         delete template.id;
-        formattedTemplates.push(template);
+        return formattedTemplate;
     });
-    return formattedTemplates;
 }
 
 function domainDataToJSON(domains) {
     var formattedDomains = [];
 
-    $.each(domains, function (key, domain) {
+    domains.forEach((domain) => {
         formattedDomains.push(domain.name);
     });
 
@@ -671,7 +666,7 @@ function domainDataToJSON(domains) {
 function inputIDDataToJSON(inputIDs) {
     var formattedInputIDs = [];
 
-    $.each(inputIDs, function (key, inputID) {
+    inputIDs.forEach((inputID) => {
         formattedInputIDs.push(inputID.name);
     });
 
@@ -680,7 +675,7 @@ function inputIDDataToJSON(inputIDs) {
 
 function getNextID(templates) {
     var highestID = 0;
-    $.each(templates, function (key, template) {
+    templates.forEach((template) => {
         var templateID = parseInt(template.id);
         if (templateID && templateID > highestID) {
             highestID = templateID;
@@ -706,15 +701,15 @@ function reloadMatchingTabs() {
     var urlRegexs = [];
     // Access all of the values in the 'domains', then reload the matching tabs
     getDomains(function (status, msg, response) {
-        $.each(response, function (index, domain) {
+        response.forEach((domain) => {
             urlRegexs.push(matchRegexToJsRegex(domain.name));
         });
 
         chrome.tabs.query(
             { windowId: chrome.windows.WINDOW_ID_CURRENT },
             function (tabs) {
-                $.each(tabs, function (tabIndex, tab) {
-                    $.each(urlRegexs, function (regexIndex, regex) {
+                tabs.forEach((tab) => {
+                    urlRegexs.forEach((regex) => {
                         // So we don't infinitely reload the chrome://extensions page, reloading JTI, reloading...
                         var chromeRegex = new RegExp('chrome://extensions');
                         if (regex.test(tab.url) && !chromeRegex.test(tab.url)) {

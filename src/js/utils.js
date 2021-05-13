@@ -1,22 +1,22 @@
 // eslint-disable-next-line no-unused-vars
 class utils {
-    static commonItemInArrays (array1, array2) {
+    static commonItemInArrays(array1, array2) {
         if (!array1 || !array2) {
             return null;
         }
 
         var commonItem = null;
-        $.each(array1, function (index, value) {
-            if ($.inArray(value, array2) !== -1) {
+        array1.forEach((value) => {
+            if (value in array2) {
                 commonItem = value;
-                return false;
+                return;
             }
         });
         return commonItem;
     }
 
     // Turn formatted projects field into an array of projects
-    static parseProjects (projects) {
+    static parseProjects(projects) {
         if (!projects) {
             return [];
         }
@@ -24,7 +24,7 @@ class utils {
     }
 
     // Sorts an array of objects in place using a property of the objects
-    static sortArrayByProperty (array, property) {
+    static sortArrayByProperty(array, property) {
         return array.sort(function (a, b) {
             var propertyA = a[property];
             var propertyB = b[property];
