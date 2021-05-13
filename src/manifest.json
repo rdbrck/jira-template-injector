@@ -30,9 +30,7 @@
     },
     "content_scripts": [
         {
-            "matches": [
-                "<all_urls>"
-            ],
+            "matches": ["<all_urls>"],
             "js": [
                 "lib/jquery/jquery-2.2.3.js",
                 "js/utils.js",
@@ -44,10 +42,5 @@
     "sandbox": {
         "pages": ["html/sandbox.html"]
     },
-    "permissions": [
-        "storage",
-        "tabs",
-        "*://*/*.json",
-        "https://*.pingstatsnet.com/"
-    ]
+    "permissions": ["storage", "tabs"]
 }
