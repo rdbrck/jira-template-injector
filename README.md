@@ -52,7 +52,6 @@ The JSON format is:
 * Templates are synced across devices.
   * Configure once, use on all chrome devices that support extensions!
 * Reload default templates with one click.
-* Load templates from url (json file). Host a single json file and have everyone use the same templates.
 * Load templates from local file (json). Easily share templates with other users.
 * Add/Remove/Edit individual templates.
 * Add/Remove custom domains.
@@ -62,7 +61,6 @@ The JSON format is:
 * Limit interface options (To keep templates consistent across users)
     * Current limit options are:
         * "all"         -> disable all interface actions except reload default
-        * "url"         -> disable loading of json from url
         * "file"        -> disable loading of json from local file
         * "clear"       -> disable clearing of all templates
         * "delete"      -> disable deleting single template
