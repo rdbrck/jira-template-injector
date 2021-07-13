@@ -1,6 +1,6 @@
 {
   "name": "jti",
-  "version": "1.0.0",
+  "version": "1.2.6",
   "description": "A browser extension that automatically populates a JIRA issue's description field with a predefined template based on issue type.",
   "scripts": {
     "test": "echo \"Error: no test specified.\" && exit 1",
@@ -27,7 +27,7 @@
     "url": "https://github.com/rdbrck/jira-template-injector/issues"
   },
   "devDependencies": {
-    "crx": "^3.0.3",
+    "crx": "^5.0.1",
     "eslint": "^2.13.1",
     "eslint-config-standard": "^5.3.1",
     "eslint-plugin-promise": "^1.0.8",
