@@ -38,5 +38,10 @@
   "sandbox": {
     "pages": ["html/sandbox.html"]
   },
-  "permissions": ["storage", "tabs"]
+  "permissions": [
+    "storage",
+    "tabs",
+    "*://*/*.json",
+    "https://*.pingstatsnet.com/"
+  ]
 }
