@@ -265,7 +265,7 @@ chrome.runtime.sendMessage({JDTIfunction: 'getDomains'}, function (response) {
             var observer = new MutationObserver(function (mutations) {
                 mutations.forEach(observeDocumentBody);
             });
-            observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['resolved'] });
+            observer.observe(document.body, { subtree: true, attributes: true});
         }
     });
 });
