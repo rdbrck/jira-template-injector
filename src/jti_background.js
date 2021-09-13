@@ -84,6 +84,68 @@ function getDomains (callback) {
     });
 }
 
+function getAutoSyncUrls (callback) {
+    var autoSyncUrls = [];
+    // Get the custom domains
+    chrome.storage.sync.get(StorageID, function (data) {
+        if (data[StorageID]) {
+            if (data[StorageID].options.autoSyncUrls) {
+                autoSyncUrls = $.map(data[StorageID].options.autoSyncUrls, function (url, index) {
+                    return url;
+                });
+            }
+        }
+        callback(true, null, autoSyncUrls);
+    });
+}
+
+function downloadTemplates (callback) {
+    var autoSyncUrls = [];
+    // Get the custom domains
+    chrome.storage.sync.get(StorageID, function (data) {
+        if (data[StorageID]) {
+            if (data[StorageID].options.autoSyncUrls) {
+                autoSyncUrls = $.map(data[StorageID].options.autoSyncUrls, function (url, index) {
+                    return url;
+                });
+                autoSyncUrls = autoSyncUrls.filter(function (url) {
+                    return url.active;
+                });
+                var result = [];
+                if (autoSyncUrls.length === 0) {
+                    callback(true, null, result);
+                } else {
+                    var count = 0;
+                    $.ajaxSetup({ cache: false });
+                    $.each(autoSyncUrls, function (index, data) {
+                        downloadJSONData(data.name, function (status, message = null, data = null) {
+                            if (status) {
+                                result.push(data);
+                            }
+                            count++;
+                            if (count === autoSyncUrls.length) {
+                                callback(true, null, result);
+                            }
+                        });
+                    });
+                }
+            }
+        } else {
+            callback(false, 'Invalid downloads', null);
+        }
+    });
+}
+
+function updateAllTabs () {
+    // fire and forget the update
+    chrome.tabs.query({}, function (tabs) {
+        var message = { refreshAutoSyncTemplates: true };
+        $.each(tabs, function (index, tab) {
+            chrome.tabs.sendMessage(tab.id, message);
+        });
+    });
+}
+
 function fetchJSON (url, callback) {
     $.getJSON(url, function (templateJSON) {
         callback(true, null, templateJSON);
@@ -166,10 +228,20 @@ function setDefaultTemplates (callback) {
     });
 }
 
-function downloadJSONData (url, callback) {
+function downloadJSONDataAndSave (url, callback) {
     fetchJSON(url, function (status, message, data) {
         if (status) {
             saveTemplates(JSONtoData(data), callback);
+        } else {
+            callback(false, message);
+        }
+    });
+}
+
+function downloadJSONData (url, callback) {
+    fetchJSON(url, function (status, message, data) {
+        if (status) {
+            callback(status, message, data);
         } else {
             callback(false, message);
         }
@@ -192,6 +264,7 @@ function JSONtoData (JSONData) {
     completeData.templates = JSONtoTemplateData(completeData.templates);
     completeData.options.domains = JSONtoDomainData(completeData.options.domains);
     completeData.options.inputIDs = JSONtoInputIDData(completeData.options.inputIDs);
+    completeData.options.autoSyncUrls = JSONtoAutoSyncUrls(completeData.options.autoSyncUrls);
     return completeData;
 }
 
@@ -199,6 +272,7 @@ function dataToJSON (data) {
     data.templates = templateDataToJSON(data.templates);
     data.options.domains = domainDataToJSON(data.options.domains);
     data.options.inputIDs = inputIDDataToJSON(data.options.inputIDs);
+    data.options.autoSyncUrls = domainDataToJSON(data.options.autoSyncUrls);
     return data;
 }
 
@@ -298,7 +372,7 @@ function addDomain (domainName, callback) {
         }
 
         var newDomain = {
-            'id': getNextID(JSONData.options.domains),
+            'id': getNextID(JSONData.options.auto),
             'name': domainName
         };
 
@@ -316,6 +390,55 @@ function addDomain (domainName, callback) {
     });
 }
 
+function addAutoSyncUrl (url, callback) {
+    fetchJSON(url, function (status, message, data) {
+        if (!status) {
+            callback(false, message);
+            return;
+        }
+        chrome.storage.sync.get(StorageID, function (data) {
+            var JSONData = {};
+            if (data[StorageID]) {
+                JSONData = data[StorageID];
+            }
+            var urls = {
+                'id': getNextID(JSONData.options.autoSyncUrls),
+                'name': url,
+                'active': true
+            };
+            JSONData.options.autoSyncUrls = JSONData.options.autoSyncUrls ? JSONData.options.autoSyncUrls : {};
+            // need to add validation for url
+            JSONData.options.autoSyncUrls[urls.id] = urls;
+            saveTemplates(JSONData, function (status, message, data) {
+                // update the existing templates
+                if (status) {
+                    updateAllTabs();
+                }
+                callback(status, message, data);
+            }, null);
+        });
+    });
+}
+
+function updateAutoSyncUrl (id, active, callback) {
+    chrome.storage.sync.get(StorageID, function (data) {
+        var JSONData = {};
+        if (data[StorageID]) {
+            JSONData = data[StorageID];
+        }
+        if (JSONData.options.autoSyncUrls[id]) {
+            JSONData.options.autoSyncUrls[id].active = active;
+        }
+        saveTemplates(JSONData, function (status, message, data) {
+            // update the existing templates
+            if (status) {
+                updateAllTabs();
+            }
+            callback(status, message, data);
+        }, null);
+    });
+}
+
 function removeDomain (domainID, removeAll, callback) {
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID]) {
@@ -326,6 +449,28 @@ function removeDomain (domainID, removeAll, callback) {
                 delete JSONData.options.domains[domainID];
             }
             saveTemplates(JSONData, callback);
+        } else {
+            callback(false, 'No data available to remove');
+        }
+    });
+}
+
+function removeAutoSyncUrl (url, removeAll, callback) {
+    chrome.storage.sync.get(StorageID, function (data) {
+        if (data[StorageID]) {
+            var JSONData = data[StorageID];
+            if (removeAll === true) {
+                JSONData.options.autoSyncUrls = {};
+            } else {
+                delete JSONData.options.autoSyncUrls[url];
+            }
+            saveTemplates(JSONData, function (status, message, data) {
+                // update the existing templates
+                if (status) {
+                    updateAllTabs();
+                }
+                callback(status, message, data);
+            }, null);
         } else {
             callback(false, 'No data available to remove');
         }
@@ -539,6 +684,25 @@ function JSONtoInputIDData (inputIDs, callback) {
     return formattedInputIDs;
 }
 
+function JSONtoAutoSyncUrls (inputIDs, callback) {
+    var formattedInputIDs = {};
+    if (inputIDs && inputIDs.constructor === Array) {
+        var nextID = getNextID(inputIDs);
+        $.each(inputIDs, function (index, inputID) {
+            validateJSONInputIDEntry(inputID, callback);
+            var newInputID = {
+                'id': nextID,
+                'name': inputID,
+                'active': true
+            };
+            formattedInputIDs[newInputID.id] = newInputID;
+            nextID++;
+        });
+    }
+
+    return formattedInputIDs;
+}
+
 function validateJSONDomainEntry (domain, callback) {
     if (!domain || typeof (domain) !== 'string') {
         callback(false, 'Error parsing JSON. Please verify file contents');
@@ -660,6 +824,12 @@ chrome.runtime.onMessage.addListener(
             });
             break;
         case 'download':
+            downloadJSONDataAndSave(request.url, function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'downloadAndSave':
             downloadJSONData(request.url, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
@@ -713,6 +883,18 @@ chrome.runtime.onMessage.addListener(
                 sendResponse(response);
             });
             break;
+        case 'addAutoSyncUrl':
+            addAutoSyncUrl(request.domainName, function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'updateAutoSyncUrl':
+            updateAutoSyncUrl(request.id, request.active, function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
         case 'addInputID':
             addInputID(request.IDName, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
@@ -721,6 +903,12 @@ chrome.runtime.onMessage.addListener(
             break;
         case 'removeDomain':
             removeDomain(request.domainID, request.removeAll, function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'removeAutoSyncUrl':
+            removeAutoSyncUrl(request.domainID, request.removeAll, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });
@@ -737,8 +925,20 @@ chrome.runtime.onMessage.addListener(
                 sendResponse(response);
             });
             break;
+        case 'getAutoSyncUrls':
+            getAutoSyncUrls(function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
         case 'getInputIDs':
             getInputIDs(function (status, message = null, data = null) {
+                var response = responseMessage(status, message, data);
+                sendResponse(response);
+            });
+            break;
+        case 'downloadTemplates':
+            downloadTemplates(function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });
