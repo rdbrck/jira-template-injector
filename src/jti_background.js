@@ -11,7 +11,7 @@ if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf
         browserType = 'Firefox';
     }
     if (navigator.userAgent.indexOf('Edge') !== -1) {
-        browserType = 'Edge';
+        browserType = 'Edge'; // eslint-disable-line no-unused-vars
     }
 }
 
@@ -19,11 +19,11 @@ var StorageID = 'Jira-Template-Injector';
 var DefaultDomainList = [
     {'name': 'atlassian.net'}
 ];
-var DefaultIDList = [
-    {'name': 'description'}
+var DefaultFieldSelectors = [
+    {'id': 0, 'name': 'Description', 'cssSelector': '.ak-editor-content-area div[role="textbox"]', 'isWYSIWYG': true, 'WYSIWYGContainerSelector': '#description-container'}
 ];
 var StorageToggleID = 'JTI-Toggle';
-var emptyData = {'options': {'limit': [], 'domains': [], 'inputIDs': []}, 'templates': {}};
+var emptyData = {'options': {'limit': [], 'domains': [], 'fieldSelectors': []}, 'templates': {}};
 var toggles = {'rateClicked': false};
 
 function saveTemplates (templateJSON, callback, responseData = null) {
@@ -38,26 +38,26 @@ function saveTemplates (templateJSON, callback, responseData = null) {
     });
 }
 
-function getInputIDs (callback) {
-    var IDListCustom = {};
-    // Get the default input IDs
-    var IDList = $.map(DefaultIDList, function (inputID, index) {
-        inputID.default = true;
-        return inputID;
+function getFieldSelectors (callback) {
+    var FieldSelectorListCustom = {};
+    // Get the default Field Selectors
+    var FieldSelectorList = $.map(DefaultFieldSelectors, function (FieldSelector, index) {
+        FieldSelector.default = true;
+        return FieldSelector;
     });
-    // Get the custom input IDs
+    // Get the custom Field Selectors
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID]) {
-            IDListCustom = $.map(data[StorageID].options.inputIDs, function (inputID, index) {
-                inputID.default = false;
-                return inputID;
+            FieldSelectorListCustom = $.map(data[StorageID].options.fieldSelectors, function (FieldSelector, index) {
+                FieldSelector.default = false;
+                return FieldSelector;
             });
             // Sort them
-            IDListCustom = utils.sortArrayByProperty(IDListCustom, 'name');
+            FieldSelectorListCustom = utils.sortArrayByProperty(FieldSelectorListCustom, 'name');
             // combine so that the default entries are always at the top
-            IDList = IDList.concat(IDListCustom);
+            FieldSelectorList = FieldSelectorList.concat(FieldSelectorListCustom);
         }
-        callback(true, null, IDList);
+        callback(true, null, FieldSelectorList);
     });
 }
 
@@ -191,14 +191,14 @@ function JSONtoData (JSONData) {
     // convert the JSON data to the proper format and return the formatted data
     completeData.templates = JSONtoTemplateData(completeData.templates);
     completeData.options.domains = JSONtoDomainData(completeData.options.domains);
-    completeData.options.inputIDs = JSONtoInputIDData(completeData.options.inputIDs);
+    completeData.options.fieldSelectors = JSONtoFieldSelectorsData(completeData.options.fieldSelectors);
     return completeData;
 }
 
 function dataToJSON (data) {
     data.templates = templateDataToJSON(data.templates);
     data.options.domains = domainDataToJSON(data.options.domains);
-    data.options.inputIDs = inputIDDataToJSON(data.options.inputIDs);
+    data.options.fieldSelectors = inputIDDataToJSON(data.options.fieldSelectors);
     return data;
 }
 
@@ -221,8 +221,8 @@ function updateTemplate (templateID, templateName, templateIssueType, templatePr
             var modifiedTemplate = {
                 'id': templateID,
                 'name': templateName,
-                'issuetype-field': templateIssueType,
-                'projects-field': formatProjectsField(templateProjects),
+                'issueType': templateIssueType,
+                'projects': formatProjectsString(templateProjects),
                 'text': templateText
             };
 
@@ -240,7 +240,7 @@ function updateTemplate (templateID, templateName, templateIssueType, templatePr
     });
 }
 
-function addTemplate (templateName, issueTypeField, projectsField, text, callback) {
+function addTemplate (templateName, issueType, projectsString, text, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         var templateJSON = {};
 
@@ -252,8 +252,8 @@ function addTemplate (templateName, issueTypeField, projectsField, text, callbac
         var newTemplate = {
             'id': templateID,
             'name': templateName,
-            'issuetype-field': issueTypeField,
-            'projects-field': formatProjectsField(projectsField),
+            'issueType': issueType,
+            'projects': formatProjectsString(projectsString),
             'text': text
         };
 
@@ -264,29 +264,34 @@ function addTemplate (templateName, issueTypeField, projectsField, text, callbac
     });
 }
 
-function addInputID (IDName, callback) {
+function addFieldSelector (name, cssSelector, isWYSIWYG, WYSIWYGContainerSelector, callback) {
     chrome.storage.sync.get(StorageID, function (data) {
         var JSONData = {};
         if (data[StorageID]) {
             JSONData = data[StorageID];
         }
 
-        var newID = {
-            'id': getNextID(JSONData.options.inputIDs),
-            'name': IDName
+        var newFieldSelector = {
+            'id': getNextID(JSONData.options.fieldSelectors),
+            'name': name,
+            'cssSelector': cssSelector,
+            'isWYSIWYG': isWYSIWYG,
+            'WYSIWYGContainerSelector': WYSIWYGContainerSelector
         };
 
-        validateInputID(IDName, function (message) {
-            if (message) {
-                callback(false, message);
-            } else {
-                JSONData.options.inputIDs[newID.id] = newID;
-                saveTemplates(JSONData, function (status, message, data) {
-                    reloadMatchingTabs();
-                    callback(status, message, data);
-                }, newID.id);
-            }
-        });
+        if (validateFieldSelector(newFieldSelector, JSONData.options.fieldSelectors, callback)) {
+            JSONData.options.fieldSelectors[newFieldSelector.id] = newFieldSelector;
+            saveTemplates(JSONData, function (status, message, data) {
+                reloadMatchingTabs();
+                callback(status, message, data);
+            }, newFieldSelector.id);
+            // function (message) {
+            //     if (message) {
+            //         callback(false, message);
+            //     } else {
+
+        //     }
+        };
     });
 }
 
@@ -320,11 +325,7 @@ function removeDomain (domainID, removeAll, callback) {
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID]) {
             var JSONData = data[StorageID];
-            if (removeAll === true) {
-                JSONData.options.domains = {};
-            } else {
-                delete JSONData.options.domains[domainID];
-            }
+            delete JSONData.options.domains[domainID];
             saveTemplates(JSONData, callback);
         } else {
             callback(false, 'No data available to remove');
@@ -332,15 +333,12 @@ function removeDomain (domainID, removeAll, callback) {
     });
 }
 
-function removeInputID (inputID, removeAll, callback) {
+function removeInputID (fieldSelectorID, callback) {
     chrome.storage.sync.get(StorageID, function (data) {
         if (data[StorageID]) {
             var JSONData = data[StorageID];
-            if (removeAll === true) {
-                JSONData.options.inputIDs = {};
-            } else {
-                delete JSONData.options.inputIDs[inputID];
-            }
+            delete JSONData.options.fieldSelectors[fieldSelectorID];
+
             saveTemplates(JSONData, callback);
         } else {
             callback(false, 'No data available to remove');
@@ -366,53 +364,70 @@ function validateDomain (domainName, callback) {
     });
 }
 
-function validateInputID (IDName, callback) {
-    getInputIDs(function (status, msg, response) {
-        // Verify that there are no empty input IDs
-        let message = null;
-        if (!IDName) {
-            message = 'Input ID is blank';
-        }
-        // Verify that there are no duplicate input IDs
-        $.each(response, function (index, inputID) {
-            if (inputID.name.localeCompare(IDName) === 0) {
-                message = `Input ID: "${IDName}" already exists`;
-                return false;
-            }
-        });
-        callback(message);
-    });
+function validateFieldSelector (newFieldSelector, fieldSelectors, callback) {
+    let valid = true;
+    let message = null;
+
+    // Must have Selectors
+    console.log(newFieldSelector);
+    console.log(newFieldSelector.name);
+    if (newFieldSelector.name === '' || newFieldSelector.name === null) {
+        message = 'Name is blank';
+        valid = false;
+    }
+    if (newFieldSelector.cssSelector === '' || newFieldSelector.cssSelector === null) {
+        message = 'CSS Selector is blank';
+        valid = false;
+    }
+    if (newFieldSelector.isWYSIWYG && (newFieldSelector.WYSIWYGContainerSelector === '' || newFieldSelector.WYSIWYGContainerSelector === null)) {
+        message = 'WYSIWYG Container Selector is blank';
+        valid = false;
+    }
+
+    if (message === null) {
+        // // Verify that there are no duplicate input IDs
+        // $.each(fieldSelectors, function (index, fieldSelector) {
+        //     if (inputID.name.localeCompare(IDName) === 0) {
+        //         // Can't have two default templates (no issue type, no projects)
+        //         message = `Input ID: "${IDName}" already exists`;
+        //         return false;
+        //     }
+        // });
+        // callback(message);
+    }
+    callback(valid, message);
+    return valid;
 }
 
 // Make sure that the (issue type, project) combination is unique
 function validateTemplate (newTemplate, templates, callback) {
     var valid = true;
-    var newTemplateProjects = utils.parseProjects(newTemplate['projects-field']);
-    $.each(templates, function (name, template) {
-        if (newTemplate['issuetype-field'] === template['issuetype-field']) {
+    var newTemplateProjects = utils.parseProjects(newTemplate['projects']);
+    $.each(templates, function (index, template) {
+        if (newTemplate['issueType'] === template['issueType']) {
             // Can't have two default templates (no issue type, no projects)
-            if (!newTemplate['issuetype-field'] && !newTemplate['projects-field'] && !template['projects-field']) {
+            if (!newTemplate['issueType'] && !newTemplate['projects'] && !template['projects']) {
                 callback(false, 'Default template ' + template.name + ' already exists', template.id);
                 valid = false;
                 return false;
             // Can't have two templates with no issue type that both have the same project in their list of projects
-            } else if (!newTemplate['issuetype-field']) {
-                let commonProject = utils.commonItemInArrays(newTemplateProjects, utils.parseProjects(template['projects-field']));
+            } else if (!newTemplate['issueType']) {
+                let commonProject = utils.commonItemInArrays(newTemplateProjects, utils.parseProjects(template['projects']));
                 if (commonProject) {
                     callback(false, 'Template ' + template.name + ' already exists for project ' + commonProject, template.id);
                     valid = false;
                     return false;
                 }
             // Can't have two templates with the same issue type and no projects
-            } else if (!newTemplate['projects-field'] && !template['projects-field']) {
-                callback(false, 'Template ' + template.name + ' already exists for issue type ' + newTemplate['issuetype-field'], template.id);
+            } else if (!newTemplate['projects'] && !template['projects']) {
+                callback(false, 'Template ' + template.name + ' already exists for issue type ' + newTemplate['issueType'], template.id);
                 valid = false;
                 return false;
             // Can't have two templates with the same issue type that both have the same project in their list of projects
-            } else if (newTemplate['projects-field'] && template['projects-field']) {
-                let commonProject = utils.commonItemInArrays(newTemplateProjects, utils.parseProjects(template['projects-field']));
+            } else if (newTemplate['projects'] && template['projects']) {
+                let commonProject = utils.commonItemInArrays(newTemplateProjects, utils.parseProjects(template['projects']));
                 if (commonProject) {
-                    callback(false, 'Template ' + template.name + ' already exists for issue type ' + newTemplate['issuetype-field'] + ' and project ' + commonProject, template.id);
+                    callback(false, 'Template ' + template.name + ' already exists for issue type ' + newTemplate['issueType'] + ' and project ' + commonProject, template.id);
                     valid = false;
                     return false;
                 }
@@ -443,21 +458,21 @@ function matchRegexToJsRegex (match) {
 }
 
 // Parse projects field and save it as a comma separated list, ensuring common format
-function formatProjectsField (projectsField) {
-    if (!projectsField) {
+function formatProjectsString (projectsString) {
+    if (!projectsString) {
         return '';
     }
 
     // Replace all commas with spaces
-    projectsField = projectsField.replace(/,/g, ' ');
+    projectsString = projectsString.replace(/,/g, ' ');
 
     // Remove leading and trailing spaces
-    projectsField = $.trim(projectsField);
+    projectsString = $.trim(projectsString);
 
     // Replace groups of spaces with a comma and a space
-    projectsField = projectsField.replace(/\s+/g, ', ');
+    projectsString = projectsString.replace(/\s+/g, ', ');
 
-    return projectsField;
+    return projectsString;
 }
 
 function migrateTemplateKeys (callback = null) {
@@ -492,7 +507,7 @@ function JSONtoTemplateData (templates) {
             template.id = nextID;
             formattedTemplates[nextID++] = template;
         });
-    } else {    // support old template format
+    } else { // support old template format
         $.each(templates, function (key, template) {
             template.name = key;
             template.id = nextID;
@@ -521,22 +536,22 @@ function JSONtoDomainData (domains, callback) {
     return formattedDomains;
 }
 
-function JSONtoInputIDData (inputIDs, callback) {
-    var formattedInputIDs = {};
-    if (inputIDs && inputIDs.constructor === Array) {
-        var nextID = getNextID(inputIDs);
-        $.each(inputIDs, function (index, inputID) {
-            validateJSONInputIDEntry(inputID, callback);
-            var newInputID = {
+function JSONtoFieldSelectorsData (fieldSelectors, callback) {
+    var formattedFieldSelectors = {};
+    if (fieldSelectors && fieldSelectors.constructor === Array) {
+        var nextID = getNextID(fieldSelectors);
+        $.each(fieldSelectors, function (index, fieldSelector) {
+            validateJSONInputIDEntry(fieldSelector, callback);
+            var newFieldSelector = {
                 'id': nextID,
-                'name': inputID
+                'name': fieldSelector.name
             };
-            formattedInputIDs[newInputID.id] = newInputID;
+            formattedFieldSelectors[newFieldSelector.id] = newFieldSelector;
             nextID++;
         });
     }
 
-    return formattedInputIDs;
+    return formattedFieldSelectors;
 }
 
 function validateJSONDomainEntry (domain, callback) {
@@ -571,14 +586,15 @@ function domainDataToJSON (domains) {
     return formattedDomains;
 }
 
-function inputIDDataToJSON (inputIDs) {
-    var formattedInputIDs = [];
+function inputIDDataToJSON (fieldSelectors) {
+    var formattedFieldSelectors = [];
 
-    $.each(inputIDs, function (key, inputID) {
-        formattedInputIDs.push(inputID.name);
+    $.each(fieldSelectors, function (key, fieldSelector) {
+        delete fieldSelector.id;
+        formattedFieldSelectors.push(fieldSelector);
     });
 
-    return formattedInputIDs;
+    return formattedFieldSelectors;
 }
 
 function getNextID (templates) {
@@ -684,7 +700,7 @@ chrome.runtime.onMessage.addListener(
             });
             break;
         case 'add':
-            addTemplate(request.templateName, request.issueTypeField, request.projectsField, request.text, function (status, message = null, data = null) {
+            addTemplate(request.templateName, request.issueType, request.projectsString, request.text, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });
@@ -713,20 +729,20 @@ chrome.runtime.onMessage.addListener(
                 sendResponse(response);
             });
             break;
-        case 'addInputID':
-            addInputID(request.IDName, function (status, message = null, data = null) {
+        case 'addFieldSelector':
+            addFieldSelector(request.name, request.cssSelector, request.isWYSIWYG, request.WYSIWYGContainerSelector, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });
             break;
         case 'removeDomain':
-            removeDomain(request.domainID, request.removeAll, function (status, message = null, data = null) {
+            removeDomain(request.domainID, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });
             break;
         case 'removeInputID':
-            removeInputID(request.inputID, request.removeAll, function (status, message = null, data = null) {
+            removeInputID(request.inputID, function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });
@@ -737,8 +753,8 @@ chrome.runtime.onMessage.addListener(
                 sendResponse(response);
             });
             break;
-        case 'getInputIDs':
-            getInputIDs(function (status, message = null, data = null) {
+        case 'getFieldSelectors':
+            getFieldSelectors(function (status, message = null, data = null) {
                 var response = responseMessage(status, message, data);
                 sendResponse(response);
             });

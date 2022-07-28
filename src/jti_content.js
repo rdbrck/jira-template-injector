@@ -4,7 +4,8 @@
 /* global chrome, browser */
 
 var StorageID = 'Jira-Template-Injector';
-var inputIDs = [];
+var fieldSelectors = [];
+var nonWYSIWYGFieldSelectors = [];
 
 var browserType = 'Chrome'; // eslint-disable-line no-unused-vars
 if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf('Edge') !== -1) {
@@ -14,17 +15,20 @@ if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf
         browserType = 'Firefox';
     }
     if (navigator.userAgent.indexOf('Edge') !== -1) {
-        browserType = 'Edge';
+        browserType = 'Edge'; // eslint-disable-line no-unused-vars
     }
 }
 
 // Handle <TI> tag selection.
-chrome.runtime.sendMessage({JDTIfunction: 'getInputIDs'}, function (response) {
-    $.each(response.data, function (index, inputID) {
-        inputIDs.push(inputID.name);
+chrome.runtime.sendMessage({JDTIfunction: 'getFieldSelectors'}, function (response) {
+    $.each(response.data, function (index, fieldSelector) {
+        fieldSelectors.push(fieldSelector);
+        if (!fieldSelector.isWYSIWYG) {
+            nonWYSIWYGFieldSelectors.push(fieldSelector.cssSelector);
+        }
     });
 
-    $(document).on('click', `#${inputIDs.join(', #')}`, function (inputID) {
+    $(document).on('click', `${nonWYSIWYGFieldSelectors.join(', ')}`, function (fieldSelector) {
         var text = $(this).val(),
             ctrlDown = false,
             backtickKey = 192,
@@ -77,14 +81,14 @@ chrome.runtime.sendMessage({JDTIfunction: 'getInputIDs'}, function (response) {
         }
 
         // Detect ctrl or cmd pressed
-        $(`#${inputID.currentTarget.id}`).keydown(function (e) {
+        $(`#${fieldSelector.currentTarget.id}`).keydown(function (e) {
             if (e.keyCode === ctrlKey) ctrlDown = true;
         }).keyup(function (e) {
             if (e.keyCode === ctrlKey) ctrlDown = false;
         });
 
         // Keypress listener
-        $(`#${inputID.currentTarget.id}`).keydown(function (e) {
+        $(`#${fieldSelector.currentTarget.id}`).keydown(function (e) {
             if (ctrlDown && (e.keyCode === backtickKey)) { // If ctrl is pressed
                 let {start: tagStartIndex, end: tagEndIndex} = getAllIndexes($(this).val()); // Find all <TI> and </TI> tags in selected template.
                 if (tagStartIndex.length !== 0 && tagEndIndex.length !== 0) { // Works only if the selected template contains any <TI> tag
@@ -153,13 +157,18 @@ function getAllIndexes (str) {
     return { start: startIndexes, end: endIndexes };
 }
 
-function isDefaultDescription (value, callback) {
+function isDefaultTemplate (value, callback) {
     chrome.storage.sync.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;
         var match = false;
 
         // Check if it's empty.
         if (value === '') {
+            match = true;
+        }
+
+        // Check if it's the placeholder
+        if (value.includes('class="placeholder')) {
             match = true;
         }
 
@@ -179,82 +188,139 @@ function isDefaultDescription (value, callback) {
 
 // Given the project name as formatted in JIRA's dropdown "PROJECT (KEY)", parse out the key
 function parseProjectKey (projectElement) {
-    var project = projectElement.val();
+    var project = projectElement.textContent;
     return project.substring(project.lastIndexOf('(') + 1, project.length - 1);
 }
 
-function injectDescriptionTemplate (descriptionElement) {
+function injectTemplate (fieldSelectorID, element, isInput) {
     // Each issue type for each project can have its own template.
     chrome.storage.sync.get(StorageID, function (templates) {
         templates = templates[StorageID].templates;
 
         var templateText = '',
-            projectElement = $('#project-field'),
-            issueTypeElement = $('#issuetype-field');
+            projectElement = document.getElementById('issue-create.ui.modal.create-form.project-picker.project-select'),
+            issueTypeElement = document.querySelector('#issue-create\\.ui\\.modal\\.create-form\\.type-picker\\.issue-type-select');
 
         if (issueTypeElement !== null && projectElement !== null) {
             var projectKey = parseProjectKey(projectElement);
             var override = 0;
 
             $.each(templates, function (key, template) {
-                // Default template (no issue type, no project)
-                if (!template['issuetype-field'] && !template['projects-field']) {
-                    if (override < 1) {
-                        override = 1;
+                if (parseInt(template.fieldSelector) === parseInt(fieldSelectorID)) {
+                    // Default template (no issue type, no project)
+                    if (!template['issueType'] && !template['projects']) {
+                        if (override < 1) {
+                            override = 1;
+                            templateText = template.text;
+                        }
+                        // Override if project, no issue type
+                    } else if (!template['issueType'] && $.inArray(projectKey, utils.parseProjects(template['projects'])) !== -1) {
+                        if (override < 2) {
+                            override = 2;
+                            templateText = template.text;
+                        }
+                        // Override if issue type, no project
+                    } else if (!template['projects'] && template['issueType'] === issueTypeElement.textContent) {
+                        if (override < 3) {
+                            override = 3;
+                            templateText = template.text;
+                        }
+                        // Override if issue type and project
+                    } else if (template['issueType'] === issueTypeElement.textContent &&
+                        $.inArray(projectKey, utils.parseProjects(template['projects'])) !== -1) {
                         templateText = template.text;
+                        return false;
                     }
-                // Override if project, no issue type
-                } else if (!template['issuetype-field'] && $.inArray(projectKey, utils.parseProjects(template['projects-field'])) !== -1) {
-                    if (override < 2) {
-                        override = 2;
-                        templateText = template.text;
-                    }
-                // Override if issue type, no project
-                } else if (!template['projects-field'] && template['issuetype-field'] === issueTypeElement.val()) {
-                    if (override < 3) {
-                        override = 3;
-                        templateText = template.text;
-                    }
-                // Override if issue type and project
-                } else if (template['issuetype-field'] === issueTypeElement.val() &&
-                        $.inArray(projectKey, utils.parseProjects(template['projects-field'])) !== -1) {
-                    templateText = template.text;
-                    return false;
                 }
             });
 
-            descriptionElement.value = templateText;
+            if (isInput) {
+                element.value = templateText;
+            } else {
+                element.innerHTML = templateText;
+            }
         } else {
             if (issueTypeElement === null) {
-                console.error('*** Error: Element Id "issuetype-field" not found.');
+                console.error('*** Error: Element Id "issueType" not found.');
             } else if (projectElement === null) {
-                console.error('*** Error: Element Id "project-field" not found.');
+                console.error('*** Error: Element Id "project" not found.');
             }
         }
     });
 }
 
-function descriptionChangeEvent (changeEvent) {
-    // The description field has been changed, turn the dirtyDialogMessage back on and remove the listener.
-    changeEvent.target.className = changeEvent.target.className.replace(' ajs-dirty-warning-exempt', '');
-    changeEvent.target.removeEventListener('change', descriptionChangeEvent);
-}
+// function descriptionChangeEvent (changeEvent) {
+//     // The description field has been changed, turn the dirtyDialogMessage back on and remove the listener.
+//     changeEvent.target.className = changeEvent.target.className.replace(' ajs-dirty-warning-exempt', '');
+//     changeEvent.target.removeEventListener('change', descriptionChangeEvent);
+// }
 
 function observeDocumentBody (mutation) {
-    if (document.getElementById('create-issue-dialog') !== null || document.getElementById('create-subtask-dialog') !== null) { // Only interested in document changes related to Create Issue Dialog box or Create Sub-task Dialog box.
-        if (inputIDs.includes(mutation.target.id)) { // Only interested in select input id fields.
-            var descriptionElement = mutation.target;
-            isDefaultDescription(descriptionElement.value, function (result) {
-                if (result) { // Only inject if description field has not been modified by the user.
-                    injectDescriptionTemplate(descriptionElement);
-                    if (descriptionElement.className.indexOf('ajs-dirty-warning-exempt') === -1) { // Default template injection should not pop up dirtyDialogMessage.
-                        descriptionElement.className += ' ajs-dirty-warning-exempt';
-                        descriptionElement.addEventListener('change', descriptionChangeEvent);
+    if (document.getElementById('issue-create.ui.modal.modal-body') !== null || document.getElementById('create-subtask-dialog') !== null) { // Only interested in document changes related to Create Issue Dialog box or Create Sub-task Dialog box.
+        $.each(fieldSelectors, function (index, fieldSelector) {
+            // Handle non WYSIWYG fields
+            if (!fieldSelector.isWYSIWYG && mutation.target.id === fieldSelector.cssSelector) {
+                var templateElement = mutation.target;
+                isDefaultTemplate(templateElement.value, function (result) {
+                    if (result) { // Only inject if the field has not been modified by the user.
+                        injectTemplate(fieldSelector.id, templateElement, true);
+                    }
+                });
+            }
+
+            // Handle WYSIWYG fields
+            if (fieldSelector.isWYSIWYG) {
+                let container = document.querySelector(fieldSelector.WYSIWYGContainerSelector);
+                if (container !== null && container.contains(mutation.target)) {
+                    let templateElement = document.querySelector(`${fieldSelector.WYSIWYGContainerSelector} ${fieldSelector.cssSelector}`);
+                    console.log(templateElement);
+                    console.log(`${fieldSelector.WYSIWYGContainerSelector} ${fieldSelector.cssSelector}`);
+                    if (templateElement !== null) {
+                        console.log('here 2');
+                        isDefaultTemplate(templateElement.innerHTML, function (result) {
+                            console.log(result);
+                            if (result) { // Only inject if description field has not been modified by the user.
+                                injectTemplate(fieldSelector.id, templateElement, false);
+                            }
+                        });
+                        return false;
                     }
                 }
-            });
-        }
+            }
+        });
+
+        // console.log('here!!!!!!!!!!');
+        // console.log(descriptionElement);
+        // console.log(descriptionElement.innerHTML);
+        // console.log(mutation.target);
+        // if (descriptionElement !== null) { // Only interested in select input id fields.
+        //     // var descriptionElement = mutation.target;
+        //     isDefaultTemplate(descriptionElement.innerHTML, function (result) {
+        //         if (result) { // Only inject if description field has not been modified by the user.
+        //             injectTemplate(descriptionElement);
+        //             // descriptionElement.addEventListener('change', descriptionChangeEvent);
+        //             // if (descriptionElement.className.indexOf('ajs-dirty-warning-exempt') === -1) { // Default template injection should not pop up dirtyDialogMessage.
+        //             //     descriptionElement.className += ' ajs-dirty-warning-exempt';
+
+        //             // }
+        //         }
+        //     });
+        // }
     }
+
+    // if (document.getElementById('create-issue-dialog') !== null || document.getElementById('create-subtask-dialog') !== null) { // Only interested in document changes related to Create Issue Dialog box or Create Sub-task Dialog box.
+    //     if (inputIDs.includes(mutation.target.id)) { // Only interested in select input id fields.
+    //         var descriptionElement = mutation.target;
+    //         isDefaultTemplate(descriptionElement.value, function (result) {
+    //             if (result) { // Only inject if description field has not been modified by the user.
+    //                 injectTemplate(descriptionElement);
+    //                 if (descriptionElement.className.indexOf('ajs-dirty-warning-exempt') === -1) { // Default template injection should not pop up dirtyDialogMessage.
+    //                     descriptionElement.className += ' ajs-dirty-warning-exempt';
+    //                     descriptionElement.addEventListener('change', descriptionChangeEvent);
+    //                 }
+    //             }
+    //         });
+    //     }
 }
 
 // Create observer to monitor for description field if the domain is a monitored one
@@ -265,7 +331,7 @@ chrome.runtime.sendMessage({JDTIfunction: 'getDomains'}, function (response) {
             var observer = new MutationObserver(function (mutations) {
                 mutations.forEach(observeDocumentBody);
             });
-            observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['resolved'] });
+            observer.observe(document.body, { subtree: true, attributes: true });
         }
     });
 });

@@ -30,7 +30,7 @@ function sortTemplates (templates) {
 
     // Move "DEFAULT TEMPLATE" to top of list.
     $.each(sorted, function (index, template) {
-        if (!template['issuetype-field'] && !template['projects-field']) {
+        if (!template['issueType'] && !template['projects']) {
             let defaultTemplate = sorted.splice(index, 1)[0];
             sorted.unshift(defaultTemplate);
             return false;
@@ -63,10 +63,12 @@ function loadTemplateEditor (openTemplate = null) {
         $('#templateEditor').empty();
         // Clear the custom template fields.
         $('#customTemplateName').val('');
-        $('#customTemplateIssueTypeField').val('');
-        $('#customTemplateProjectsField').val('');
+        $('#customTemplateIssueType').val('');
+        $('#customTemplateProjectsString').val('');
         // Clear the add default template dropdown.
         $('#addDefaultDropdown').empty();
+        // Clear the Field Selector dropdown in the add template modal.
+        $('#fieldSelectDropdown').empty();
         // remove all domains, so that the whole list can be re-added in proper order.
         $('.custom-domain-collection').remove();
         // remove all input ids, so that the whole list can be re-added in proper order.
@@ -97,9 +99,9 @@ function loadTemplateEditor (openTemplate = null) {
                     var valid = true;
                     $.each(templatesArray, function (index, excludeTemplate) {
                         // if the issue types are the same and (the templates have no projects specified or they have a project in common), then this template is invalid
-                        if (excludeTemplate['issuetype-field'] === template['issuetype-field']) {
-                            if (!excludeTemplate['projects-field'] && !template['projects-field'] ||
-                                utils.commonItemInArrays(excludeTemplate['projects-field'], template['projects-field'])) {
+                        if (excludeTemplate['issueType'] === template['issueType']) {
+                            if (!excludeTemplate['projects'] && !template['projects'] ||
+                                utils.commonItemInArrays(excludeTemplate['projects'], template['projects'])) {
                                 valid = false;
                                 return false;
                             }
@@ -114,7 +116,7 @@ function loadTemplateEditor (openTemplate = null) {
                     $('#addDefaultDropdownButton').removeClass('emptyDropdown').addClass('waves-effect waves-light');
 
                     $.each(validDefaultTemplates, function (key, template) {
-                        var dropdownData = '<li><a class="dropdownOption" href="#!" data-issueFieldType="' + template['issuetype-field'] + '" data-text="' + template.name + '">' + template.name + '</a></li>';
+                        var dropdownData = '<li><a class="dropdownOption" href="#!" data-issueFieldType="' + template['issueType'] + '" data-text="' + template.name + '">' + template.name + '</a></li>';
                         $('#addDefaultDropdown').append(dropdownData);
                     });
                 } else {
@@ -129,6 +131,55 @@ function loadTemplateEditor (openTemplate = null) {
                 Materialize.toast('Error loading default templates please reload the extension', 2000, 'toastNotification');
             }
         });
+
+        // chrome.runtime.sendMessage({JDTIfunction: 'getFieldSelectors'}, function (response) {
+        //     if (response.status === 'success') {
+        //         var fieldSelectors = response.data;
+
+        //         $.each(fieldSelectors, function (key, fieldSelector) {
+        //             var dropdownData = '<li><a class="dropdownOption" href="#!" data-fieldSelectorID="' + fieldSelector.id + '" data-text="' + fieldSelector.name + '">' + fieldSelector.name + '</a></li>';
+        //             $('#fieldSelectDropdown').append(dropdownData);
+        //         });
+        //         $('#addDefaultDropdownButton').removeClass('emptyDropdown').addClass('waves-effect waves-light');
+        //         var validDefaultTemplates = [];
+
+        //         // Only show default templates if a template for that (issue type, projects) combination doesn't already exist.
+        //         $.each(defaultTemplates, function (defaultIndex, template) {
+        //             var valid = true;
+        //             $.each(templatesArray, function (index, excludeTemplate) {
+        //                 // if the issue types are the same and (the templates have no projects specified or they have a project in common), then this template is invalid
+        //                 if (excludeTemplate['issueType'] === template['issueType']) {
+        //                     if (!excludeTemplate['projects'] && !template['projects'] ||
+        //                         utils.commonItemInArrays(excludeTemplate['projects'], template['projects'])) {
+        //                         valid = false;
+        //                         return false;
+        //                     }
+        //                 }
+        //             });
+        //             if (valid) {
+        //                 validDefaultTemplates.push(template);
+        //             }
+        //         });
+
+        //         if (!$.isEmptyObject(validDefaultTemplates)) {
+        //             $('#addDefaultDropdownButton').removeClass('emptyDropdown').addClass('waves-effect waves-light');
+
+        //             $.each(validDefaultTemplates, function (key, template) {
+        //                 var dropdownData = '<li><a class="dropdownOption" href="#!" data-issueFieldType="' + template['issueType'] + '" data-text="' + template.name + '">' + template.name + '</a></li>';
+        //                 $('#addDefaultDropdown').append(dropdownData);
+        //             });
+        //         } else {
+        //             $('#addDefaultDropdownButton').addClass('emptyDropdown').removeClass('waves-effect waves-light');
+        //         }
+
+        //         // Reload the dropdown.
+        //         $('.dropdown-button').dropdown({constrain_width: false});
+        //     } else {
+        //         $('#addTemplateDropdown').empty();
+        //         $('#addDefaultDropdownButton').addClass('emptyDropdown').removeClass('waves-effect waves-light');
+        //         Materialize.toast('Error loading default templates please reload the extension', 2000, 'toastNotification');
+        //     }
+        // });
     });
 
     // Check the "rate" flag. If the flag is not set, display "rate it now" button
@@ -152,13 +203,13 @@ function loadTemplateEditor (openTemplate = null) {
         }
     });
 
-    // Load in the custom input IDs.
-    chrome.runtime.sendMessage({JDTIfunction: 'getInputIDs'}, function (response) {
+    // Load in the custom Field Selectors.
+    chrome.runtime.sendMessage({JDTIfunction: 'getFieldSelectors'}, function (response) {
         if (response.data) {
-            // send a message to sandbox.html to build the input ids list
+            // send a message to sandbox.html to build the Field Selectors list
             // once the template is compiled, a 'message' event will be sent to this window with the html
-            var sandboxIFrameInputIDs = document.getElementById('sandbox_window');
-            sandboxIFrameInputIDs.contentWindow.postMessage({
+            var sandboxIFrameFieldSelectors = document.getElementById('sandbox_window');
+            sandboxIFrameFieldSelectors.contentWindow.postMessage({
                 command: 'renderObject',
                 context: { object: response.data, classAddition: 'ID' },
                 type: 'customIDsList'
@@ -186,8 +237,8 @@ function limitAccess (callback = false) {
                     $('#add').addClass('disabled');
                     $('#addCustomTemplate').addClass('disabled');
                     $('#customTemplateName').prop('disabled', true);
-                    $('#customTemplateIssueTypeField').prop('disabled', true);
-                    $('#customTemplateProjectsField').prop('disabled', true);
+                    $('#customTemplateIssueType').prop('disabled', true);
+                    $('#customTemplateProjectsString').prop('disabled', true);
                     $('#addDefaultDropdownButton').addClass('disabled');
                     $('#customSettings').addClass('disabled');
                     break;
@@ -215,8 +266,8 @@ function limitAccess (callback = false) {
                 case 'add-custom':
                     $('#addCustomTemplate').addClass('disabled');
                     $('#customTemplateName').prop('disabled', true);
-                    $('#customTemplateIssueTypeField').prop('disabled', true);
-                    $('#customTemplateProjectsField').prop('disabled', true);
+                    $('#customTemplateIssueType').prop('disabled', true);
+                    $('#customTemplateProjectsString').prop('disabled', true);
                     break;
                 case 'add-default':
                     $('#addDefaultDropdownButton').addClass('disabled');
@@ -292,53 +343,6 @@ $(document).ready(function () {
         $('main').toggle();
     });
 
-    $('#clearCustomIDs').click(function () {
-        if (!$(this).hasClass('disabled')) {
-            // remove all added input IDs:
-            chrome.runtime.sendMessage({
-                JDTIfunction: 'removeInputID',
-                removeAll: true
-            }, function (response) {
-                if (response.status === 'success') {
-                    loadTemplateEditor();
-                    Materialize.toast('Input IDs successfully removed', 2000, 'toastNotification');
-                } else {
-                    if (response.message) {
-                        Materialize.toast(response.message, 2000, 'toastNotification');
-                    } else {
-                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotifcation');
-                    }
-                }
-            });
-        } else {
-            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
-        }
-    });
-
-    $('#clearCustomDomains').click(function () {
-        if (!$(this).hasClass('disabled')) {
-            // remove all added domains:
-            chrome.runtime.sendMessage({
-                JDTIfunction: 'removeDomain',
-                domainName: '',
-                removeAll: true
-            }, function (response) {
-                if (response.status === 'success') {
-                    loadTemplateEditor();
-                    Materialize.toast('Domains successfully removed', 2000, 'toastNotification');
-                } else {
-                    if (response.message) {
-                        Materialize.toast(response.message, 2000, 'toastNotification');
-                    } else {
-                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
-                    }
-                }
-            });
-        } else {
-            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
-        }
-    });
-
     $('#customDomainInput').keyup(function (event) {
         if (event.keyCode === 13) {
             $('#customDomainInputButton').click();
@@ -370,43 +374,12 @@ $(document).ready(function () {
         }
     });
 
-    $('#customIDInput').keyup(function (event) {
-        if (event.keyCode === 13) {
-            $('#customIDInputButton').click();
-        }
-    });
-
-    $('#customIDInputButton').click(function () {
-        if (!$(this).hasClass('disabled')) {
-            var IDName = $('#customIDInput').val();
-            chrome.runtime.sendMessage({
-                JDTIfunction: 'addInputID',
-                IDName: IDName
-            }, function (response) {
-                if (response.status === 'success') {
-                    $('#customIDInput').val('');
-                    loadTemplateEditor();
-                    Materialize.toast('Input ID successfully added', 2000, 'toastNotification');
-                } else {
-                    if (response.message) {
-                        Materialize.toast(response.message, 2000, 'toastNotification');
-                    } else {
-                        Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
-                    }
-                }
-            });
-        } else {
-            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
-        }
-    });
-
     // Because the template editing section is dynamically built, need to monitor document rather then the buttons directly
     $(document).on('click', '.custom-Domain-remove-button', function () {
         if (!$(this).hasClass('disabled')) {
             chrome.runtime.sendMessage({
                 JDTIfunction: 'removeDomain',
-                domainID: event.target.id,
-                removeAll: false
+                domainID: event.target.id
             }, function (response) {
                 if (response.status === 'success') {
                     loadTemplateEditor();
@@ -424,16 +397,94 @@ $(document).ready(function () {
         }
     });
 
+    $('#addFieldSelectorButton').click(function () {
+        $('#addFieldSelectorModal').openModal();
+    });
+
+    $('#saveCustomFieldSelector').click(function () {
+        var fieldSelectorName = $('#customFieldSelectorName').val();
+        var fieldSelectorCSSSelector = $('#customFieldSelectorCSSSelector').val();
+        var fieldSelectorIsWYSIWYG = $('#customFieldSelectorIsWYSIWYG').prop('checked');
+        var fieldSelectorWYSIWYGSelector = $('#customFieldSelectorWYSIWYGContainerSelector').val();
+        console.log(fieldSelectorName);
+        console.log(fieldSelectorCSSSelector);
+        console.log(fieldSelectorIsWYSIWYG);
+        console.log(fieldSelectorWYSIWYGSelector);
+
+        // var IDName = $('#customIDInput').val();
+        chrome.runtime.sendMessage({
+            JDTIfunction: 'addFieldSelector',
+            name: fieldSelectorName,
+            cssSelector: fieldSelectorCSSSelector,
+            isWYSIWYG: fieldSelectorIsWYSIWYG,
+            WYSIWYGContainerSelector: fieldSelectorIsWYSIWYG ? fieldSelectorWYSIWYGSelector : ''
+        }, function (response) {
+            if (response.status === 'success') {
+                $('#addFieldSelectorModal').closeModal();
+                $('#customFieldSelectorName').val('');
+                $('#customFieldSelectorCSSSelector').val('');
+                $('#customFieldSelectorIsWYSIWYG').prop('checked', true);
+                $('#customFieldSelectorWYSIWYGContainerSelector').prop('disabled', false);
+                $('#customFieldSelectorWYSIWYGContainerSelector').val('');
+                loadTemplateEditor();
+                Materialize.toast('Custom Field Selector successfully added', 2000, 'toastNotification');
+            } else {
+                if (response.message) {
+                    Materialize.toast(response.message, 2000, 'toastNotification');
+                } else {
+                    Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+                }
+            }
+        });
+    });
+
+    // $('#addCustomTemplateSave').click(function () {
+    //     if (!$(this).hasClass('disabled')) {
+    //         var templateName = $('#customTemplateName').val();
+    //         var issueType = $('#customTemplateIssueType').val();
+    //         var projectsString = $('#customTemplateProjectsString').val();
+
+    //         chrome.runtime.sendMessage({
+    //             JDTIfunction: 'add',
+    //             templateName: templateName,
+    //             issueType: issueType,
+    //             projectsString: projectsString,
+    //             text: ''
+    //         }, function (response) {
+    //             if (response.status === 'success') {
+    //                 $('#addTemplateModal').closeModal();
+    //                 loadTemplateEditor(response.data);
+    //                 Materialize.toast('Template successfully added', 2000, 'toastNotification');
+    //             } else {
+    //                 if (response.message) {
+    //                     Materialize.toast(response.message, 2000, 'toastNotification');
+    //                 } else {
+    //                     Materialize.toast('Something went wrong. Please try again.', 2000, 'toastNotification');
+    //                 }
+    //             }
+    //         });
+    //     } else {
+    //         Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
+    //     }
+    // });
+
+    $('#customFieldSelectorIsWYSIWYG').change(function () {
+        if (!this.checked) {
+            $('#customFieldSelectorWYSIWYGContainerSelector').prop('disabled', true);
+            return;
+        }
+        $('#customFieldSelectorWYSIWYGContainerSelector').prop('disabled', false);
+    });
+
     $(document).on('click', '.custom-ID-remove-button', function () {
         if (!$(this).hasClass('disabled')) {
             chrome.runtime.sendMessage({
                 JDTIfunction: 'removeInputID',
-                inputID: event.target.id,
-                removeAll: false
+                inputID: event.target.id
             }, function (response) {
                 if (response.status === 'success') {
                     loadTemplateEditor();
-                    Materialize.toast('Input ID successfully removed', 2000, 'toastNotification');
+                    Materialize.toast('Field Selector successfully removed', 2000, 'toastNotification');
                 } else {
                     if (response.message) {
                         Materialize.toast(response.message, 2000, 'toastNotification');
@@ -543,26 +594,21 @@ $(document).ready(function () {
         }
     });
 
-    $(document).on('click', '#add', function (event) {
-        event.preventDefault();
-        if (!$(this).hasClass('disabled')) {
-            $('#addTemplateModal').openModal();
-        } else {
-            Materialize.toast(disabledOptionToast, 2000, 'toastNotification');
-        }
+    $(document).on('click', '#addCustomTemplateButton', function (event) {
+        $('#addTemplateModal').openModal();
     });
 
-    $('#addCustomTemplate').click(function () {
+    $('#addCustomTemplateSave').click(function () {
         if (!$(this).hasClass('disabled')) {
             var templateName = $('#customTemplateName').val();
-            var issueTypeField = $('#customTemplateIssueTypeField').val();
-            var projectsField = $('#customTemplateProjectsField').val();
+            var issueType = $('#customTemplateIssueType').val();
+            var projectsString = $('#customTemplateProjectsString').val();
 
             chrome.runtime.sendMessage({
                 JDTIfunction: 'add',
                 templateName: templateName,
-                issueTypeField: issueTypeField,
-                projectsField: projectsField,
+                issueType: issueType,
+                projectsString: projectsString,
                 text: ''
             }, function (response) {
                 if (response.status === 'success') {
@@ -680,8 +726,8 @@ $(document).ready(function () {
                 JDTIfunction: 'save',
                 templateID: templateID,
                 templateName: form.find('[name="nameField"]').val(),
-                templateIssueType: form.find('[name="issueTypeField"]').val(),
-                templateProjects: form.find('[name="projectsField"]').val(),
+                templateIssueType: form.find('[name="issueType"]').val(),
+                templateProjects: form.find('[name="projectsString"]').val(),
                 templateText: form.find('[name="textField"]').val()
             }, function (response) {
                 if (response.status === 'success') {
@@ -703,7 +749,7 @@ $(document).ready(function () {
     $(document).on('click', '.dropdownOption', function () {
         // Close the Modal
         var templateName = $(this).text();
-        var issueTypeField = $(this).data('issuefieldtype');
+        var issueType = $(this).data('issuefieldtype');
         var text = '';
         if ($('#loadDefault').prop('checked')) {
             text = $(this).data('text');
@@ -712,7 +758,7 @@ $(document).ready(function () {
         chrome.runtime.sendMessage({
             JDTIfunction: 'add',
             templateName: templateName,
-            issueTypeField: issueTypeField,
+            issueType: issueType,
             text: text
         }, function (response) {
             $('#addTemplateModal').closeModal();

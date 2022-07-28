@@ -8,7 +8,7 @@ if (navigator.userAgent.indexOf('Firefox') !== -1 || navigator.userAgent.indexOf
         browserType = 'Firefox';
     }
     if (navigator.userAgent.indexOf('Edge') !== -1) {
-        browserType = 'Edge';
+        browserType = 'Edge'; // eslint-disable-line no-unused-vars
     }
 }
 

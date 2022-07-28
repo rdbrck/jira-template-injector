@@ -131,7 +131,7 @@ textarea.materialize-textarea:focus:not([readonly]) {
 
 .modal.bottom-sheet {
 	overflow: visible;
-	max-height: 55% !important;
+	max-height: 60% !important;
 }
 
 .modal-content {
@@ -222,12 +222,16 @@ textarea.materialize-textarea:focus:not([readonly]) {
 	max-height: calc(100vh - 95px);
 }
 
+#fieldSelectDropdownRow {
+	padding-bottom: 50px;
+}
+
 #addCustomTemplate {
 	margin-left: -20px;
 }
 
 /*noinspection CssUnusedSymbol*/
-#issueTypeField {
+#issueType {
 	width: 90%;
 }
 
@@ -255,6 +259,9 @@ textarea.materialize-textarea:focus:not([readonly]) {
 	display: none;
 }
 
+#customDomainsList {
+	margin-top: 30px;
+}
 .custom-domain-collection {
 	padding-top: 5px;
 	padding-bottom: 5px;

@@ -135,7 +135,7 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                     </div>
                 </div>
                 <div class="divider"></div>
-                
+
                 <div class="section">
                     <ul class="collapsible popout" data-collapsible="accordion" id="templateEditor">
                     </ul>
@@ -147,12 +147,17 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                 </div>
             </div>
 
-            <!-- Modal Structure -->
+            <!-- Add Template Modal -->
             <div id="addTemplateModal" class="modal bottom-sheet">
                 <div class="modal-content">
                     <div class="row">
-                        <div class="col s12">
+                        <div class="col s10">
                             <h5 id="addTemplateTitle">Add Default or Custom Template</h5>
+                        </div>
+                        <div class="col s2 right-align">
+                            <a id="addCustomTemplateSave" class="btn-floating btn-jti">
+                                <i class="material-icons">save</i>
+                            </a>
                         </div>
                     </div>
                     <div class="divider"></div>
@@ -165,16 +170,12 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                             <input id="customTemplateName" type="text" name="customName" placeholder="BUG TEMPLATE" >
                         </div>
                         <div class="col s2 valign-wrapper zpr zpl text-center">
-                            <h6>Issue Type Field:</h6>
+                            <h6>Issue Type:</h6>
                         </div>
-                        <div class="col s3">
-                            <input id="customTemplateIssueTypeField" type="text" name="issueTypeField" placeholder="Bug" >
+                        <div class="col s4">
+                            <input id="customTemplateIssueType" type="text" name="issueType" placeholder="Bug" >
                         </div>
-                        <div class="col s1 right-align">
-                            <a id="addCustomTemplate" class="btn-floating btn-jti">
-                                <i class="material-icons">forward</i>
-                            </a>
-                        </div>
+
                     </div>
                     <div class="invisible-divider"></div>
                     <div class="row">
@@ -182,7 +183,18 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                             <h6>Projects:</h6>
                         </div>
                         <div class="col s10 zpl">
-                            <input id="customTemplateProjectsField" type="text" name="projectsField" placeholder="AIR, JIR (leave blank for all projects)" >
+                            <input id="customTemplateProjectsString" type="text" name="projectsString" placeholder="AIR, JIR (leave blank for all projects)" >
+                        </div>
+                    </div>
+                    <div class="row" id="fieldSelectDropdownRow">
+                        <div class="col s2 valign-wrapper zpr">
+                            <h6>Field:</h6>
+                        </div>
+                        <div class="col s10 zpl">
+                            <a class="dropdown-button btn btn-jti" id="fieldSelectDropdownButton" href="#">
+                                <i class="material-icons left">expand_more</i>
+                                Select Field
+                            </a>
                         </div>
                     </div>
                     <div class="divider"></div>
@@ -205,10 +217,15 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                 </div>
             </div>
 
-            <!-- Dropdown Structure -->
+            <!-- Dropdown Structures -->
             <ul id="addDefaultDropdown" class="dropdown-content">
                 <!-- Dynamically built -->
             </ul>
+
+            <ul id="fieldSelectDropdown" class="dropdown-content">
+                <!-- Dynamically built -->
+            </ul>
+            <!-- Dropdown Structure -->
         </main>
 
         <!-- Manage custom settings section -->
@@ -227,23 +244,14 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                 </div>
 
                 <div class="divider"></div>
+                <div class="invisible-divider"></div>
+
 
                 <!-- Custom Domain section -->
-                <div class="row valign-wrapper">
-                    <div class="col">
-                        <a id="clearCustomDomains" class="btn-floating btn-jti tooltipped center-align custom-Domain-ui" data-position="right" data-delay="50" data-tooltip="Clear All Domains">
-                            <i class="material-icons">delete</i>
-                        </a>
-                    </div>
-                    <div class="col center-align">
-                        <div color="black" class="center-align custom-label">Custom Domains</div>
-                    </div>
-                </div>
-
                 <div class="section">
                     <div class="row">
                         <div class="col s5 valign-wrapper">
-                            <h6> Add Custom Domain:</h6>
+                            <div color="black" class="custom-label">Domains:</div>
                         </div>
                         <div class="col s5">
                             <input id="customDomainInput" type="text" name="url" placeholder="Custom Domain URL">
@@ -254,46 +262,86 @@ https://github.com/rdbrck/jira-description-extension/blob/master/LICENSE
                             </a>
                         </div>
                     </div>
+
+                    <!-- List of custom domains -->
+                    <ul class="collection" id="customDomainsList">
+                    </ul>
                 </div>
-                <div class="divider spaced"></div>
-                <!-- List of custom domains -->
-                <ul class="collection" id="customDomainsList">
-                </ul>
 
-                <div class="divider"></div>
+                <div class="invisible-divider"></div>
 
-                <!-- Custom Input ID section -->
-                <div class="row valign-wrapper">
-                        <div class="col">
-                            <a id="clearCustomIDs" class="btn-floating btn-jti tooltipped center-align custom-ID-ui" data-position="right" data-delay="50" data-tooltip="Clear All IDs">
-                                <i class="material-icons">delete</i>
+                 <!-- Custom Field Selector section -->
+                <div class="section">
+                    <div class="row">
+                        <div class="col s8 valign-wrapper">
+                            <div color="black" class="custom-label">Field Selectors:</div>
+                        </div>
+                        <div class="col s4 right-align">
+                            <a id="addFieldSelectorButton" class="btn-floating btn-jti tooltipped" data-position="left" data-delay="50" data-tooltip="Add Custom Field Selector">
+                                <i class="material-icons">add</i>
                             </a>
                         </div>
-                        <div class="col center-align">
-                            <div color="black" class="center-align custom-label">Custom Input IDs</div>
-                        </div>
                     </div>
-    
-                    <div class="section">
-                        <div class="row">
-                            <div class="col s5 valign-wrapper">
-                                <h6> Add Custom Input IDs:</h6>
-                            </div>
-                            <div class="col s5">
-                                <input id="customIDInput" type="text" name="url" placeholder="Custom Input ID">
-                            </div>
-                            <div class="col s2 right-align">
-                                <a id="customIDInputButton" class="btn-floating btn-jti tooltipped custom-ID-ui" data-position="left" data-delay="50" data-tooltip="Add ID">
-                                    <i class="material-icons">add</i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="divider spaced"></div>
+
                     <!-- List of custom input IDs -->
                     <ul class="collection" id="customIDsList">
                     </ul>
+                </div>
+
+
+                <!-- Add Custom Field Modal Structure -->
+                <div id="addFieldSelectorModal" class="modal bottom-sheet">
+                    <div class="modal-content">
+                        <div class="row">
+                            <div class="col s10">
+                                <h5 id="addFieldSelectorTitle">Add Custom Field Selector</h5>
+                            </div>
+                            <div class="col s2 right-align">
+                                <a id="saveCustomFieldSelector" class="btn-floating btn-jti">
+                                    <i class="material-icons">save</i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="divider"></div>
+                        <div class="row">
+                            <div class="col s2 valign-wrapper zpr">
+                                <h6>Name:</h6>
+                            </div>
+                            <div class="col s10 zpl">
+                                <input id="customFieldSelectorName" type="text" name="customName" placeholder="Description" >
+                            </div>
+                        </div>
+                        <div class="invisible-divider"></div>
+                        <div class="row">
+                            <div class="col s2 valign-wrapper zpr">
+                                <h6>Field Selector:</h6>
+                            </div>
+                            <div class="col s10 zpl">
+                                <input id="customFieldSelectorCSSSelector" type="text" name="customFieldSelectorCSSSelector" placeholder="#summary-field" >
+                            </div>
+                        </div>
+                        <div class="invisible-divider"></div>
+                        <div class="row">
+                            <div class="col s2 valign-wrapper zpr">
+                                <h6>WYSIWYG:</h6>
+                            </div>
+                            <div class="col s1 valign-wrapper right-align">
+                                    <input type="checkbox" class="filled-in btn-jti" id="customFieldSelectorIsWYSIWYG" checked="checked" />
+                                    <label for="customFieldSelectorIsWYSIWYG"></label>
+                            </div>
+                            <div class="col s3 valign-wrapper zpr">
+                                <h6>Container Selector:</h6>
+                            </div>
+                            <div class="col s6 zpl">
+                                <input id="customFieldSelectorWYSIWYGContainerSelector" type="text" name="customFieldSelectorWYSIWYGContainerSelector" placeholder="#description-container" >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
+
+
         </div>
 
         <!-- Need this to be able to grab the sandbox window to compile the edit templates -->

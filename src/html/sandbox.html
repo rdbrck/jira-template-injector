@@ -15,7 +15,7 @@
                 </div>
                 <div class="col s4 right-align">
                     <!-- Modal Trigger -->
-                    <a id="add" class="btn-floating btn-jti modal-trigger" data-position="left" data-delay="50" data-toggle="tooltip" data-tooltip="Add a Template">
+                    <a id="addCustomTemplateButton" class="btn-floating btn-jti modal-trigger" data-position="left" data-delay="50" data-toggle="tooltip" data-tooltip="Add a Template">
                         <i class="material-icons">add</i>
                     </a>
                 </div>
@@ -37,10 +37,10 @@
                                     <input type="text" name="nameField" placeholder="BUG TEMPLATE" value="{{ this.name }}" >
                                 </div>
                                 <div class="col s2 valign-wrapper zpr zpl text-center">
-                                    <h6>Issue Type Field:</h6>
+                                    <h6>Issue Type:</h6>
                                 </div>
                                 <div class="col s3">
-                                    <input type="text" name="issueTypeField" placeholder="Bug" value="{{ this.[issuetype-field] }}" >
+                                    <input type="text" name="issueType" placeholder="Bug" value="{{ this.[issueType] }}" >
                                 </div>
                             </div>
                             <div class="invisible-divider"></div>
@@ -49,7 +49,7 @@
                                     <h6>Projects:</h6>
                                 </div>
                                 <div class="col s10">
-                                    <input type="text" name="projectsField" placeholder="AIR, JIR (leave blank for all projects)" value="{{ this.[projects-field] }}" >
+                                    <input type="text" name="projectsString" placeholder="AIR, JIR (leave blank for all projects)" value="{{ this.[projects] }}" >
                                 </div>
                             </div>
                             <div class="invisible-divider"></div>
@@ -111,7 +111,7 @@
 
         <script>
             Handlebars.registerHelper('boldIfDefault', function (template) {
-                if (!template['issuetype-field'] && !template['projects-field']) {
+                if (!template['issueType'] && !template['projects']) {
                     return 'font-bold';
                 } else {
                     return '';
